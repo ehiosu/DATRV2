@@ -48,28 +48,28 @@ export const Home = () => {
         <div className='flex justify-end w-full h-20 '>
         <button className='w-40 flex text-sm gap-2 items-center justify-end'>Dashboard <AiOutlineArrowRight/></button></div>
     </div>
-    <div className="grid lg:grid-cols-3 grid-flow-row gap-8 mt-10 md:grid-cols-2 grid-cols-1  ">
-      <div className="relative col-span-1  h-[10rem] md:h-[23rem] w-[90%] hover:scale-x-110 hover:scale-y-105 transition-all mx-auto hover:drop-shadow-xl rounded-lg overflow-hidden duration-300 ease-in-out hover:z-10 bg-white" onClick={()=>(Nav('/CPD/Dashboard'))}>
+    <div className="grid lg:grid-cols-3 grid-flow-row gap-8 mt-10 md:grid-cols-2 grid-cols-1 h-auto ">
+      <div className="relative col-span-1  h-[5rem] md:h-[15rem] aspect-square hover:scale-x-110 hover:scale-y-105 transition-all mx-auto hover:drop-shadow-xl rounded-lg overflow-hidden duration-300 ease-in-out hover:z-10 bg-white" onClick={()=>(Nav('/CPD/Dashboard'))}>
         <div className="w-full h-full department bg-[#000066]/70 bg-opacity-60  blur-md">
 
         </div>
         <div className='w-full h-full bg-[#000066]/70 hover:bg-blue-400/70 transition-all duration-300 ease-in-out absolute top-0 text-white text-xl text-center  flex justify-center items-center p-4'><p className='w-full'> CONSUMER PROTECTION DEPARTMENT</p></div>
       </div>
 
-      <div className="relative col-span-1  h-[10rem] md:h-[23rem] w-[90%] hover:scale-x-110 hover:scale-y-105 transition-all hover:drop-shadow-xl rounded-lg overflow-hidden duration-300 ease-in-out bg-white mx-auto" onClick={()=>{Nav('/ATO/Home')}}>
+      <div className="relative col-span-1  h-[10rem] md:h-[15rem] aspect-square  hover:scale-x-110 hover:scale-y-105 transition-all hover:drop-shadow-xl rounded-lg overflow-hidden duration-300 ease-in-out bg-white mx-auto" onClick={()=>{Nav('/ATO/Home')}}>
         <div className="w-full h-full department bg-[#000066]/70 bg-opacity-60  blur-md">
 
         </div>
         <div className='w-full h-full bg-[#000066]/70 hover:bg-blue-400/70 transition-all duration-300 ease-in-out absolute top-0 text-white text-xl text-center  flex justify-center items-center p-4'><p className='w-full'> AIR TRANSPORT OPERATION DEPARTMENT</p></div>
       </div>
 
-      <div className="relative col-span-1  h-[10rem] md:h-[23rem] w-[90%] hover:scale-x-110 hover:scale-y-105 transition-all hover:drop-shadow-xl rounded-lg overflow-hidden duration-300 ease-in-out bg-white mx-auto">
+      <div className="relative col-span-1  h-[10rem] md:h-[15rem] aspect-square hover:scale-x-110 hover:scale-y-105 transition-all hover:drop-shadow-xl rounded-lg overflow-hidden duration-300 ease-in-out bg-white mx-auto">
         <div className="w-full h-full department bg-[#000066]/70 bg-opacity-60  blur-md">
 
         </div>
         <div className='w-full h-full bg-[#000066]/70 hover:bg-blue-400/70 transition-all duration-300 ease-in-out absolute top-0 text-white text-xl text-center  flex justify-center items-center p-4' onClick={()=>{Nav('/CAS/Dashboard')}}><p className='w-[80%]'> COMMERCIAL & STATISTICS DEPARTMENT</p></div>
       </div>
-      <div className="relative col-span-1  h-[10rem] md:h-[23rem] w-[90%] hover:scale-x-110 hover:scale-y-105 transition-all hover:drop-shadow-xl rounded-lg overflow-hidden duration-300 ease-in-out bg-white mx-auto">
+      <div className="relative col-span-1  h-[10rem] md:h-[15rem] aspect-square hover:scale-x-110 hover:scale-y-105 transition-all hover:drop-shadow-xl rounded-lg overflow-hidden duration-300 ease-in-out bg-white mx-auto">
         <div className="w-full h-full department bg-[#000066]/70 bg-opacity-60  blur-md">
 
         </div>
