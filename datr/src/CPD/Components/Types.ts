@@ -1,3 +1,5 @@
+import { type } from "os"
+
 export type  openTicket={
     id:string,
     complaint_type:string,
@@ -30,3 +32,61 @@ export  type GeneralTicket={
         status:"Pending"|"Unresolved"|"Resolved"|"",
         date:string
       }
+
+export type Message={
+  recipient:String,
+  complaint_type:String,
+  status:String,
+  time:String
+}
+
+export type TicketDistribution={
+  id:String,
+  cpoName:String,
+  assigned:String,
+  active:String,  
+  resolved:String,
+  escalated:String,
+  stressLevel:"High"|"Medium"|"Low"
+}
+
+export type SlaGeneral={
+  slaName:string,
+  resolutionTime:string,
+  responseTime:string
+}
+export type GeneralGroup={
+  groupName:string,
+  groupDescription:string,
+  members:string
+}
+
+export type GeneralTerminal={
+  id:string,
+  name:string
+}
+
+export type DelayedFlight={
+  id:string,
+  numberOfFlights:string,
+  delays:string,
+  delayL1:string,
+  delay1_2:string,
+  delayg2:string
+}
+export type cancelledFlight={
+  id:string,
+  cancelledFlights:string,
+  numberOfFlights:string
+}
+export type Report = {
+  fltNo: string;
+  route: string;
+  sta: string;
+  ata: string;
+  delay: string;
+  isDelayed: boolean;
+  isOnTime: boolean;
+  isCancelled: boolean;
+  type: 'in' | 'out'; // Assuming 'in' and 'out' are the possible values for the 'type' property
+};
