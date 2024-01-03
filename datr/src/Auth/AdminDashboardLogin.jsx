@@ -7,31 +7,31 @@ import { useNavigate } from "react-router";
 export const AdminDashboardLogin = () => {
   const Navigate=useNavigate()
   return (
-    <main className="lg:max-h-[100vh] overflow-hidden  overfloverflow-x-hidden max-w-[100vw] lg:overflow-y-hidden h-auto overflow-y-scroll text-center">
-      <section className="grid grid-cols-4 lg:h-[30vh] h-[25vh] max-w-full ">
+    <main className="md:max-h-[100vh] overflow-hidden  overfloverflow-x-hidden max-w-[100vw] md:overflow-y-hidden h-auto  text-center">
+      <section className="grid grid-cols-4 md:h-[30vh] h-[25vh] max-w-full ">
         <div className="logo-img col-span-1 ">
           <img
             src={logo}
             alt=""
-            className="absolute  opacity-30 lg:top-[-5%] lg:right-[77%] object-fit lg:w-[460px] lg:h-[460px] w-[250px] h-[250px] right-[80%] top-[-10%] "
+            className="absolute  opacity-30 md:top-[-5%] md:right-[77%] object-fit md:w-[460px] md:h-[460px] w-[250px] h-[250px] right-[80%] top-[-10%] "
           />
         </div>
-        <div className="lg:col-span-3 col-span-4  lg:mt-10">
-          <div className="flex w-full    items-center lg:justify-between justify-end gap-4 lg:gap-0">
+        <div className="md:col-span-3 col-span-4  md:mt-10">
+          <div className="flex w-full    items-center md:justify-between justify-end gap-4 md:gap-0">
             <img
               src={tlogo}
               alt=""
-              className="  object-contain lg:ml-52 lg:mt-12 lg:w-[300px] p-2 w-[200px] "
+              className="  object-contain md:ml-52 md:mt-12 md:w-[300px] p-2 w-[200px] "
             />
             <div className="flex flex-col gap-4 items-end justify-end">
               <button
-                className=" lg:w-36 lg:h-16 w-20 h-16 lg:hover:w-48 hover:w-24  transition-[1s] shadow-md  rounded-l-md rounded-tl-md bg-[#3968FF] hover:bg-[#FFF]  hover:text-[#3968FF]  text-white text-center"
+                className=" md:w-36 md:h-16 w-20 h-16 lg:hover:w-48 hover:w-24  transition-[1s] shadow-md  rounded-l-md rounded-tl-md bg-[#3968FF] hover:bg-[#FFF]  hover:text-[#3968FF]  text-white text-center"
                 onClick={() => Navigate("/Create-Account")}
               >
                 Create account
               </button>
 
-              <button className="lg:w-36 lg:h-16 w-20 h-16 shadow-md p-2 rounded-l-md hover:w-24 rounded-tl-md  lg:hover:w-48  transition-[1s] hover:bg-[#3968FF] text-[#3968FF] hover:text-white">
+              <button className="md:w-36 md:h-16 w-20 h-16 shadow-md p-2 rounded-l-md hover:w-24 rounded-tl-md  lg:hover:w-48  transition-[1s] hover:bg-[#3968FF] text-[#3968FF] hover:text-white">
                 Need Help?
               </button>
             </div>
@@ -45,7 +45,7 @@ export const AdminDashboardLogin = () => {
         <img
           src={logo}
           alt=""
-          className="lg:ml-[85vw] lg:h-[530px] lg:w-[530px] relative z-[1] -translate-y-[40%] ml-[60%]  object-contain lg:-translate-y-48  opacity-30"
+          className="md:ml-[85vw] md:h-[530px] md:w-[530px] relative z-[1] -translate-y-[40%] ml-[60%]  object-contain lg:-translate-y-48  opacity-30"
         />
       </div>
     </main>
