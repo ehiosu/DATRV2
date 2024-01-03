@@ -14,7 +14,7 @@ export const CreateAccount = () => {
           </p>
         </div>
 
-        <div className="lg:w-[60%] w-full h-full flex flex-col text-center mx-auto gap-2 p-2">
+        <div className="lg:w-[75%] w-full h-full flex flex-col text-center mx-auto gap-2 p-2">
           <p className=" lg:text-xl text-lg font-bold text-[#000066]">
             Register with us to start your application.
           </p>
@@ -213,11 +213,11 @@ export const CreateAccount = () => {
               <div className="flex gap-3 ">
                 <button
                   className="w-24 h-12 rounded-md bg-[#000066] text-white outline-none hover:bg-gray-200 hover:text-[#000066] transition-all hover:shadow-md "
-                  onClick={() => Navigate("/")}
+                  onClick={() => Navigate("/Home")}
                 >
                   Register
                 </button>
-                <button className="w-24 h-12 rounded-md text-black bg-gray-200 outline-none hover:bg-[#000066] hover:text-white">
+                <button className="w-24 h-12 rounded-md text-black bg-gray-200 outline-none hover:bg-[#000066] hover:text-white" type="button" onClick={() => Navigate("/")}>
                   Cancel
                 </button>
               </div>
