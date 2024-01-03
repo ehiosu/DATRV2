@@ -22,12 +22,12 @@ export const AuthForm = () => {
     }
   }
   return (
-    <section className="w-full h-full  lg:mt-0 mt-10 p-10 ">
+    <section className="w-full h-full  md:mt-0 mt-10 p-10 ">
       <div className="mx-auto">
         <p className="lg:text-2xl text-3xl">Welcome Back</p>
       </div>
-      <div className="flex lg:gap-4 gap-8  flex-1 h-full lg:flex-row flex-col mt-2">
-        <div className="flex-1  flex flex-col  justify-end p-2 lg:gap-4 gap-12">
+      <div className="flex md:gap-4 gap-8  flex-1 h-full md:flex-row flex-col mt-2   justify-center">
+        <div className="flex-1  flex flex-col  justify-center p-2 md:gap-4 gap-12">
           <p className=" font-[25px] ">Staff Only</p>
           <button className="lg:w-[80%] w-full mx-auto bg-[#FF007C] h-12 text-white rounded-md  flex justify-center gap-2 items-center shadow-md lg:p-0"   onClick={() => {
                 Navigate("/Home");
