@@ -3,7 +3,7 @@ import logo from '/NCAA.png'
 import oip from '/OIP.jpg'
 export const Header = () => {
   return (
-    <div className='h-[25vh] w-full flex justify-between items-center sm:flex-col sm:h-[35vh] sm:mb-4'>
+    <div className='md:h-[25vh] w-full flex justify-between items-center md:flex-row sm:flex-col sm:h-[35vh] sm:mb-4'>
         <img src={logo} alt="" className='w-60 h-full object-contain'/>
         <div className="flex flex-col h-full w-80 max-w-80 justify-center text-center text-[#000066] font-semibold  ">
             <p>Welcome</p>
