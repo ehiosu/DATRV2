@@ -4,11 +4,13 @@ import { BsThreeDots } from "react-icons/bs";
 import { MdAssignmentInd } from "react-icons/md";
 import { IoMdArrowDown } from "react-icons/io";
 import { FaRegEdit } from "react-icons/fa";
-import { useParams } from "react-router-dom";
+import { NavigateFunction, useNavigate, useParams } from "react-router-dom";
 import { CiCircleCheck } from "react-icons/ci";
 import { IoMdClose } from "react-icons/io";
 import {
+  Cell,
   ColumnDef,
+  Row,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -48,11 +50,27 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput } from "@/components/ui/command";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+} from "@/components/ui/command";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SelectArrow } from "@radix-ui/react-select";
 
-type ExtendedColumnDef<TData extends unknown, TValue = unknown> = ColumnDef<TData, TValue> & {
+type ExtendedColumnDef<TData extends unknown, TValue = unknown> = ColumnDef<
+  TData,
+  TValue
+> & {
   accesorKey?: string; // Add your custom property
 };
 
@@ -180,6 +198,7 @@ export const RecentTicketsTable = () => {
       data={data}
       hasAssignment={true}
       isDraft={false}
+      hasNav={false}
     />
   );
 };
@@ -286,39 +305,27 @@ export const GeneralTicketsTable = () => {
         columns={generalTicketColumnDefiniton}
         data={generalTicketData}
         hasAssignment={false}
+        hasNav={true}
       />
     </div>
   );
 };
-
+interface TicketTableProps<TData, Tvalue>
+  extends DataTableProps<TData, Tvalue> {
+  hasNav: boolean;
+}
 export function TicketsDataTable<TData, TValue>({
   columns,
   data,
   hasAssignment = false,
-}: DataTableProps<TData, TValue>) {
+  hasNav = false,
+}: TicketTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-  useEffect(() => {
-    const handleClose = (e: MouseEvent | null) => {
-      let nabbed = false;
-      cells.current.map((cell) => {
-        if (cell.contains(e?.target as Node)) {
-          nabbed = true;
-        }
-      });
-      if (!nabbed && !dropdownRef.current?.contains(e?.target as Node)) {
-        setSelectedCell(-1);
-      }
-    };
-    document.addEventListener("click", handleClose);
-    return () => {
-      document.removeEventListener("click", () => {});
-    };
-  }, []);
-
+  const nav = useNavigate();
   const [selectedCell, setSelectedCell] = useState(-1);
   const [cellTransform, setCellTransform] = useState({ right: 0, top: 0 });
   const cells = useRef<HTMLTableCellElement[]>([]);
@@ -392,6 +399,11 @@ export function TicketsDataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => {
+                    if (hasNav) {
+                      nav(`/CPD/Ticket/${row.original["id"]}`);
+                    }
+                  }}
                 >
                   {row
                     .getVisibleCells()
@@ -418,37 +430,44 @@ export function TicketsDataTable<TData, TValue>({
                       <Popover>
                         <PopoverTrigger
                           className="w-8 aspect-square rounded-full bg-darkBlue grid place-items-center text-white"
-                          
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
                         >
                           {" "}
                           <MdAssignmentInd />
                         </PopoverTrigger>
-                        <PopoverContent side="left" className="px-2 py-1 w-[20rem]">
-                          <Command className="p-0 m-0 min-h-60">
-                            <p className="text-[1.3rem] text-blue-300 mb-2">Assign Ticket</p>
-                            <CommandInput className="border-none ring-0 focus:border-none focus:ring-0 h-8 text-[0.8275rem] text-neutral-700" placeholder="Search for an agent... "/>
+                        <PopoverContent
+                          side="left"
+                          className="px-2 py-1 w-[14rem] md:w-[20rem]"
+                        >
+                          <Command className="p-0 m-0 min-h-52 md:min-h-60">
+                            <p className="text-[1.3rem] text-blue-300 mb-2">
+                              Assign Ticket
+                            </p>
+                            <CommandInput
+                              className="border-none ring-0 focus:border-none focus:ring-0 h-8 text-[0.8275rem] text-neutral-700"
+                              placeholder="Search for an agent... "
+                            />
                             <Select>
-                            <SelectTrigger className="w-full my-2 ring-0 focus:ring-0 "><SelectValue placeholder='Filter By Group...'/> </SelectTrigger>
-                            <SelectContent>
-                             <SelectGroup>
-                              <SelectLabel >
-                                User Groups
-                              </SelectLabel>
-                              <SelectItem value="usd">User Supervisory Department</SelectItem>
-                              <SelectItem value="none">None</SelectItem>
-
-                             </SelectGroup>
-                            </SelectContent>
-                          </Select>
+                              <SelectTrigger className="w-full my-2 ring-0 focus:ring-0 ">
+                                <SelectValue placeholder="Filter By Group..." />{" "}
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  <SelectLabel>User Groups</SelectLabel>
+                                  <SelectItem value="usd">
+                                    User Supervisory Department
+                                  </SelectItem>
+                                  <SelectItem value="none">None</SelectItem>
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
                             <CommandEmpty className="text-neutral-400 text-[0.8275rem] text-center m-auto">
                               Agent Doesn't exist...
                             </CommandEmpty>
-                            <CommandGroup>
-
-                            </CommandGroup>
+                            <CommandGroup></CommandGroup>
                           </Command>
-
-                         
                         </PopoverContent>
                       </Popover>
                     </TableCell>
@@ -697,6 +716,7 @@ export const OpenTicketsTable = () => {
         columns={openTicketColumnDefinition}
         isDraft={false}
         hasAssignment={true}
+        hasNav={true}
       />
     </div>
   );
@@ -717,13 +737,16 @@ const RegularTableCell = ({
       className={`text-center ${
         cell.column.columnDef.accesorKey === "groupName" && "font-semibold"
       } whitespace-nowrap ${
-        index === 0 && "sticky left-0 bg-white md:bg-transparent"
+        cell.column.columnDef.accesorKey == "complainant" ||
+        cell.column.columnDef.accesorKey == "slaName"
+          ? "sticky left-0 bg-white md:bg-transparent group-hover:bg-slate-400 peer-hover:bg-slate-400"
+          : ""
       }`}
     >
       {flexRender(
         cell.column.columnDef.accesorKey === "id"
           ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
-          : row.original[cell.column.columnDef.accesorKey]?.length
+          : row.original[cell.column.columnDef.accesorKey]?.length >0
           ? row.original[cell.column.columnDef.accesorKey]
           : "----",
         cell.getContext()
@@ -814,12 +837,12 @@ const FromTableCell = ({
         isDraft ? "flex-col justify-start t" : "flex-row  gap-2"
       }  ${
         !isDraft && cell.column.columnDef.header === "From"
-          ? "justify-start  pl-[30%]"
+          ? "md:justify-start   md:pl-[30%]"
           : "justify-center"
       }   items-center   `}
     >
       {cell.column.columnDef.header === "From" && (
-        <span className="block  w-5 rounded-full  bg-darkBlue  aspect-square  ">
+        <span className="block  min-w-5 rounded-full  bg-darkBlue  aspect-square  ">
           {" "}
         </span>
       )}
@@ -1044,6 +1067,7 @@ export const ResolvedTicketsTable = () => {
         data={resolvedTicketPlaceholderData}
         columns={ResolvedTicketColumnDefinition}
         hasAssignment={false}
+        hasNav={true}
       />
     </div>
   );
@@ -1226,40 +1250,42 @@ export const UnresolvedTicketsTable = () => {
         isDraft={false}
         columns={UnresolvedTicketsColumnDefinition}
         hasAssignment={true}
+        hasNav={true}
       />
     </div>
   );
 };
-const unassignedTicketColumnDefinition: ExtendedColumnDef<unassignedTicket>[] = [
-  {
-    accesorKey: "id",
-    header: "ID",
-  },
-  {
-    accesorKey: "complainant",
-    header: "Complainant",
-  },
-  {
-    accesorKey: "complaint_type",
-    header: "Complainant Type",
-  },
-  {
-    accesorKey: "cpo",
-    header: "CPO",
-  },
-  {
-    accesorKey: "group",
-    header: "Group",
-  },
-  {
-    accesorKey: "status",
-    header: "Status",
-  },
-  {
-    accesorKey: "date",
-    header: "Date due",
-  },
-];
+const unassignedTicketColumnDefinition: ExtendedColumnDef<unassignedTicket>[] =
+  [
+    {
+      accesorKey: "id",
+      header: "ID",
+    },
+    {
+      accesorKey: "complainant",
+      header: "Complainant",
+    },
+    {
+      accesorKey: "complaint_type",
+      header: "Complainant Type",
+    },
+    {
+      accesorKey: "cpo",
+      header: "CPO",
+    },
+    {
+      accesorKey: "group",
+      header: "Group",
+    },
+    {
+      accesorKey: "status",
+      header: "Status",
+    },
+    {
+      accesorKey: "date",
+      header: "Date due",
+    },
+  ];
 
 const unassignedTicketData: unassignedTicket[] = [
   {
@@ -1327,6 +1353,7 @@ export const UnassignedTicketsTable = () => {
         isDraft={false}
         columns={unassignedTicketColumnDefinition}
         hasAssignment={false}
+        hasNav={true}
       />
     </div>
   );
@@ -1477,16 +1504,23 @@ export const EscalatedTicketsTable = () => {
         isDraft={false}
         columns={UnresolvedTicketsColumnDefinition}
         hasAssignment={true}
+        hasNav={true}
       />
     </div>
   );
 };
 
+type MessageDataTablepProps<TData, TValue> = DataTableProps<TData, TValue> & {
+  section: string;
+  nav: (location: string) => void;
+};
 export function MessageDataTable<TData, TValue>({
   columns,
   data,
   isDraft = false,
-}: DataTableProps<TData, TValue>) {
+  section,
+  nav,
+}: MessageDataTablepProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
@@ -1507,7 +1541,7 @@ export function MessageDataTable<TData, TValue>({
                   >
                     {header.isPlaceholder ? null : header.column.columnDef
                         .header === "time" ? (
-                      <DropdownMenu >
+                      <DropdownMenu>
                         <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 ">
                           <p>Any Time</p>
                           <CiClock1 />
@@ -1531,10 +1565,17 @@ export function MessageDataTable<TData, TValue>({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row: any) => (
+            table.getRowModel().rows.map((row: any, index: number) => (
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                onClick={() => {
+                  nav(
+                    `${window.location.pathname}/${String(
+                      row.original["recipient"]
+                    ).replace(" ", "_")}`
+                  );
+                }}
               >
                 {row
                   .getVisibleCells()
@@ -1641,7 +1682,7 @@ const inboxMessageData: Message[] = [
   },
 ];
 
-export const InboxDataTable = () => {
+export const InboxDataTable = ({ nav }: { nav: () => void }) => {
   return (
     <div className="w-[100%]   max-h-[60vh]  overflow-y-auto">
       <MessageDataTable
@@ -1649,6 +1690,8 @@ export const InboxDataTable = () => {
         isDraft={false}
         data={inboxMessageData}
         hasAssignment={false}
+        section="inbox"
+        nav={nav}
       />
     </div>
   );
@@ -1691,7 +1734,7 @@ const DraftMessageColumnDefinition: ExtendedColumnDef<Message>[] = [
     accesorKey: "time",
   },
 ];
-export const OutboxDataTable = () => {
+export const OutboxDataTable = ({ nav }: { nav: () => void }) => {
   return (
     <div className="w-[100%] h-full    max-h-[60vh]  overflow-y-auto">
       <MessageDataTable
@@ -1699,12 +1742,14 @@ export const OutboxDataTable = () => {
         isDraft={false}
         data={inboxMessageData}
         hasAssignment={false}
+        section="sent"
+        nav={nav}
       />
     </div>
   );
 };
 
-export const DraftDataTable = () => {
+export const DraftDataTable = ({ nav }: { nav: () => void }) => {
   return (
     <div className="w-[100%] h-full    max-h-[60vh]  overflow-y-auto">
       <MessageDataTable
@@ -1712,45 +1757,53 @@ export const DraftDataTable = () => {
         hasAssignment={false}
         data={inboxMessageData}
         isDraft={true}
+        section="drafts"
+        nav={nav}
       />
     </div>
   );
 };
 
-const reportTicketDistributionColumnDef: ExtendedColumnDef<TicketDistribution>[] = [
-  {
-    header: "ID",
-    accesorKey: "id",
-  },
-  {
-    header: "CPO Name",
-    accesorKey: "cpoName",
-  },
-  {
-    header: "Assigned",
-    accesorKey: "assigned",
-  },
-  {
-    header: "Active",
-    accesorKey: "active",
-  },
-  {
-    header: "Resolved",
-    accesorKey: "resolved",
-  },
-  {
-    header: "Escalated",
-    accesorKey: "escalated",
-  },
-  {
-    header: "Stress Level",
-    accesorKey: "stressLevel",
-  },
-];
+const reportTicketDistributionColumnDef: ExtendedColumnDef<TicketDistribution>[] =
+  [
+    {
+      header: "ID",
+      accesorKey: "id",
+    },
+    {
+      header: "CPO Name",
+      accesorKey: "cpoName",
+    },
+    {
+      header: "Assigned",
+      accesorKey: "assigned",
+    },
+    {
+      header: "Active",
+      accesorKey: "active",
+    },
+    {
+      header: "Resolved",
+      accesorKey: "resolved",
+    },
+    {
+      header: "Escalated",
+      accesorKey: "escalated",
+    },
+    {
+      header: "Stress Level",
+      accesorKey: "stressLevel",
+    },
+  ];
+interface TicketsDistributionTableProps<TData, TValue>
+  extends DataTableProps<TData, TValue> {
+  nav: (id: string) => void;
+}
 export function TicketDistributionDataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
+  nav,
+}: TicketsDistributionTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
@@ -1800,7 +1853,12 @@ export function TicketDistributionDataTable<TData, TValue>({
                     )
                   )}
                 <TableCell>
-                  <button className="w-16 outline-none h-8 border-2 border-neutral-500 rounded-md hover:bg-black hover:text-white transition-colors duration-500">
+                  <button
+                    className="w-16 outline-none h-8 border-2 border-neutral-500 rounded-md hover:bg-black hover:text-white transition-colors duration-500"
+                    onClick={() => {
+                      nav(`/CPD/Tickets/CPO/${row.original["id"]}`);
+                    }}
+                  >
                     View
                   </button>
                 </TableCell>
@@ -1979,6 +2037,7 @@ const ticketDistributionData: TicketDistribution[] = [
 ];
 
 export const TicketDistributionTable = () => {
+  const navigate = useNavigate();
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[40vh]">
       <TicketDistributionDataTable
@@ -1986,6 +2045,7 @@ export const TicketDistributionTable = () => {
         hasAssignment={false}
         data={ticketDistributionData}
         columns={reportTicketDistributionColumnDef}
+        nav={navigate}
       />
     </div>
   );
@@ -2042,7 +2102,7 @@ export function SlADataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
+  const nav: NavigateFunction = useNavigate();
   return (
     <div className=" border bg-white shadow-md ">
       <Table>
@@ -2081,7 +2141,16 @@ export function SlADataTable<TData, TValue>({
 
                 <TableCell>
                   <span className="block w-24">
-                    <FaRegEdit className="text-[1.2rem] text-blue-400" />
+                    <FaRegEdit
+                      className="text-[1.2rem] text-blue-400 hover:cursor-pointer"
+                      onClick={() => {
+                        nav(
+                          `/CPD/Configuration/Sla/Edit/${row.original[
+                            "slaName"
+                          ].replace(" ", "_")}`
+                        );
+                      }}
+                    />
                   </span>
                 </TableCell>
               </TableRow>
@@ -2638,5 +2707,187 @@ export const ReportsTable: React.FC<reportProps> = ({ data }) => {
         columns={reportsColumnDef}
       />
     </div>
+  );
+};
+
+type cpo = {
+  name: string;
+  id: string;
+  email: string;
+};
+
+export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
+  {
+    accesorKey:"name",
+    header: "Name",
+  },
+  {
+    accesorKey:"id",
+    header: "ID",
+  },
+  {
+    accesorKey: "email",
+    header: "Email",
+  },
+];
+
+export function CpoViewTable<TData, TValue>({
+  columns,
+  data,
+}: DataTableProps<TData, TValue>) {
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+  const navTo = useNavigate();
+  return (
+    <div className="rounded-md border bg-white shadow-md  relative ">
+      <Table>
+        <TableHeader className="sticky top-0">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead key={header.id} className="text-center ">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
+              <TableHead className=""></TableHead>
+            </TableRow>
+          ))}
+        </TableHeader>
+
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row: Row<TData>) => (
+            <TableRow
+              key={row.id}
+              data-state={row.getIsSelected() && "selected"}
+            >
+              {row
+                .getVisibleCells()
+                .map((cell: Cell<TData, unknown>, index: number) => (
+                <RegularTableCellCPO cell={cell} navto={navTo} row={row}/>
+                ))}
+
+              <TableCell>
+                <span className="w-20 ">
+                  <BsThreeDots/>
+                </span>
+              </TableCell>
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={columns.length} className="h-24 text-center">
+              No results.
+            </TableCell>
+          </TableRow>
+        )}
+      </Table>
+    </div>
+  );
+}
+export const cpoViewPlaceholderData: cpo[] = [
+  {
+    name: "Adamu Musa",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Mahmud Malami",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Amir Amosu",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Bashir Salubi",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Chike Johnson",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Chijoke Adewale",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Charles Davies",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Semako Samuel",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Adebola Adewale",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+  {
+    name: "Southy Soul",
+    id: "#7894392",
+    email: "example@ncaacpd.com",
+  },
+];
+
+const RegularTableCellCPO = ({
+  cell,
+  row,
+  navto,
+}: {
+  cell: any;
+  row: any;
+  navto: (id: string) => void;
+}) => {
+  return cell.column.columnDef.accesorKey === "name" ? (
+    <TableCell
+      key={cell.id}
+      onClick={() =>{if(cell.column.columnDef.accesorKey==="name"){ navto(`/CPD/Tickets/CPO/${row.original["name"]}`)}}}
+      className={`${
+        cell.column.columnDef.accesorKey === "name"
+          && "text-center whitespace-nowrap hover:text-blue-300 hover:cursor-pointer"
+          
+      } text-center`}
+    >
+      {flexRender(
+        cell.column.columnDef.accesorKey === "id"
+          ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
+          : row.original[cell.column.columnDef.accesorKey].toString(),
+        cell.getContext()
+      )}
+    </TableCell>
+  ) : (
+    <TableCell
+      key={cell.id}
+      className={`${
+        cell.column.columnDef.accesorKey === "name"
+          ? "text-start"
+          : "text-center"
+      } whitespace-nowrap`}
+    >
+      {flexRender(
+        cell.column.columnDef.accesorKey === "id"
+          ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
+          : row.original[cell.column.columnDef.accesorKey],
+        cell.getContext()
+      )}
+    </TableCell>
   );
 };
