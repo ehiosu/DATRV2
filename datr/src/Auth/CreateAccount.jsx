@@ -2,6 +2,13 @@ import React from "react";
 import { AiFillStar, AiOutlineArrowDown } from "react-icons/ai";
 import { useNavigate } from "react-router";
 import Logo from "/NCAA.png";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 export const CreateAccount = () => {
   const Navigate = useNavigate();
   return (
@@ -29,27 +36,20 @@ export const CreateAccount = () => {
               <span className="h-[4px] lg:w-[45%] w-[40%] bg-gray-200/50 "></span>
             </div>
 
-            <div className="flex justify-between w-full lg:gap-0 gap-4   flex-wrap">
-              <div className="flex lg:gap-4 gap-1 items-center">
-                <p className="text-[#000066] font-semibold w-max  sm:w-full ">Title</p>
-                <div className="relative">
-                  <button
-                    type="button"
-                    className="outline-none border-2 dropdownbtn border-gray-200 bg-white flex justify-center gap-2 p-2 items-center w-16 h-8 rounded-md"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    Mr <AiOutlineArrowDown />
-                  </button>
-                  <div className="absolute dropdown h-auto w-40 rounded-md border-2 border-gray-200 shadow-md bg-white p-2">
-                    <ul className="space-y-3">
-                      <li>Mr</li>
-                      <li>Mrs</li>
-                      <li>Miss</li>
-                    </ul>
-                  </div>
-                </div>
+            <div className="flex items-center md:justify-between  flex-wrap">
+              <div className="flex justify-start  lg:gap-4 gap-1 items-center my-2">
+                <p className="text-[#000066] font-semibold ">Title</p>
+                <Select>
+                  <SelectTrigger className="bg-white dark:bg-white w-40 px-2  h-7 dark:focus:ring-offset-transparent dark:ring-offset-transparent">
+                    <SelectValue placeholder="Select Gender" />
+                    <SelectContent>
+                      <SelectItem value="m">Mr</SelectItem>
+                      <SelectItem value="f">Mrs</SelectItem>
+                    </SelectContent>
+                  </SelectTrigger>
+                </Select>
               </div>
-              <div className="flex lg:gap-2 gap-2  w-full">
+              <div className="flex lg:gap-2 gap-2   md:ml-auto ">
                 <p className="text-[#000066] font-semibold flex items-center whitespace-nowrap lg:gap-2 gap-0 h-10">
                   First Name <AiFillStar className="text-red-600" />
                 </p>
@@ -57,7 +57,7 @@ export const CreateAccount = () => {
                   type="text"
                   name=""
                   id=""
-                  className="lg:w-72 w-full h-8 p-2 border-b-4 border-gray-200 outline-none text-sm"
+                  className="lg:w-72   w-full h-8 p-2 border-b-4 border-gray-200 outline-none text-sm"
                   required
                 />
               </div>
@@ -91,27 +91,22 @@ export const CreateAccount = () => {
             </div>
 
             {/* third-layer */}
-            <div className="flex  w-full my-3 gap-x-2">
-              <div className="flex lg:gap-4   items-center  gap-2 flex-wrap w-full  ">
+            <div className="flex   my-3 gap-x-2 flex-wrap">
+              <div className="flex lg:gap-4   items-center  gap-2 flex-wrap   ">
                 <p className="text-[#000066] font-semibold flex items-center lg:gap-2 h-10 justify-start  my-2">
                   Proof of Identity <AiFillStar className="text-red-600" />
                 </p>
-                <div className="relative  w-full">
-                  <button
-                    type="button"
-                    className="outline-none border-2 dropdownbtn border-gray-200 bg-white flex justify-center gap-2 p-2 items-center w-full md:w-auto h-8 rounded-md  "
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    Passport Number <AiOutlineArrowDown />
-                  </button>
-                  <div className="absolute dropdown h-auto w-40 rounded-md border-2 border-gray-200 shadow-md bg-white p-2 my-2">
-                    <ul className="space-y-3">
-                      <li>Passport Number</li>
-                      <li>NIN</li>
-                      <li>Driver's License</li>
-                    </ul>
-                  </div>
-                </div>
+                <Select>
+                  <SelectTrigger className="bg-white dark:bg-white   h-7 dark:focus:ring-offset-transparent dark:ring-offset-transparent w-max px-4">
+                    <SelectValue placeholder="Means of Identification" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="p">Passport Number</SelectItem>
+                    <SelectItem value="n">
+                      National Identification Number (NIN)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -217,7 +212,11 @@ export const CreateAccount = () => {
                 >
                   Register
                 </button>
-                <button className="w-24 h-12 rounded-md text-black bg-gray-200 outline-none hover:bg-[#000066] hover:text-white" type="button" onClick={() => Navigate("/")}>
+                <button
+                  className="w-24 h-12 rounded-md text-black bg-gray-200 outline-none hover:bg-[#000066] hover:text-white"
+                  type="button"
+                  onClick={() => Navigate("/")}
+                >
                   Cancel
                 </button>
               </div>
