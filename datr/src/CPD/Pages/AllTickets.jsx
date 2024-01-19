@@ -14,14 +14,14 @@ export const AllTickets = () => {
   return (
     <section className="w-full">
       <SearchPage heading={"All Tickets"}>
-        <div className="w-full  flex-wrap   flex justify-between md:gap-0 gap-2">
+        <div className="w-full  flex-wrap   flex justify-between md:gap-0 ">
           <div className="flex    gap-4   items-center">
             <ViewChangeBtn />
             <button className="w-44 bg-darkBlue rounded-md  text-white  h-10">
               New Application
             </button>
           </div>
-          <div className="md:ml-auto flex    gap-3">
+          <div className="md:ml-auto flex    gap-3  flex-wrap md:my-0 my-2">
             <FilterButton />
             <RangeSelectButton />
           </div>
@@ -70,7 +70,7 @@ const FilterButton = () => {
 const RangeSelectButton = () => {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="border-darkBlue    border-2 flex justify-center items-center  w-56   text-[0.8275rem]  outline-none h-10    rounded-md  shadow-md  gap-3   font-semibold   ">
+      <DropdownMenuTrigger className="border-darkBlue    border-2 flex justify-center items-center  w-60 md:w-56   text-[0.8275rem]  outline-none h-10    rounded-md  shadow-md  gap-3   font-semibold   ">
         Showing Last 90 days of Data <AiOutlineArrowDown />
       </DropdownMenuTrigger>
       <DropdownMenuContent className=" bg-white w-28   rounded-md     z-50 my-2"></DropdownMenuContent>
