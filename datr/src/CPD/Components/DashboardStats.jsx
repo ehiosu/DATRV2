@@ -2,6 +2,7 @@ import React from "react";
 import { statData } from "../data/data";
 import { PiWarningCircle } from "react-icons/pi";
 import ReactApexChart from "react-apexcharts";
+import { cn } from "../../lib/utils";
 const colors = ["#00CCF2", "#FF007C"];
 export const DashboardStats = () => {
   return (
@@ -13,12 +14,19 @@ export const DashboardStats = () => {
   );
 };
 
-export const StatCard = ({ figure, title }) => {
+export const StatCard = ({ figure, title, className }) => {
   return (
-    <div className="w-40 aspect-square  rounded-lg   flex    flex-col    items-center bg-white   shadow-md p-2      ">
+    <div
+      className={cn(
+        "md:w-40 w-32 aspect-square  rounded-lg   flex    flex-col    items-center bg-white   shadow-md p-2      ",
+        className
+      )}
+    >
       <PiWarningCircle className="ml-auto  text-[0.8rem]   hover:cursor-pointer" />
-      <p className="mt-auto  text-[1.6rem]  font-semibold ">{figure}</p>
-      <p className="font-thin  text-neutral-600 mb-auto text-[0.8275rem] text-center">
+      <p className="mt-auto text-[1.2rem]  md:text-[1.6rem]  font-semibold ">
+        {figure}
+      </p>
+      <p className="font-thin  text-neutral-600 mb-auto text-[0.75rem] md:text-[0.8275rem] text-center">
         {title}
       </p>
       <p className="text-xs  text-blue-400   hover:underline underline-offset-2">{`{total}`}</p>
@@ -77,9 +85,10 @@ export const TicketStatistics = () => {
     tooltip: {
       custom: function ({ series, seriesIndex, dataPointIndex, w }) {
         const colors = ["#00CCF2", "#FF007C"];
-        console.log(seriesIndex, w.globals.colors[seriesIndex]);
+        // TODO:fix hover tooltip
+        // console.log(w.config.colors[seriesIndex]);
         const dataName = w.globals.seriesNames[seriesIndex];
-        return `<div class=" w-36   text-center  h-8 p-1   aspect-square  text-white  bg-[#00CCF2]" ><p className='w-max  h-max  '>${dataName}: ${series[seriesIndex][dataPointIndex]}</p></div>`;
+        return `<div class="w-36 text-center h-8 p-1 aspect-square text-white bg-[\`${w.config.colors[seriesIndex]}\`]" ><p className='w-max h-max'>${dataName}: ${series[seriesIndex][dataPointIndex]}</p></div>`;
       },
     },
   };
