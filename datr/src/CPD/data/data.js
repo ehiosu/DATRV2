@@ -369,3 +369,25 @@ export const expandedReport=[
   
 
 ]
+
+export const cpoViewStats=[
+  {
+    figure:"10",
+    title:"New Conversations"
+  },
+  {
+    figure:"78",
+    title:"Total Resolutions"
+  },
+  {
+    figure:"40",
+    title:"Avg Conversations/Day"
+  },
+  {
+    figure:"10",
+    title:"Avg Resolutions/Day"
+  },{
+    figure:"10",
+    title:"Avg Customers Helped/Day"
+  }
+]
