@@ -13,11 +13,11 @@ export const CPOView = () => {
       <SearchPage heading={"User Groups"}>
         <BreadCrumb3
           data={[
-            { title: "User Groups", index: 0, link: `/CPD/user_groups` },
+            { title: "User Groups", index: 0, link: `/CPD/all_groups` },
             {
               title: "Customer Support",
               index: 1,
-              link: "/CPD/user_groups/customer_support",
+              link: "/CPD/user_groups?group=customer_support",
             },
             { title: "User Preview", index: 2 },
           ]}
@@ -200,7 +200,7 @@ export const BreadCrumb3 = ({ data }) => {
       ref={containerRef}
       animate={{ width: containerWidth }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="flex w-60   px-4 py-2 items-center text-[0.9275rem] h-12 bg-white rounded-md shadow-md font-semibold border-b-[2px] border-b-neutral-200"
+      className="flex w-60 max-w-full  px-4 py-2 items-center text-xs md:whitespace-nowrap whitespace-pre-wrap  md:text-[0.9275rem] h-12 bg-white rounded-md shadow-md font-semibold border-b-[2px] border-b-neutral-200"
     >
       <BsThreeDots
         className="mr-2 w-10 mt-1 hover:cursor-pointer"
@@ -246,7 +246,7 @@ const NewBreadCrumbItem = React.forwardRef(
         </motion.p>
         {!lastIndex && (
           <span
-            className="text-[1.1rem] font-bold mx-3 hover:cursor-pointer hover:text-red-500 hover:animate-pulse"
+            className="md:text-[1.1rem] text-[0.85rem] font-bold md:mx-3 mx-1 hover:cursor-pointer hover:text-red-500 hover:animate-pulse"
             onClick={setHidden}
           >
             {">"}
