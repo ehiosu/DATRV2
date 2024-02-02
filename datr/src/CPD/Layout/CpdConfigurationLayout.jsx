@@ -6,7 +6,7 @@ export const CpdConfigurationLayout = () => {
   //   const { location } = useParams();
   //   if (!location) return redirect("/CPD/Dashboard");
   return (
-    <section className="w-full">
+    <section className="w-full min-h-screen overflow-y-hidden">
       <SearchPage heading={"Configuration"}>
         <>
           <div className="w-max px-3 border-b-2 border-neutral-200 flex items-center gap-3">
