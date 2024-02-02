@@ -5,16 +5,18 @@ import { ReportOverview } from "../Components/ReportOverview";
 import { ReportTickets } from "../Components/ReportTickets";
 import { ResolutionTime } from "../Components/ResolutionTime";
 import { Conversations } from "../Components/Conversations";
+import useWindowSize from "../Sidebar/Hooks/useWindowSize";
 
 export const ReportsPage = () => {
   const tabRefs = useRef([]);
+  const { screenSize } = useWindowSize();
   const [tabTransform, setTabTransofrm] = useState({
     left: -15,
     width: "70px",
   });
   const handleReposition = (index = 0) => {
     const element = tabRefs.current[index];
-    const left = element.offsetLeft - 15;
+    const left = element.offsetLeft - (screenSize == "small" ? 8 : 15);
     const width = element.clientWidth;
     setTabTransofrm((transform) => ({ left, width }));
   };
@@ -25,12 +27,12 @@ export const ReportsPage = () => {
     <section className="w-full ">
       <SearchPage heading={"Reports"}>
         <Tabs defaultValue="overview">
-          <TabsList className="space-x-4    relative h-10 ">
+          <TabsList className="md:space-x-4 space-x-2 md:px-0     relative h-10 w-full outline">
             <TabsTrigger
               ref={(el) => tabRefs.current.push(el)}
               onClick={() => handleReposition(0)}
               value="overview"
-              className="inline p-1 text-[0.8275rem]"
+              className="inline  p-1 text-[0.8275rem]"
             >
               Overview
             </TabsTrigger>
