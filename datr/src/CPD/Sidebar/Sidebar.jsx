@@ -36,8 +36,8 @@ const MidSizedSidebar = () => {
   const nav = useNavigate();
   return (
     <aside
-      className={`md:block hidden h-[97vh] ${
-        open ? "w-[14vw]" : "w-12"
+      className={`md:block hidden max-h-[97vh] h-[97vh] overflow-y-auto sticky top-[1.5vh] ${
+        open ? "md:w-[22vw] lg:w-[14vw]" : "w-12"
       } transition-all mx-2 my-2 bg-white rounded-md shadow-md`}
     >
       {!open && (
@@ -55,7 +55,7 @@ const MidSizedSidebar = () => {
       )}
 
       {open && (
-        <div className="flex flex-col justify-center p-3">
+        <div className="flex flex-col justify-center p-3 max-h-full overflow-y-auto">
           <AiOutlineClose
             onClick={() => {
               setOpen(close);
@@ -74,7 +74,7 @@ const SmallSideBar = () => {
   const nav = useNavigate();
   return (
     <Sheet>
-      <SheetTrigger className="absolute top-10 z-10 left-3 w-8 aspect-square grid place-items-center bg-white shadow-md md:hidden ">
+      <SheetTrigger className="fixed top-10 z-10 left-3 w-8  aspect-square grid place-items-center bg-white shadow-md md:hidden  ">
         <RxHamburgerMenu />
       </SheetTrigger>
       <SheetContent className="flex flex-col">
@@ -135,7 +135,7 @@ const SidebarItem = ({ Name, Icon, SubMenu, open, to, nav }) => {
         </span>
       )}
       {open && (
-        <div className="flex items-center justify-between flex-1 p-2">
+        <div className="flex items-center justify-between flex-1 p-2 ">
           <div className="flex flex-col text-black">
             <p className="text-[0.8275rem]">{Name}</p>
           </div>
