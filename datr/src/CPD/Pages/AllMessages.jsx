@@ -14,16 +14,33 @@ import {
   OutboxDataTable,
 } from "../Components/DataTable";
 import { redirect, useNavigate, useParams } from "react-router";
+import { useQuery } from "../Sidebar/Hooks/useQuery";
 
 export const AllMessages = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const query = useQuery();
+  const location = query.get("location");
+  const [activeIndex, setActiveIndex] = useState(() => {
+    console.log(location);
+    switch (location) {
+      case "inbox":
+        return 0;
+      case "sent":
+        return 1;
+      case "drafts":
+        return 2;
+      default:
+        return 0;
+    }
+  });
   const { section } = useParams();
   const nav = useNavigate();
   if (!section) {
     redirect("/CPD/Dashboard");
   }
+
   useEffect(() => {
-    switch (section) {
+    console.log("re render");
+    switch (location) {
       case "inbox":
         setActiveIndex(0);
         break;
@@ -37,7 +54,7 @@ export const AllMessages = () => {
         console.log("wrong");
         nav("/CPD/Dashboard");
     }
-  }, [section]);
+  }, [location]);
   return (
     <section className="w-full   ">
       <SearchPage heading={"All Messages"}>
@@ -60,7 +77,9 @@ export const AllMessages = () => {
                 ? "bg-darkBlue text-white"
                 : "bg-white text-darkBlue"
             }   transition-colors duration-700`}
-            onClick={() => setActiveIndex(0)}
+            onClick={() =>
+              nav(`/CPD/Messages?location=inbox`, { replace: true })
+            }
           >
             Inbox
           </button>
@@ -70,7 +89,9 @@ export const AllMessages = () => {
                 ? "bg-darkBlue text-white"
                 : "bg-white text-darkBlue"
             }   transition-colors duration-700`}
-            onClick={() => setActiveIndex(1)}
+            onClick={() =>
+              nav(`/CPD/Messages?location=sent`, { replace: true })
+            }
           >
             Sent Items
           </button>
@@ -80,7 +101,9 @@ export const AllMessages = () => {
                 ? "bg-darkBlue text-white"
                 : "bg-white text-darkBlue"
             }   transition-colors duration-700`}
-            onClick={() => setActiveIndex(2)}
+            onClick={() =>
+              nav(`/CPD/Messages?location=drafts`, { replace: true })
+            }
           >
             Drafts
           </button>
