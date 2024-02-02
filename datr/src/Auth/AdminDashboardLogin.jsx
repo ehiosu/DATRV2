@@ -5,7 +5,7 @@ import { AuthForm } from "./Components/AuthForm";
 import { useNavigate } from "react-router";
 
 export const AdminDashboardLogin = () => {
-  const Navigate=useNavigate()
+  const Navigate = useNavigate();
   return (
     <main className="md:max-h-[100vh] overflow-hidden  overfloverflow-x-hidden max-w-[100vw] md:overflow-y-hidden h-auto  text-center">
       <section className="grid grid-cols-4 md:h-[30vh] h-[25vh] max-w-full ">
@@ -17,13 +17,13 @@ export const AdminDashboardLogin = () => {
           />
         </div>
         <div className="md:col-span-3 col-span-4  md:mt-10">
-          <div className="flex w-full    items-center md:justify-between justify-end gap-4 md:gap-0">
+          <div className="flex w-full    items-center md:justify-between justify-center gap-4 md:gap-0">
             <img
               src={tlogo}
               alt=""
-              className="  object-contain md:ml-52 md:mt-12 md:w-[300px] p-2 w-[200px] "
+              className="  object-contain ml-auto md:ml-52 md:mt-12 md:w-[300px] p-2 w-[200px] "
             />
-            <div className="flex flex-col gap-4 items-end justify-end">
+            <div className="flex flex-col gap-4 items-end justify-end md:ml-0 ml-auto">
               <button
                 className=" md:w-36 md:h-16 w-20 h-16 lg:hover:w-48 hover:w-24  transition-[1s] shadow-md  rounded-l-md rounded-tl-md bg-[#3968FF] hover:bg-[#FFF]  hover:text-[#3968FF]  text-white text-center"
                 onClick={() => Navigate("/Create-Account")}
@@ -38,7 +38,7 @@ export const AdminDashboardLogin = () => {
           </div>
         </div>
       </section>
-      <div className="lg:w-[80vw] w-full mx-auto lg:h-[45vh] h-auto">
+      <div className="lg:w-[80vw] w-full mx-auto lg:h-[45vh] h-auto p-2">
         <AuthForm />
       </div>
       <div className="h-0 lg:h-auto">
