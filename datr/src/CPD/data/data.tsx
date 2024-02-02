@@ -171,3 +171,9 @@ export const StatusTypeEntries:statusType[]=[
     state:false
   }
 ]
+
+type groupConfigRight={
+   read:boolean,
+   write:boolean,
+   
+}
