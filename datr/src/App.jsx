@@ -32,87 +32,106 @@ import { TicketsConfiguration } from "./CPD/Pages/TicketsConfiguration";
 import { UserGroupConfiguration } from "./CPD/Pages/UserGroupConfiguration";
 import { ConversationConfiguration } from "./CPD/Pages/ConversationConfiguration";
 import { GroupView } from "./CPD/Pages/GroupView";
+import ViewType from "./CPD/context/viewTypeContext.tsx";
+import { AllUserGroups } from "./CPD/Pages/AllUserGroups.jsx";
+import ResetPassword from "./CPD/Pages/ResetPassword.tsx";
+import ForgotPassword from "./CPD/Pages/ForgotPassword.tsx";
 function App() {
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<AdminDashboardLogin />} />
-          <Route path="/Create-Account" element={<CreateAccount />} />
-          <Route path="/Home" element={<Home />} />
-          <Route element={<CPDLayout />}>
-            <Route path="/CPD/Dashboard" element={<Dashboard />} />
-            <Route path="/CPD/Tickets/All" element={<AllTickets />} />
-            <Route path="/CPD/Tickets/Open" element={<OpenTickets />} />
-            <Route path="/CPD/Tickets/Resolved" element={<ResolvedTickets />} />
-            <Route
-              path="/CPD/Tickets/Unresolved"
-              element={<UnresolvedTickets />}
-            />
-            <Route path="/CPD/Ticket/:id" element={<TicketPage />} />
-            <Route
-              path="/CPD/Tickets/Unassigned"
-              element={<UnassignedTickets />}
-            />
-            <Route
-              path="/CPD/Tickets/Escalated"
-              element={<EscalatedTickets />}
-            />
-            <Route path="/CPD/Messages/:section" element={<AllMessages />} />
-            <Route
-              path="/CPD/Messages/:section/:id"
-              element={<MessaggeComponent />}
-            />
-            <Route path="/CPD/Tickets/CPO/:agent" element={<CPOView />} />
+      <ViewType.Provider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<AdminDashboardLogin />} />
+            <Route path="/Create-Account" element={<CreateAccount />} />
+            <Route path="/Home" element={<Home />} />
+            <Route path="/Reset-Password" element={<ResetPassword />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            <Route path="/CPD/Reports" element={<ReportsPage />} />
-            {/* <Route path="/CPD/Configuration" element={<Configuration />} /> */}
-            <Route path="/CPD/user_groups/:group" element={<GroupView />} />
-            <Route
-              element={<CpdConfigurationLayout />}
-              path="/CPD/Configuration"
-            >
+            <Route element={<CPDLayout />}>
+              <Route path="/CPD/Dashboard" element={<Dashboard />} />
+              <Route path="/CPD/Tickets/All" element={<AllTickets />} />
+              <Route path="/CPD/Tickets/Open" element={<OpenTickets />} />
               <Route
-                element={<GeneralConfigurations />}
-                path="/CPD/Configuration/General"
+                path="/CPD/Tickets/Resolved"
+                element={<ResolvedTickets />}
               />
               <Route
-                element={<SlaConfiguration />}
-                path="/CPD/Configuration/Sla"
+                path="/CPD/Tickets/Unresolved"
+                element={<UnresolvedTickets />}
               />
-              <Route element={<NewSla />} path="/CPD/Configuration/Sla/New" />
+              <Route path="/CPD/Ticket/:id" element={<TicketPage />} />
               <Route
-                element={<TicketsConfiguration />}
-                path="/CPD/Configuration/Tickets"
-              />
-              <Route
-                element={<UserGroupConfiguration />}
-                path="/CPD/Configuration/Groups"
+                path="/CPD/Tickets/Unassigned"
+                element={<UnassignedTickets />}
               />
               <Route
-                element={<ConversationConfiguration />}
-                path="/CPD/Configuration/Conversations"
+                path="/CPD/Tickets/Escalated"
+                element={<EscalatedTickets />}
               />
+              <Route path="/CPD/Messages" element={<AllMessages />} />
               <Route
-                element={<EditSLA />}
-                path="/CPD/Configuration/Sla/Edit/:section"
+                path="/CPD/Messages/:section/:id"
+                element={<MessaggeComponent />}
               />
+              <Route path="/CPD/Tickets/CPO/:agent" element={<CPOView />} />
+
+              <Route path="/CPD/Reports" element={<ReportsPage />} />
+              {/* <Route path="/CPD/Configuration" element={<Configuration />} /> */}
+              <Route path="/CPD/user_groups/" element={<GroupView />} />
+
+              <Route path="/CPD/Reports" element={<ReportsPage />} />
+              {/* <Route path="/CPD/Configuration" element={<Configuration />} /> */}
+              <Route path="/CPD/all_groups" element={<AllUserGroups />} />
+              <Route
+                element={<CpdConfigurationLayout />}
+                path="/CPD/Configuration"
+              >
+                <Route
+                  element={<GeneralConfigurations />}
+                  path="/CPD/Configuration/General"
+                />
+                <Route
+                  element={<SlaConfiguration />}
+                  path="/CPD/Configuration/Sla"
+                />
+                <Route element={<NewSla />} path="/CPD/Configuration/Sla/New" />
+                <Route
+                  element={<TicketsConfiguration />}
+                  path="/CPD/Configuration/Tickets"
+                />
+                <Route
+                  element={<UserGroupConfiguration />}
+                  path="/CPD/Configuration/Groups"
+                />
+                <Route
+                  element={<ConversationConfiguration />}
+                  path="/CPD/Configuration/Conversations"
+                />
+                <Route
+                  element={<EditSLA />}
+                  path="/CPD/Configuration/Sla/Edit/:section"
+                />
+              </Route>
+              <Route path="/CPD/New-Ticket" element={<NewTicket />} />
+              <Route path="/CPD/DAS" element={<DataAndStatisticsHome />} />
             </Route>
-            <Route path="/CPD/New-Ticket" element={<NewTicket />} />
-            <Route path="/CPD/DAS" element={<DataAndStatisticsHome />} />
-          </Route>
-          <Route element={<DASLayout />}>
-            <Route path="/Das/:Location/Dashboard" element={<DASDashboard />} />
-            <Route path="/Das/:Location/Delays" element={<Delays />} />
-            <Route
-              path="/Das/:Location/Cancelled"
-              element={<CancelledFlights />}
-            />
-            <Route path="/Das/:Location/Report/:id" element={<Reports />} />
-            <Route path="/Das/:Location/New" element={<CreateEntry />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            <Route element={<DASLayout />}>
+              <Route
+                path="/Das/:Location/Dashboard"
+                element={<DASDashboard />}
+              />
+              <Route path="/Das/:Location/Delays" element={<Delays />} />
+              <Route
+                path="/Das/:Location/Cancelled"
+                element={<CancelledFlights />}
+              />
+              <Route path="/Das/:Location/Report/:id" element={<Reports />} />
+              <Route path="/Das/:Location/New" element={<CreateEntry />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ViewType.Provider>
     </>
   );
 }
