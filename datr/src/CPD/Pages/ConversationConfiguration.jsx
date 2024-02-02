@@ -25,7 +25,7 @@ export const ConversationConfiguration = () => {
           </p>
         </div>
         <Select className="outline-none">
-          <SelectTrigger className="w-48 h-7 outline-none my-1 bg-white rounded-md  dark:bg-white bg-white rounded-md outline-0 focus:ring-0 focus:outline-none focus-within:ring-0 focus-within:outline-none focus:border-0 focus-within:border-0">
+          <SelectTrigger className="w-48 h-7 outline-none my-1 dark:bg-white bg-white rounded-md outline-0 focus:ring-0 focus:outline-none focus-within:ring-0 focus-within:outline-none focus:border-0 focus-within:border-0">
             <SelectValue
               placeholder="Closed Tickets Only"
               className="text-neutral-500"
