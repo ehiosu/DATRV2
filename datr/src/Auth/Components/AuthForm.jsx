@@ -22,16 +22,19 @@ export const AuthForm = () => {
     }
   }
   return (
-    <section className="w-full h-full  md:mt-0 mt-10 p-10 ">
+    <section className="w-full h-full  md:mt-0 mt-10 p-10  ">
       <div className="mx-auto">
         <p className="lg:text-2xl text-3xl">Welcome Back</p>
       </div>
       <div className="flex md:gap-4 gap-8  flex-1 h-full md:flex-row flex-col mt-2   justify-center">
         <div className="flex-1  flex flex-col  justify-center p-2 md:gap-4 gap-12">
           <p className=" font-[25px] ">Staff Only</p>
-          <button className="lg:w-[80%] w-full mx-auto bg-[#FF007C] h-12 text-white rounded-md  flex justify-center gap-2 items-center shadow-md lg:p-0"   onClick={() => {
-                Navigate("/Home");
-              }}>
+          <button
+            className="lg:w-[80%] w-full mx-auto bg-[#FF007C] h-12 text-white rounded-md  flex justify-center gap-2 items-center shadow-md lg:p-0"
+            onClick={() => {
+              Navigate("/Home");
+            }}
+          >
             <span>Company Single Sign-On</span>{" "}
             <CiLogin className=" w-8 h-8 rounded-full p-1 hover:w-10 hover:h-10 text-sm hover:text-sm hover:p-2 hover:shadow-sm transition-[1s] bg-[#FFF] text-[#FF007C] hover:text-black " />{" "}
           </button>
@@ -75,14 +78,23 @@ export const AuthForm = () => {
             />
 
             <button
+              onClick={() => {
+                Navigate("/Reset-password");
+              }}
               className={`w-full bg-[#000066] ${
                 emailError ? "mt-4" : "mt-6"
               }  text-white h-12 rounded-md`}
-             
             >
               Sign in
             </button>
-            <p className="mx-auto mt-8 text-[#000066]">Forgot Password</p>
+            <p
+              className="mx-auto mt-8 text-[#000066] hover:cursor-pointer hover:border-b-2 hover:border-b-darkBlue hover:py-2 transition-all"
+              onClick={() => {
+                Navigate("/forgot-password");
+              }}
+            >
+              Forgot Password
+            </p>
           </div>
         </div>
       </div>
