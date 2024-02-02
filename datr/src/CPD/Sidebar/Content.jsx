@@ -29,11 +29,11 @@ export const content = [
     Name: "Messages",
     Icon: <BiMessageSquareDetail />,
     SubMenu: [
-      { Name: "Inbox", Info: 4, to: "/CPD/Messages" },
-      { Name: "Sent Items", Info: 0, to: "/Messages/Sent" },
-      { Name: "Draft", Info: 0, to: "/Messages/Drafts" },
+      { Name: "Inbox", Info: 4, to: "/CPD/Messages?location=inbox" },
+      { Name: "Sent Items", Info: 0, to: "/CPD/Messages?location=sent" },
+      { Name: "Draft", Info: 0, to: "/CPD/Messages?location=drafts" },
     ],
-    to: "/CPD/Messages",
+    to: "/CPD/Messages?location=inbox",
   },
   {
     Name: "Reports",
@@ -45,7 +45,7 @@ export const content = [
     Name: "Configuration",
     Icon: <FiSettings />,
     SubMenu: [],
-    to: "/CPD/Configuration",
+    to: "/CPD/Configuration/General",
   },
   {
     Name: "Help",
