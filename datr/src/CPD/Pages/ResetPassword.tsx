@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 const ResetPassword = () => {
     const nav = useNavigate()
   return (
-    <main className="w-full h-screen grid place-items-center relative">
+    <main className="w-full h-screen grid place-items-center relative overflow-hidden">
       <div className="lg:w-[35%] xl:w-[30%] md:w-[45%] w-[80%] h-[80%] p-2 bg-white shadow-md rounded-lg border-2 border-neutral-200 flex flex-col pt-2 pb-8">
         <img
           src={logo}
