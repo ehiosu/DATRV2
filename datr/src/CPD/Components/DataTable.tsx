@@ -141,7 +141,7 @@ export function DataTable<TData, TValue>({
                         ? row.original[
                             cell.column.columnDef.accesorKey
                           ].toString() // Convert ID to string
-                        : cell.column.columnDef.accessorKey === "Assign"
+                        : cell.column.columnDef.accesorKey === "Assign"
                         ? cell.column.columnDef.cell({ row })
                         : row.original[cell.column.columnDef.accesorKey],
                       cell.getContext()
@@ -439,7 +439,8 @@ export function TicketsDataTable<TData, TValue>({
                         </PopoverTrigger>
                         <PopoverContent
                           side="left"
-                          className="px-2 py-1 w-[14rem] md:w-[20rem]"
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-2 py-1 w-[14rem] md:w-[20rem] z-[5]"
                         >
                           <Command className="p-0 m-0 min-h-52 md:min-h-60">
                             <p className="text-[1.3rem] text-blue-300 mb-2">
@@ -746,7 +747,7 @@ const RegularTableCell = ({
       {flexRender(
         cell.column.columnDef.accesorKey === "id"
           ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
-          : row.original[cell.column.columnDef.accesorKey]?.length >0
+          : row.original[cell.column.columnDef.accesorKey]?.length > 0
           ? row.original[cell.column.columnDef.accesorKey]
           : "----",
         cell.getContext()
@@ -2092,11 +2093,19 @@ const slaGeneralPlaceholderData: SlaGeneral[] = [
     responseTime: "7days 0hrs 50 minutes",
   },
 ];
+interface slaTableProps<TData, TValue> extends DataTableProps<TData, TValue> {
+  navUrl: string;
+  navRegion: string;
+  hasEdit: boolean;
+}
 export function SlADataTable<TData, TValue>({
   columns,
   data,
   isDraft = false,
-}: DataTableProps<TData, TValue>) {
+  navUrl = "",
+  navRegion = "",
+  hasEdit = false,
+}: slaTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
@@ -2124,7 +2133,9 @@ export function SlADataTable<TData, TValue>({
                   </TableHead>
                 );
               })}
-              <TableHead className="w-20 bg-neutral-100"></TableHead>
+             {
+              hasEdit && <TableHead className="w-20 bg-neutral-100"></TableHead>
+             }
             </TableRow>
           ))}
         </TableHeader>
@@ -2139,20 +2150,113 @@ export function SlADataTable<TData, TValue>({
                   <RegularTableCell cell={cell} index={index} row={row} />
                 ))}
 
-                <TableCell>
-                  <span className="block w-24">
-                    <FaRegEdit
-                      className="text-[1.2rem] text-blue-400 hover:cursor-pointer"
-                      onClick={() => {
-                        nav(
-                          `/CPD/Configuration/Sla/Edit/${row.original[
-                            "slaName"
-                          ].replace(" ", "_")}`
-                        );
-                      }}
-                    />
-                  </span>
-                </TableCell>
+                {hasEdit && (
+                  <TableCell>
+                    <span className="block w-24">
+                      <FaRegEdit
+                        className="text-[1.2rem] text-blue-400 hover:cursor-pointer"
+                        onClick={() => {
+                          nav(
+                            `${navUrl}${row.original[navRegion].replaceAll(
+                              " ",
+                              "_"
+                            )}`
+                          );
+                        }}
+                      />
+                    </span>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+
+export function GroupConfigDT<TData, TValue>({
+  columns,
+  data,
+  isDraft = false,
+  navUrl = "",
+  navRegion = "",
+  hasEdit = false,
+}: slaTableProps<TData, TValue>) {
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+  const nav: NavigateFunction = useNavigate();
+  return (
+    <div className=" border bg-white shadow-md ">
+      <Table>
+        <TableHeader className="sticky top-0">
+          {table.getHeaderGroups().map((headerGroup: any) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header: any) => {
+                return (
+                  <TableHead
+                    key={header.id}
+                    className="text-center h-12 bg-neutral-100 "
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
+             {
+              hasEdit && <TableHead className="w-20 bg-neutral-100"></TableHead>
+             }
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row: any) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell: any, index: number) => {
+                return  cell.column.columnDef.accesorKey === "groupName"?<TableCell className="hover:text-blue-400 hover:cursor-pointer  text-center" onClick={()=>{nav(`/CPD/user_groups/?group=${row.original["groupName"].replaceAll(" ","_")}`,{replace:true})}}>
+                    {
+                      flexRender(row.original[cell.column.columnDef.accesorKey].toString(),cell.getContext())
+                    }
+                  </TableCell>:
+                  <RegularTableCell cell={cell} index={index} row={row} />
+})}
+
+                {hasEdit && (
+                  <TableCell>
+                    <span className="block w-24">
+                      <FaRegEdit
+                        className="text-[1.2rem] text-blue-400 hover:cursor-pointer"
+                        onClick={() => {
+                          nav(
+                            `${navUrl}${row.original[navRegion].replaceAll(
+                              " ",
+                              "_"
+                            )}`
+                          );
+                        }}
+                      />
+                    </span>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           ) : (
@@ -2176,6 +2280,9 @@ export const GeneralSlaDataTable = () => {
         hasAssignment={false}
         columns={slaGeneralColumnDef}
         data={slaGeneralPlaceholderData}
+        navUrl="/CPD/Configuration/Sla/Edit/"
+        navRegion="slaName"
+        hasEdit={true}
       />
     </div>
   );
@@ -2218,14 +2325,17 @@ const generalGroupPlaceholderData: GeneralGroup[] = [
     members: "400",
   },
 ];
-export const GeneralGroupTable = () => {
+export const  GeneralGroupTable = () => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
-      <SlADataTable
+      <GroupConfigDT
         hasAssignment={false}
         isDraft={false}
         columns={generalGroupColumnDef}
         data={generalGroupPlaceholderData}
+        navRegion="groupName"
+        navUrl="/CPD/Configuration/Groups/"
+        hasEdit={false}
       />
     </div>
   );
@@ -2718,11 +2828,11 @@ type cpo = {
 
 export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
   {
-    accesorKey:"name",
+    accesorKey: "name",
     header: "Name",
   },
   {
-    accesorKey:"id",
+    accesorKey: "id",
     header: "ID",
   },
   {
@@ -2773,12 +2883,12 @@ export function CpoViewTable<TData, TValue>({
               {row
                 .getVisibleCells()
                 .map((cell: Cell<TData, unknown>, index: number) => (
-                <RegularTableCellCPO cell={cell} navto={navTo} row={row}/>
+                  <RegularTableCellCPO cell={cell} navto={navTo} row={row} />
                 ))}
 
               <TableCell>
                 <span className="w-20 ">
-                  <BsThreeDots/>
+                  <BsThreeDots />
                 </span>
               </TableCell>
             </TableRow>
@@ -2859,11 +2969,14 @@ const RegularTableCellCPO = ({
   return cell.column.columnDef.accesorKey === "name" ? (
     <TableCell
       key={cell.id}
-      onClick={() =>{if(cell.column.columnDef.accesorKey==="name"){ navto(`/CPD/Tickets/CPO/${row.original["name"]}`)}}}
+      onClick={() => {
+        if (cell.column.columnDef.accesorKey === "name") {
+          navto(`/CPD/Tickets/CPO/${row.original["name"]}`);
+        }
+      }}
       className={`${
-        cell.column.columnDef.accesorKey === "name"
-          && "text-center whitespace-nowrap hover:text-blue-300 hover:cursor-pointer"
-          
+        cell.column.columnDef.accesorKey === "name" &&
+        "text-center whitespace-nowrap hover:text-blue-300 hover:cursor-pointer"
       } text-center`}
     >
       {flexRender(
