@@ -9,13 +9,27 @@ import React, { useState } from "react";
 import { CiBookmarkCheck } from "react-icons/ci";
 import { CiBellOn } from "react-icons/ci";
 import { CiTrash } from "react-icons/ci";
-export const SearchPage = ({ children, heading }) => {
+import { useNavigate } from "react-router";
+import { Button } from "../components/ui/button";
+export const SearchPage = ({ children, heading, isRedirect = false }) => {
   const [searching, setSearching] = useState(false);
+  const nav = useNavigate();
   return (
     <div className="w-full   flex    flex-col   gap-2  p-2">
       <div className="flex flex-wrap  justify-start md:justify-between items-center w-full ">
-        <p className="text-[1.2rem]  font-semibold">{heading}</p>
-        <div className="flex items-center gap-2 text-[1.2rem] font-extrabold mx-auto">
+        <p
+          className={`text-[1.2rem] ${
+            isRedirect && "hover:cursor-pointer"
+          }  font-semibold`}
+          onClick={() => {
+            if (isRedirect) {
+              nav(-1);
+            }
+          }}
+        >
+          {heading}
+        </p>
+        <div className="flex items-center mt-2 gap-2 text-[1.2rem] font-extrabold mx-auto">
           <CiBookmarkCheck className="hover:text-blue-700" />
           <CiBellOn />
           <CiTrash className="hover:text-red-700  " />
@@ -54,10 +68,11 @@ export const SearchPage = ({ children, heading }) => {
 };
 
 const UserHeader = ({ searching }) => {
+  const nav = useNavigate();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={`outline-none ${searching ? "hidden" : "block"} `}
+        className={`outline-none ${searching ? "hidden" : "block"} ml-auto`}
       >
         <Avatar className="w-8  aspect-square rounded-full  border-2  border-gray-400/40  grid  place-items-center">
           <AvatarFallback>PU</AvatarFallback>
@@ -67,7 +82,12 @@ const UserHeader = ({ searching }) => {
         <DropdownMenuItem className="outline-none h-8 grid  place-items-center">
           <p>Account Settings</p>
         </DropdownMenuItem>
-        <DropdownMenuItem className="outline-none h-8 grid  place-items-center">
+        <DropdownMenuItem
+          className="outline-none h-8 grid  place-items-center cursor-pointer hover:border-b-2 hover:border-b-purple-300 rounded-md"
+          onClick={() => {
+            nav("/");
+          }}
+        >
           <p>Sign Out</p>
         </DropdownMenuItem>
       </DropdownMenuContent>
