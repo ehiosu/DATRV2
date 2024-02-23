@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Header } from "./Components/Header";
 import { AiOutlineArrowRight } from "react-icons/ai";
-import { useNavigate } from "react-router";
+import { Navigate, redirect, useNavigate } from "react-router";
 import audio from "/1.mp3";
+import { useAuth } from "../api/useAuth";
+import { useAuthStore } from "../store/AuthStore";
 
 export const Home = () => {
-  const Nav = useNavigate();
+  const nav = useNavigate();
+  const Nav = (to) => {
+    if (user.roles.includes("USER")) {
+      return;
+    } else {
+      nav(to);
+    }
+  };
+  // const { access } = useAuth();
+  const { access, user } = useAuth();
+  if (!access) return <Navigate to={"/"} />;
 
   useEffect(() => {
     const onMouseMove = () => {
