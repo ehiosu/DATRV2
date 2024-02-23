@@ -35,7 +35,7 @@ import { GroupView } from "./CPD/Pages/GroupView";
 import ViewType from "./CPD/context/viewTypeContext.tsx";
 import { AllUserGroups } from "./CPD/Pages/AllUserGroups.jsx";
 import ResetPassword from "./CPD/Pages/ResetPassword.tsx";
-import ForgotPassword from "./CPD/Pages/ForgotPassword.tsx";
+import ForgotPassword from "./CPD/Pages/ForgotPassword.jsx";
 function App() {
   return (
     <>
