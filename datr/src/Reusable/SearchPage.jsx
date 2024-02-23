@@ -11,8 +11,10 @@ import { CiBellOn } from "react-icons/ci";
 import { CiTrash } from "react-icons/ci";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
+import { useAuth } from "../api/useAuth";
 export const SearchPage = ({ children, heading, isRedirect = false }) => {
   const [searching, setSearching] = useState(false);
+
   const nav = useNavigate();
   return (
     <div className="w-full   flex    flex-col   gap-2  p-2">
@@ -68,6 +70,7 @@ export const SearchPage = ({ children, heading, isRedirect = false }) => {
 };
 
 const UserHeader = ({ searching }) => {
+  const { user, generalUpdate } = useAuth();
   const nav = useNavigate();
   return (
     <DropdownMenu>
@@ -75,16 +78,21 @@ const UserHeader = ({ searching }) => {
         className={`outline-none ${searching ? "hidden" : "block"} ml-auto`}
       >
         <Avatar className="w-8  aspect-square rounded-full  border-2  border-gray-400/40  grid  place-items-center">
-          <AvatarFallback>PU</AvatarFallback>
+          <AvatarFallback>{user.firstName[0]}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-40 outline-none bg-neutral-100 p-2 rounded-md shadow-md  z-[10]  text-[0.8275rem] text-center   ">
+      <DropdownMenuContent className="w-40 outline-none bg-white p-2 rounded-md shadow-md  z-[10]  text-[0.8275rem] text-center   ">
         <DropdownMenuItem className="outline-none h-8 grid  place-items-center">
           <p>Account Settings</p>
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="outline-none h-8 grid  place-items-center cursor-pointer hover:border-b-2 hover:border-b-purple-300 rounded-md"
+          className="outline-none h-8 grid  place-items-center cursor-pointer hover:border-b-2 hover:bg-blue-300 hover:font-semibold hover:text-white hover:border-b-purple-300 rounded-md"
           onClick={() => {
+            generalUpdate({
+              access_token: "",
+              refresh_token: "",
+              user: { id: "", email: "", firstName: "", roles: [] },
+            });
             nav("/");
           }}
         >
