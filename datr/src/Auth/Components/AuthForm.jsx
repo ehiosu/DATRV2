@@ -1,28 +1,87 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
 import { CiLogin } from "react-icons/ci";
-import { AiOutlineCheck } from "react-icons/ai";
 import { useNavigate } from "react-router";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../../components/ui/form";
+import { useToast } from "../../components/ui/use-toast";
+import { Input } from "../../components/ui/input";
+import { useAuth } from "../../api/useAuth";
+import { useAxiosClient } from "../../api/useAxiosClient";
 export const AuthForm = () => {
-  const [emailError, setemailError] = useState("");
+  const { generalUpdate, access } = useAuth();
+  const { axios } = useAxiosClient();
+  const { toast } = useToast();
   const Navigate = useNavigate();
-  const [email, setemail] = useState("");
-  const emailinput = useRef(null);
-  function updateinput(e) {
-    if (e.target.name == "Email") {
-      if (e.target.validity.valid && e.target.value.length > 0) {
-        setemailError("Email looks good!");
-      } else {
-        setemailError("Enter a valid Email.");
-      }
-      if (e.target.value.length == 0) {
-        setemailError("");
-        document.getElementsByClassName("check").style.color = "red";
-      }
-      setemail(e.target.value);
+  const LoginSchema = z.object({
+    email: z
+      .string()
+      .min(3, { message: "Enter a Valid Email" })
+      .email("This is not a valid email")
+      .default(""),
+    password: z
+      .string()
+      .min(1, { message: "Please type in a valid password" })
+      .default(""),
+  });
+
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    resolver: zodResolver(LoginSchema),
+  });
+
+  const tryLogin = async (values) => {
+    if (!values.email || !values.password) {
+      throw new Error("Ensure both fields are filled");
     }
-  }
+    try {
+      const resp = await axios("/users/login", {
+        method: "Post",
+        data: values,
+      });
+      if (resp) {
+        const { access_token, refresh_token, data } = resp.data;
+        console.log(access_token);
+        generalUpdate({ access_token, refresh_token, user: data });
+        console.log(access);
+        // updateTokens({ access: access_token, refresh: refresh_token });
+        // updateUser(data);
+
+        setTimeout(() => {
+          Navigate("/Home");
+        }, 500);
+      }
+    } catch (err) {
+      if ((err.message = "Request failed with status code 401")) {
+        toast({
+          title: "Error Logging in",
+          description: "Invalid username or password",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error Logging in",
+          description: err.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
-    <section className="w-full h-full  md:mt-0 mt-10 p-10  ">
+    <section className="w-full h-full   md:p-2 p-6 mt-4 ">
       <div className="mx-auto">
         <p className="lg:text-2xl text-3xl">Welcome Back</p>
       </div>
@@ -47,53 +106,63 @@ export const AuthForm = () => {
         </div>
         <div className="flex-1  w-full">
           <div className="lg:w-[80%] w-full  flex flex-col lg:justify-start lg:items-start gap-2 justify-center items-start lg:mx-0 mx-auto">
-            <label htmlFor="Email" className="text-blue-800">
-              Email
-            </label>
-            <div className="w-full relative">
-              <input
-                type="email"
-                ref={emailinput}
-                onChange={(e) => updateinput(e)}
-                name="Email"
-                id="Email"
-                placeholder="abc@gmail.com"
-                className="border-2 border-opacity-40 rounded-md  customInput w-full h-10 p-2 "
-              />
-              <AiOutlineCheck className="absolute top-3 left-[88%] check " />
-            </div>
+            <Form {...form}>
+              <form
+                className="w-full text-start space-y-4"
+                onSubmit={form.handleSubmit(tryLogin)}
+              >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Email"
+                          className="dark:bg-white dark:focus:bg-neutral-200 dark:border-2 dark:border-neutral-500 transition-colors"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>Enter your Email here.</FormDescription>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Password"
+                          className="dark:bg-white dark:focus:bg-neutral-200 dark:border-2 dark:border-neutral-500 transition-colors"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Ensure to keep your password a secret!
+                      </FormDescription>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
 
-            <p className={`${emailError ? "" : "mt-2"} text-blue-800`}>
-              {emailError}
-            </p>
-            <label htmlFor="Password" className="text-blue-800 ">
-              Password
-            </label>
-            <input
-              type="password"
-              name="Password"
-              id="Password"
-              className="w-full h-10 p-2 border-2 border-opacity-40 rounded-md"
-              placeholder="password"
-            />
-
-            <button
-              onClick={() => {
-                Navigate("/Reset-password");
-              }}
-              className={`w-full bg-[#000066] ${
-                emailError ? "mt-4" : "mt-6"
-              }  text-white h-12 rounded-md`}
-            >
-              Sign in
-            </button>
+                <button className="w-full h-10 flex items-center justify-center bg-lightPink rounded-lg text-white">
+                  Login
+                </button>
+              </form>
+            </Form>
             <p
-              className="mx-auto mt-8 text-[#000066] hover:cursor-pointer hover:border-b-2 hover:border-b-darkBlue hover:py-2 transition-all"
               onClick={() => {
                 Navigate("/forgot-password");
               }}
+              className="text-[0.75rem] text-darkBlue font-semibold mx-auto my-4 cursor-pointer"
             >
-              Forgot Password
+              Forgot password
             </p>
           </div>
         </div>
