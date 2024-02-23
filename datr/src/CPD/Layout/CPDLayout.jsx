@@ -1,7 +1,11 @@
 import React from "react";
 import { Sidebar } from "../Sidebar/Sidebar";
-import { Outlet } from "react-router";
+import { Outlet, Navigate } from "react-router";
+import { AxiosClient } from "../../api/useAxiosClient";
+import { useAuth } from "../../api/useAuth";
 export const CPDLayout = () => {
+  const { access, user } = useAuth();
+  if (!access || user.roles.includes("USER")) return <Navigate to={"/"} />;
   return (
     <main className="flex w-full bg-my-gray max-w-screen-2xl overflow-y-hidden">
       <Sidebar />
