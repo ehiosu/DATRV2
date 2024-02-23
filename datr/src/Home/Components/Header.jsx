@@ -1,7 +1,9 @@
 import React from "react";
 import logo from "/NCAA.png";
 import oip from "/OIP.jpg";
+import { useAuth } from "../../api/useAuth";
 export const Header = () => {
+  const { user } = useAuth();
   return (
     <div className="md:h-[15vh] w-full flex justify-center md:justify-between items-center md:flex-row flex-col h-[30vh]  md:gap-0 gap-2 ">
       <img
@@ -9,9 +11,9 @@ export const Header = () => {
         alt=""
         className="md:w-52 w-36 md:h-full object-contain"
       />
-      <div className="flex flex-col md:h-full md:w-80 max-w-80 justify-center text-center text-[#000066] font-semibold  ">
+      <div className="flex flex-col md:h-full md:w-80 flex-1  justify-center text-center text-[#000066] font-semibold  items-center ">
         <p>Welcome</p>
-        <p className="text-2xl ">Capt. Musa Shuaibu Nuhu</p>
+        <p className="text-2xl ">{user.firstName}</p>
       </div>
       <div className="flex items-center gap-4">
         <input
