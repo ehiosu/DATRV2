@@ -8,7 +8,7 @@ export const AdminDashboardLogin = () => {
   const Navigate = useNavigate();
   return (
     <main className="md:max-h-[100vh] overflow-hidden  overfloverflow-x-hidden max-w-[100vw] md:overflow-y-hidden h-auto  text-center">
-      <section className="grid grid-cols-4 md:h-[30vh] h-[25vh] max-w-full ">
+      <section className="grid grid-cols-4 lg:h-[25vh] max-w-full ">
         <div className="logo-img col-span-1 ">
           <img
             src={logo}
@@ -45,7 +45,7 @@ export const AdminDashboardLogin = () => {
         <img
           src={logo}
           alt=""
-          className="md:ml-[85vw] md:h-[530px] md:w-[530px] relative z-[1] -translate-y-[40%] ml-[60%]  object-contain lg:-translate-y-48  opacity-30"
+          className="md:ml-[85vw] md:h-[530px] md:w-[530px] relative z-[-1] -translate-y-[40%] ml-[60%]  object-contain lg:-translate-y-48  opacity-30"
         />
       </div>
     </main>
