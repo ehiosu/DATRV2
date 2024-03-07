@@ -1,5 +1,4 @@
 import { createContext, useContext } from "react";
-
 const AxiosClientContext = createContext({
   axios: null,
   updateTokens: null,
@@ -9,11 +8,12 @@ const AxiosClientContext = createContext({
 import React from "react";
 import { useAuth } from "./useAuth";
 import createAxiosClient from "./axios";
-
+import axios from "axios";
 export const AxiosClient = ({ children }) => {
   const { refresh, access, updateTokens, updateUser } = useAuth();
   const getNewToken = () => {
-    return fetch("/users/refresh/token", {
+    return axios("http://localhost:8080/api/users/refresh/token", {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${refresh}`,
       },
