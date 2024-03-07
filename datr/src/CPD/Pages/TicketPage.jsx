@@ -40,6 +40,14 @@ import { TipTapEditor } from "../Components/TipTapEditor";
 export const TicketPage = () => {
   const { id } = useParams();
   if (!id) return redirect("/CPD/Dashboard");
+  const { axios } = useAxiosClient();
+  const ticketQuery = useQuery({
+    queryKey: ["tickets", `${id}`],
+    queryFn: () =>
+      axios(`tickets/${id}`, {
+        method: "Get",
+      }).then((resp) => resp.data),
+  });
   const btnStyles = {
     Pending: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
     Unresolved: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
@@ -51,106 +59,84 @@ export const TicketPage = () => {
 
   return (
     <section className="w-full max-h-screen overflow-y-auto">
-      <SearchPage isRedirect={true} heading={"Back"}>
-        <div className="flex md:gap-0 gap-3 justify-between items-center flex-wrap flex-1 ">
-          <div className="flex flex-col">
-            <div className="flex  gap-2 items-center ">
-              <p className="text-[1.4rem] font-semibold text-darkBlue">
-                Missing Baggage
-              </p>
-              <span
-                className={`block w-max px-3 text-[0.7275rem] rounded-md ${btnStyles.Pending}`}
-              >
-                Pending
-              </span>
+      {ticketQuery.isSuccess && (
+        <SearchPage isRedirect={true} heading={"Back"}>
+          <div className="flex md:gap-0 gap-3 justify-between items-center flex-wrap flex-1 ">
+            <div className="flex flex-col">
+              <div className="flex  gap-2 items-center ">
+                <p className="text-[1.4rem] font-semibold text-darkBlue">
+                  {ticketQuery.data.complainantType}
+                </p>
+                <span
+                  className={`block w-max px-3 text-[0.7275rem] rounded-md ${btnStyles.Pending}`}
+                >
+                  Pending
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-[0.8275rem]">
+                <p className="font-semibold">{ticketQuery.data.priority}</p>
+                <p className="text-darkBlue font-semibold">Ticket ID: {id}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-[0.8275rem]">
-              <p className="font-semibold">High Priority</p>
-              <p className="text-darkBlue font-semibold">Ticket ID: {id}</p>
+            <div className="flex items-center gap-2">
+              {ticketQuery.data.assignerName && (
+                <>
+                  <span className=" h-8 grid place-items-center aspect-square rounded-full bg-darkBlue text-white">
+                    {ticketQuery.data.assignerName?.substring(0, 1)}
+                  </span>
+                  <p className="text-[0.8275rem] text-darkBlue font-semibold">
+                    {ticketQuery.data.assignerName}
+                  </p>
+                </>
+              )}
+              <ActionsComponent />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className=" h-8 grid place-items-center aspect-square rounded-full bg-darkBlue text-white">
-              K
-            </span>
-            <p className="text-[0.8275rem] text-darkBlue font-semibold">
-              Kunmi Samuel
-            </p>
-            <ActionsComponent />
-          </div>
-        </div>
-        <div className="flex mt-3 ">
-          <div className="flex-[2.5] border-r-2 border-t-2 p-2 h-[70vh] max-w-full relative">
-            <div className=" border-neutral-200 flex flex-col px-5 py-2 gap-3  h-[45vh] overflow-y-auto relative">
-              <SignleTicketMessage
-                name={"DG"}
-                username={"DG Office"}
-                priority={"High Priority"}
-                date={"10 oct,2023"}
-                message={
-                  "Hi Support, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-                }
-                complaintDetails={{
-                  requestType: "Missing Items",
-                  complainantName: "Balogun Sadiq",
-                  complainantEmail: "bsadiq@gmail.com",
-                  complainantPhone: "08123456789",
-                  location: "Lagos",
-                  zone: "Zone",
-                  rating: 3,
-                  attachments: [],
-                }}
-              />
-              <SignleTicketMessage
-                name={"DG"}
-                username={"DG Office"}
-                priority={"High Priority"}
-                date={"10 oct,2023"}
-                message={
-                  "Hi Support, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-                }
-              />
-              <SignleTicketMessage
-                name={"DG"}
-                username={"DG Office"}
-                priority={"High Priority"}
-                date={"10 oct,2023"}
-                message={
-                  "Hi Support, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-                }
-              />
-              <SignleTicketMessage
-                name={"DG"}
-                username={"DG Office"}
-                priority={"High Priority"}
-                date={"10 oct,2023"}
-                message={
-                  "Hi Support, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-                }
-              />
-              <SignleTicketMessage
-                name={"DG"}
-                username={"DG Office"}
-                priority={"High Priority"}
-                date={"10 oct,2023"}
-                message={
-                  "Hi Support, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-                }
-              />
-              <SignleTicketMessage
-                name={"DG"}
-                username={"DG Office"}
-                priority={"High Priority"}
-                date={"10 oct,2023"}
-                message={`Hi Support, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                Hi Support, Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`}
-              />
+          <div className="flex mt-3 ">
+            <div className="flex-[2.5] border-r-2 border-t-2 p-2 h-[70vh] max-w-full relative">
+              <div className=" border-neutral-200 flex flex-col px-5 py-2 gap-3  h-[45vh] overflow-y-auto relative">
+                <SignleTicketMessage
+                  name={"DG"}
+                  username={"DG Office"}
+                  priority={"High Priority"}
+                  date={format(
+                    new Date(ticketQuery.data.dateTimeCreated),
+                    "dd, MMMM yyyy"
+                  )}
+                  message={""}
+                  complaintDetails={[
+                    {
+                      title: "Request Type",
+                      data: ticketQuery.data.complainantType,
+                    },
+                    {
+                      title: "Complainant Name",
+                      data: ticketQuery.data.complainantName,
+                    },
+                    {
+                      title: "Complainant Email",
+                      data: ticketQuery.data.complainantEmail,
+                    },
+                    {
+                      title: "Complainant Phone",
+                      data: ticketQuery.data.complainantPhoneNo,
+                    },
+                    { title: "Location", data: ticketQuery.data.route },
+                    { title: "Zone", data: ticketQuery.data.location },
+                    { title: "Rating", data: "3" },
+                    {
+                      title: "Attachments",
+                      data: ticketQuery.data.attachment.attachmentUrl,
+                    },
+                  ]}
+                />
+              </div>
+              <TipTapEditor />
             </div>
-            <TipTapEditor />
+            <LeftPanel />
           </div>
-          <LeftPanel />
-        </div>
-      </SearchPage>
+        </SearchPage>
+      )}
     </section>
   );
 };
@@ -357,7 +343,31 @@ const LeftPanel = () => {
 };
 import { CgDetailsMore } from "react-icons/cg";
 import { MdHistory } from "react-icons/md";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAxiosClient } from "../../api/useAxiosClient";
+import { format } from "date-fns";
+import { toast } from "../../components/ui/use-toast";
 const DetailsSubAction = () => {
+  const { id } = useParams();
+  const client = useQueryClient();
+
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+
+  const detailsInfo = {
+    ticketId: ticketData.id,
+    status: ticketData.ticketStatus,
+    life_cycle: "24 Hours",
+    consumer_protection_officer: ticketData.creatorName,
+    tasks: "0",
+    reminders: "0",
+    Approval_Status: "Not Approved",
+    Attachments: ticketData.attachment.attachmentUrl.length,
+    Responded_Date: format(new Date(ticketData.dateTimeModified), "dd/MM/yyyy"),
+    Due_By: format(new Date(ticketData.dateTimeTicketAssigned), "dd/MM/yyyy"),
+    Working_Timer: "4h:30M:20S",
+    Assigner: ticketData.assigneeName,
+  };
+
   return (
     <Popover>
       <PopoverTrigger>
@@ -369,8 +379,8 @@ const DetailsSubAction = () => {
       <PopoverContent side="left" className="w-[35vw] h-[60vh] px-4">
         <p className="text-[1.3rem] font-semibold ">Details</p>
         <div className=" w-full grid grid-cols-3 grid-rows-4 gap-y-3 h-[90%]">
-          {Object.keys(detailsData).map((key, index) => {
-            return <DetailCellManager cellKey={key} value={detailsData[key]} />;
+          {Object.keys(detailsInfo).map((key, index) => {
+            return <DetailCellManager cellKey={key} value={detailsInfo[key]} />;
           })}
         </div>
       </PopoverContent>
@@ -380,6 +390,44 @@ const DetailsSubAction = () => {
 
 const DetailCellManager = ({ cellKey, value }) => {
   const { id } = useParams();
+  const { axios } = useAxiosClient();
+  const client = useQueryClient();
+  const statusesQuery = useQuery({
+    queryKey: ["Tickets", "statuses"],
+    queryFn: () =>
+      axios("tickets/statuses", {
+        method: "GET",
+      }).then((resp) => {
+        console.log(resp.data);
+        return resp.data;
+      }),
+    staleTime: Infinity,
+  });
+  const changeStatusMutation = useMutation({
+    mutationKey: ["statusChange"],
+    mutationFn: (value) =>
+      axios
+        .patch(`/tickets/${id}`, [
+          { op: "replace", path: "/ticketStatus", value: `${value}` },
+        ])
+        .then((resp) => {
+          toast({
+            title: "Success!",
+            description: "Ticket Updated",
+          });
+          client.invalidateQueries({ queryKey: ["tickets", `${id}`] });
+        })
+        .catch((err) => {
+          toast({
+            title: "Error!",
+            description: err.message,
+            variant: "destructive",
+          });
+        }),
+  });
+  const tryChangeStatus = (status) => {
+    changeStatusMutation.mutate(status);
+  };
   if (cellKey === "ticketID")
     return (
       <div className="col-span-1  flex flex-col  items-center   justify-center">
@@ -392,22 +440,28 @@ const DetailCellManager = ({ cellKey, value }) => {
       <div className="col-span-1  flex flex-col  items-center  justify-center">
         <p className="text-[0.75rem] text-neutral-700 font-semibold">{value}</p>
         <p className="text-[0.6275rem] text-neutral-500 ">
-          {cellKey.replace("_", " ")}
+          {cellKey.replaceAll("_", " ")}
         </p>
       </div>
     );
 
   return (
     <div className="col-span-1 flex flex-col justify-center items-center ">
-      <Select defaultValue="unresolved">
+      <Select
+        defaultValue={value}
+        disabled={!statusesQuery.isSuccess || changeStatusMutation.isPending}
+        onValueChange={tryChangeStatus}
+      >
         <SelectTrigger>
           <SelectValue placeholder="Select A Status" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="resolved">Resolved</SelectItem>
-          <SelectItem value="unresolved">Unresolved</SelectItem>
-        </SelectContent>
+        {statusesQuery.isSuccess && (
+          <SelectContent>
+            {statusesQuery.data.map((status) => {
+              return <SelectItem value={status}>{status}</SelectItem>;
+            })}
+          </SelectContent>
+        )}
       </Select>
       <p className="text-[0.6275rem] text-neutral-400"></p>
     </div>
