@@ -16,10 +16,11 @@ import {
 import { useToast } from "../../components/ui/use-toast";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../api/useAuth";
-import { useAxiosClient } from "../../api/useAxiosClient";
+import axios from "axios";
+// import { useAxiosClient } from "../../api/useAxiosClient";
 export const AuthForm = () => {
   const { generalUpdate, access } = useAuth();
-  const { axios } = useAxiosClient();
+  // const { axios } = useAxiosClient();
   const { toast } = useToast();
   const Navigate = useNavigate();
   const LoginSchema = z.object({
@@ -47,21 +48,26 @@ export const AuthForm = () => {
       throw new Error("Ensure both fields are filled");
     }
     try {
-      const resp = await axios("/users/login", {
+      const resp = await axios("http://localhost:8080/api/users/login", {
         method: "Post",
         data: values,
       });
       if (resp) {
         const { access_token, refresh_token, data } = resp.data;
-        console.log(access_token);
-        generalUpdate({ access_token, refresh_token, user: data });
-        console.log(access);
-        // updateTokens({ access: access_token, refresh: refresh_token });
-        // updateUser(data);
-
-        setTimeout(() => {
-          Navigate("/Home");
-        }, 500);
+        console.log(resp.data);
+        generalUpdate({
+          access_token,
+          refresh_token,
+          user: data,
+          verified: data.verified,
+        });
+        if (!data.verified) {
+          setTimeout(() => {
+            Navigate("/Verify");
+          }, 1000);
+          return;
+        }
+        Navigate("/CPD/Dashboard");
       }
     } catch (err) {
       if ((err.message = "Request failed with status code 401")) {
@@ -151,7 +157,10 @@ export const AuthForm = () => {
                   )}
                 />
 
-                <button className="w-full h-10 flex items-center justify-center bg-lightPink rounded-lg text-white">
+                <button
+                  className="w-full h-10 flex items-center justify-center bg-lightPink rounded-lg text-white"
+                  disabled={form.formState.isSubmitting}
+                >
                   Login
                 </button>
               </form>
