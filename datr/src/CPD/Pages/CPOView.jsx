@@ -5,24 +5,72 @@ import { AnimatePresence, motion, useAnimation } from "framer-motion";
 import { StatCard } from "../Components/DashboardStats";
 import { cpoViewStats } from "../data/data";
 import { CpoViewGraph } from "../Components/CpoViewGraph";
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate, useParams } from "react-router";
+import { useSearchParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAxiosClient } from "../../api/useAxiosClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogTrigger,
+} from "../../components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { toast } from "../../components/ui/use-toast";
 
 export const CPOView = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const group = searchParams.get("group");
+  if (!group) return <Navigate to={"/CPD/Dashboard"} />;
+  const { agent } = useParams();
+  const { axios } = useAxiosClient();
+  const updatedGroup = group.replaceAll("_", " ");
+  const userQuery = useQuery({
+    queryKey: [group, agent],
+    refetchOnMount: true,
+    queryFn: () =>
+      axios(`/users/${agent}`, {
+        method: "GET",
+      })
+        .then((resp) => resp.data)
+        .catch((err) => err),
+  });
   return (
     <section className="w-full">
       <SearchPage heading={"User Groups"}>
         <BreadCrumb3
           data={[
-            { title: "User Groups", index: 0, link: `/CPD/all_groups` },
             {
-              title: "Customer Support",
+              title: "User Groups",
+              index: 0,
+              link: `/CPD/Configuration/Groups`,
+            },
+            {
+              title: updatedGroup,
               index: 1,
-              link: "/CPD/user_groups?group=customer_support",
+              link: `/CPD/user_groups?group=${group}`,
             },
             { title: "User Preview", index: 2 },
           ]}
         />
-        <UserCard />
+        {userQuery.isSuccess && userQuery.data && (
+          <UserCard group={updatedGroup} user={userQuery.data} />
+        )}
+        {/* <div>
+          <AlertDialog>
+            <AlertDialogTrigger>
+              
+            </AlertDialogTrigger>
+          </AlertDialog>
+        </div> */}
         <div className="flex items-center flex-wrap gap-4 justify-evenly ">
           {cpoViewStats.map((stat, index) => (
             <StatCard
@@ -77,7 +125,41 @@ export const BreadCrumb = ({ last, previous, current }) => {
   );
 };
 
-const UserCard = () => {
+const UserCard = ({ group, user }) => {
+  const { axios } = useAxiosClient();
+  const client = useQueryClient();
+  const [newRole, setNewRole] = useState("");
+  const changeRoleMutation = useMutation({
+    mutationKey: ["role"],
+    mutationFn: () =>
+      axios("/admin/upgrade", {
+        method: "PUT",
+        data: {
+          ncaaUserEmail: user.email,
+          role: newRole,
+        },
+      })
+        .then((resp) => {
+          toast({
+            title: "Success!",
+            description: "User Successfully upgraded!",
+          });
+          client.invalidateQueries({ queryKey: [group, user.id] });
+          return resp.data;
+        })
+        .catch((err) => {
+          toast({
+            title: "Error!",
+            description:
+              err.message === "Request failed with status code 400"
+                ? "Role doesn't exist!"
+                : err.message === "Request failed with status code 415"
+                ? "This is the user's current role."
+                : err.message,
+            variant: "destructive",
+          });
+        }),
+  });
   return (
     <div className="flex  my-3 px-2 gap-4 items-center flex-wrap">
       <div className="w-20 aspect-square rounded-full overflow-hidden ">
@@ -88,14 +170,77 @@ const UserCard = () => {
         />
       </div>
       <div className="flex flex-col justify-between">
-        <p className="text-[1rem] font-semibold text-black">Ahmed Musa</p>
-        <p className="text-neutral-400 text-[0.725rem]">#789989</p>
-        <p className="text-[0.65rem]  text-blue-500">example@ncaacpd.com</p>
+        <p className="text-[1rem] font-semibold text-black">
+          {user.firstName}, {user.lastName}
+        </p>
+        <p className="text-neutral-400 text-[0.725rem]">{user.id}</p>
+        <p className="text-[0.65rem]  text-blue-500">{user.email}</p>
       </div>
       <div className="w-max h-8 rounded-full border-2 border-neutral-500 bg-neutral-200 grid place-items-center px-4 ">
         <p className="text-[0.725rem] text-neutral-600 whitespace-nowrap">
-          User/Supervisory Department
+          {group}
         </p>
+      </div>
+      <div className="flex flex-col space-y-1 items-center justify-center">
+        <p className="w-max px-6 bg-darkBlue text-white rounded-full py-1 text-xs font-bold">
+          {user.roles[user.roles.length - 1]}
+        </p>
+        <AlertDialog>
+          <AlertDialogTrigger className="text-xs font-semibold hover:text-blue-300 text-neutral-400">
+            Change Role
+          </AlertDialogTrigger>
+          <AlertDialogContent className="text-center">
+            <p className="text-[1.4rem] font-semibold text-neutral-700">
+              Change User Role
+            </p>
+            <p className="my-2 text-[0.77rem] text-neutral-400">
+              Doing this will revoke access to or grant the user access to
+              certain modules and/ or features of the system.
+            </p>
+
+            <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start">
+              Select a new Role
+            </p>
+            <Select
+              onValueChange={(value) => {
+                setNewRole(value);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="New Role..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CPO">Consumer Protection Officer</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="TERMINAL_SUPERVISOR">
+                  Terminal Supervisor
+                </SelectItem>
+                <SelectItem value="SHIFT_SUPERVISOR">
+                  Shift Supervisor
+                </SelectItem>
+                <SelectItem value="DATA_STATISTIC">
+                  Data and Statistics Officer
+                </SelectItem>
+                <SelectItem value="DGO"> Director General</SelectItem>
+                <SelectItem value="CPD_D">CPD Director</SelectItem>
+                <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
+              </SelectContent>
+            </Select>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                className="flex-grow"
+                onClick={() => {
+                  changeRoleMutation.mutate();
+                }}
+              >
+                Save
+              </AlertDialogAction>
+              <AlertDialogCancel className="flex-grow">
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
