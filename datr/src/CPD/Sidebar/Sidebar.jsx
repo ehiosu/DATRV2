@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { RxHamburgerMenu } from "react-icons/rx";
-import { content } from "./Content";
+import { cpoSidebarContent, adminSidebarContent } from "./Content";
 import { AiOutlineClose } from "react-icons/ai";
 import { useLocation, useNavigate } from "react-router";
 import {
@@ -23,15 +23,22 @@ import {
   PopoverTrigger,
 } from "../../components/ui/popover";
 import { BsThreeDots } from "react-icons/bs";
+import { useAuth } from "../../api/useAuth";
 export const Sidebar = () => {
+  const { user } = useAuth();
+
+  const getUserSidebarContent = () => {
+    if (user.roles.includes("ADMIN")) return adminSidebarContent;
+    return cpoSidebarContent;
+  };
   return (
     <section>
-      <MidSizedSidebar />
-      <SmallSideBar />
+      <MidSizedSidebar content={getUserSidebarContent()} />
+      <SmallSideBar content={getUserSidebarContent()} />
     </section>
   );
 };
-const MidSizedSidebar = () => {
+const MidSizedSidebar = ({ content }) => {
   const [open, setOpen] = useState(false);
   const nav = useNavigate();
   return (
@@ -70,7 +77,7 @@ const MidSizedSidebar = () => {
     </aside>
   );
 };
-const SmallSideBar = () => {
+const SmallSideBar = ({ content }) => {
   const nav = useNavigate();
   return (
     <Sheet>
