@@ -82,7 +82,12 @@ const UserHeader = ({ searching }) => {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-40 outline-none bg-white p-2 rounded-md shadow-md  z-[10]  text-[0.8275rem] text-center   ">
-        <DropdownMenuItem className="outline-none h-8 grid  place-items-center">
+        <DropdownMenuItem
+          onClick={() => {
+            nav("/Account-Settings");
+          }}
+          className="outline-none h-8 grid  place-items-center cursor-pointer hover:border-b-2 hover:bg-blue-300 hover:font-semibold hover:text-white hover:border-b-purple-300 rounded-md"
+        >
           <p>Account Settings</p>
         </DropdownMenuItem>
         <DropdownMenuItem
