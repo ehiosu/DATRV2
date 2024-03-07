@@ -4,6 +4,7 @@ type state = {
   access: string;
   refresh: string;
   user: user;
+  verified:boolean
 };
 type user = {
   id: string;
@@ -18,16 +19,18 @@ type tokenUpdatePayload = {
 type generalUpdate ={
   access_token: string;
   refresh_token: string;
-  user:user
+  user:user;
+  verified:boolean
 }
 type actions = {
   updateTokens: (data: tokenUpdatePayload) => void;
   updateUser: (data:user)=>void;
   generalUpdate:(data:generalUpdate)=>void;
+  updateVerified:(data:boolean)=>void
 };
 export const useAuthStore = create(persist<state & actions> (
   (set) => ({
-    access: "",
+    access: "access",
     refresh: "",
     user: {
       id: "",
@@ -35,14 +38,16 @@ export const useAuthStore = create(persist<state & actions> (
       firstName: "",
       roles: [],
     },
+    verified:false,
     updateTokens: (data) =>{
-      // await new Promise((resolve) => setTimeout(resolve, 100));
+      console.log(data)
       set(()=>({
         access: data["access_token"],
         refresh: data["refresh_token"],
       }))},
     updateUser: (data) => set(() => ({ user: { ...data } })),
-    generalUpdate:(data:generalUpdate)=>{set(()=>({access:data.access_token,refresh:data.refresh_token,user:data.user}))}
+    generalUpdate:(data:generalUpdate)=>{set(()=>({access:data.access_token,refresh:data.refresh_token,user:data.user,verified:data.verified}))},
+    updateVerified:(data)=>set(()=>({verified:data}))
   }),{
 name:"auth-store",
 storage:createJSONStorage(()=>sessionStorage)
