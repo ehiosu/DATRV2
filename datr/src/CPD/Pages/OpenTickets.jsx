@@ -9,8 +9,18 @@ import {
 } from "@radix-ui/react-dropdown-menu";
 import { AiOutlineArrowDown } from "react-icons/ai";
 import { OpenTicketsTable } from "../Components/DataTable";
+import { useAxiosClient } from "../../api/useAxiosClient";
+import { useQuery } from "@tanstack/react-query";
 
 export const OpenTickets = () => {
+  const { axios } = useAxiosClient();
+  const ticketsQuery = useQuery({
+    queryKey: ["tickets", "open"],
+    queryFn: () =>
+      axios("tickets/status?value=OPENED", {
+        method: "GET",
+      }).then((resp) => resp.data),
+  });
   return (
     <section className="w-full">
       <SearchPage heading={"Open Tickets"}>
@@ -27,7 +37,19 @@ export const OpenTickets = () => {
           </div>
         </div>
         <div className="w-full  flex-1   max-h-[75vh]  mt-4 overflow-y-auto">
-          <OpenTicketsTable />
+          {ticketsQuery.isSuccess && (
+            <OpenTicketsTable data={ticketsQuery.data.tickets} />
+          )}
+          {ticketsQuery.isError && (
+            <div className="w-full h-full grid place-items-center  min-h-[60vh]">
+              <p className="Font-semibold text-[2rem] text-neutral-500">
+                {ticketsQuery.error.message ===
+                "Request failed with status code 401"
+                  ? "You don't have access to this resource!"
+                  : ticketsQuery.error.message}
+              </p>
+            </div>
+          )}
         </div>
       </SearchPage>
     </section>
