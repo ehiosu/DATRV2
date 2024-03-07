@@ -5,7 +5,7 @@ import { DashboardStats, TicketStatistics } from "../Components/DashboardStats";
 import { DashboardPerformanceGraph } from "../Components/DashboardPerformanceGraph";
 import { RecentTickets } from "../Components/RecentTickets";
 import { useNavigate } from "react-router";
-
+import { useAuth } from "../../api/useAuth";
 export const Dashboard = () => {
   return (
     <section className=" w-full  p-4 lg:p-2 max-h-screen overflow-y-auto">
@@ -27,7 +27,10 @@ export const Dashboard = () => {
 };
 
 const TicketButton = () => {
+  const { user } = useAuth();
   const Nav = useNavigate();
+  if (!user.roles.includes("CPO") && !user.roles.includes("ADMIN"))
+    return <></>;
   return (
     <div className="w-60 h-10 lg:w-72 lg:h-[3.6rem]  flex  justify-between items-center  bg-white  rounded-lg  shadow-md p-2">
       <p className="text-[1.2rem]  font-semibold ">Create Ticket</p>
