@@ -9,8 +9,18 @@ import {
 } from "@radix-ui/react-dropdown-menu";
 import { AiOutlineArrowDown } from "react-icons/ai";
 import { UnassignedTicketsTable } from "../Components/DataTable";
+import { useQuery } from "@tanstack/react-query";
+import { useAxiosClient } from "../../api/useAxiosClient";
 
 export const UnassignedTickets = () => {
+  const { axios } = useAxiosClient();
+  const ticketsQuery = useQuery({
+    queryKey: ["tickets", "unassigned"],
+    queryFn: () =>
+      axios("tickets/status?value=NEW", {
+        method: "GET",
+      }).then((resp) => resp.data),
+  });
   return (
     <section className="w-full">
       <SearchPage heading={"Unassigned Tickets"}>
@@ -27,7 +37,19 @@ export const UnassignedTickets = () => {
           </div>
         </div>
         <div className="w-full    max-h-[75vh]  mt-4 overflow-y-auto ">
-          <UnassignedTicketsTable />
+          {ticketsQuery.isSuccess && (
+            <UnassignedTicketsTable data={ticketsQuery.data.tickets} />
+          )}
+          {ticketsQuery.isError && (
+            <div className="w-full h-full grid place-items-center  min-h-[60vh]">
+              <p className="Font-semibold text-[2rem] text-neutral-500">
+                {ticketsQuery.error.message ===
+                "Request failed with status code 401"
+                  ? "You don't have access to this resource!"
+                  : ticketsQuery.error.message}
+              </p>
+            </div>
+          )}
         </div>
       </SearchPage>
     </section>
