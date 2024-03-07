@@ -20,8 +20,39 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { Textarea } from "../../components/ui/textarea";
+import { useQuery } from "@tanstack/react-query";
+import { useAxiosClient } from "../../api/useAxiosClient";
 
 export const UserGroupConfiguration = () => {
+  const { axios } = useAxiosClient();
+  const allUsersQuery = useQuery({
+    queryKey: ["group", "all"],
+    queryFn: () =>
+      axios("/users/all?page=0&size=10", {
+        method: "GET",
+      })
+        .then((resp) => resp.data)
+        .catch((err) => err),
+  });
+  const cposQuery = useQuery({
+    queryKey: ["group", "cpos"],
+    retry: false,
+    queryFn: () =>
+      axios("/cpo/all", {
+        method: "GET",
+      }).then((resp) => resp.data),
+  });
+  const terminalSupervisorsQuery = useQuery({
+    queryKey: ["groups", "Terminal_Supervisors"],
+    retry: false,
+    queryFn: () =>
+      axios("/supervisors/all", {
+        method: "GET",
+      }).then((resp) => {
+        console.log(resp.data);
+        return resp.data;
+      }),
+  });
   return (
     <AnimatePresence>
       <motion.section
@@ -59,7 +90,31 @@ export const UserGroupConfiguration = () => {
           </AlertDialogContent>
         </AlertDialog>
         <div className="w-full my-5 shadow-md">
-          <GeneralGroupTable />
+          {terminalSupervisorsQuery.isSuccess &&
+            cposQuery.isSuccess &&
+            allUsersQuery.isSuccess && (
+              <GeneralGroupTable
+                data={[
+                  {
+                    groupName: "Consumer Protection Officers",
+                    groupDescription: "Short Description of group Properties",
+                    members: cposQuery.data.length.toString(),
+                  },
+                  {
+                    groupName: "Terminal Supervisors",
+                    groupDescription: "Short Description of group Properties",
+                    members: terminalSupervisorsQuery.data.length.toString(),
+                  },
+                  {
+                    groupName: "All",
+                    groupDescription:
+                      "List of All Users contained in the system",
+                    members:
+                      allUsersQuery.data.ncaaUserResponseDtoList.length.toString(),
+                  },
+                ]}
+              />
+            )}
         </div>
       </motion.section>
     </AnimatePresence>
