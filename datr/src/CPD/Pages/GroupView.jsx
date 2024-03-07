@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { SearchPage } from "../../Reusable/SearchPage";
 import { BreadCrumb3 } from "./CPOView";
-import { redirect, useParams } from "react-router";
+import { Navigate, redirect, useParams } from "react-router";
 import {
   CpoViewTable,
   cpoTableColumnDef,
@@ -14,21 +14,43 @@ import {
   AlertDialogTrigger,
 } from "../../components/ui/alert-dialog";
 import { CgClose } from "react-icons/cg";
-import { useQuery } from "../Sidebar/Hooks/useQuery";
+import { useQuery as useQueryParameter } from "../Sidebar/Hooks/useQuery";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAxiosClient } from "../../api/useAxiosClient";
 
 export const GroupView = () => {
   // const { group } = useParams();
-  const query = useQuery();
+  const query = useQueryParameter();
   const group = query.get("group");
+  const { axios } = useAxiosClient();
+  if (!group) return redirect("/CPD/Dashboard");
+
+  const [page, setPage] = useState(1);
+  const urlMap = {
+    All: "/users/all?page=0&size=10",
+    Consumer_Protection_Officers: `/cpo/all/paginated?page=${page - 1}&size=20`,
+    Terminal_Supervisors: `/supervisors/all`,
+  };
+
+  const groupDataQuery = useQuery({
+    queryKey: ["groups", group, page - 1],
+    queryFn: () =>
+      axios(urlMap[group], {
+        method: "GET",
+      }).then((resp) => resp.data),
+  });
   const updated_group = group.replaceAll("_", " ");
   console.log(updated_group);
-  if (!group) return redirect("/CPD/Dashboard");
   return (
     <section className="w-full">
       <SearchPage heading={"User Groups"}>
         <BreadCrumb3
           data={[
-            { title: "User Groups", index: 0, link: `/CPD/all_groups` },
+            {
+              title: "User Groups",
+              index: 0,
+              link: `/CPD/Configuration/Groups`,
+            },
             {
               title: `${updated_group}`,
               index: 1,
@@ -66,10 +88,16 @@ export const GroupView = () => {
           {/* //TODO:CPOs Table */}
         </div>
         <div className="max-h-[50vh] overflow-y-auto">
-          <CpoViewTable
-            columns={cpoTableColumnDef}
-            data={cpoViewPlaceholderData}
-          />
+          {groupDataQuery.isSuccess && (
+            <CpoViewTable
+              columns={cpoTableColumnDef}
+              data={
+                groupDataQuery.data.ncaaUserResponseDtoList ||
+                groupDataQuery.data.cpoProfileResponseList ||
+                groupDataQuery.data
+              }
+            />
+          )}
         </div>
       </SearchPage>
     </section>
