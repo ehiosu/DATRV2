@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "../../components/ui/dialog.tsx";
+import { cn } from "../../lib/utils.ts";
 export const SignleMessage = ({
   name,
   username,
@@ -96,7 +97,7 @@ export const SignleTicketMessage = ({
   date,
   message,
   priority,
-  complaintDetails = {},
+  complaintDetails = [],
 }) => {
   return (
     <div className="w-full flex flex-col ">
@@ -122,41 +123,51 @@ export const SignleTicketMessage = ({
           <p className="text-[0.725rem] font-semibold text-darkBlue">{date}</p>
         </div>
       </div>
-      {Object.keys(complaintDetails).length > 0 && (
+      {complaintDetails.length > 0 && (
         <div className="w-full  rounded-lg bg-neutral-300 my-2 grid grid-cols-4 grid-rows-2 p-2 gap-y-3">
-          {Object.keys(complaintDetails).map((complaintKey) => {
-            if (complaintKey === "attachments")
-              return <Attachments data={complaintDetails[complaintKey]} />;
-            if (complaintKey === "rating")
-              return <StarRating value={complaintDetails[complaintKey]} />;
+          {complaintDetails?.map((complaintInfo) => {
+            if (complaintInfo.title === "Attachments")
+              return <Attachments data={complaintInfo.data} />;
+            if (complaintInfo.title === "Rating")
+              return <StarRating value={complaintInfo.data} />;
             return (
               <div className="col-span-1 flex flex-col justify-between items-center p-1 h-[3.5rem] ">
                 <p className="text-[0.75rem]   text-neutral-500 font-semibold">
-                  {complaintDetails[complaintKey]}
+                  {complaintInfo.title}
                 </p>
                 <p className="text-[0.6275rem] text-neutral-700 mt-auto">
-                  {complaintKey}
+                  {complaintInfo.data}
                 </p>
               </div>
             );
           })}
         </div>
       )}
-      <div className="px-6 mx-auto text-[0.7275rem] py-2 bg-neutral-200 rounded-md leading-4 mt-4">
-        {message}
-      </div>
+      {message && (
+        <div className="px-6 mx-auto text-[0.7275rem] py-2 bg-neutral-200 rounded-md leading-4 mt-4">
+          {message}
+        </div>
+      )}
     </div>
   );
 };
 
 const Attachments = ({ data }) => {
+  console.log(data);
   return (
     <div className="col-span-1 flex flex-col justify-between h-full items-center  p-1">
       <Dialog>
-        <DialogTrigger className="border-none outline-none text-blue-400 text-[0.75rem] grid place-items-center">
+        <DialogTrigger
+          className={cn(
+            "border-none outline-none text-blue-400 text-[0.75rem] grid place-items-center",
+            data.length === 0 && "text-neutral-800 line-through"
+          )}
+        >
           View Attachments
         </DialogTrigger>
-        <DialogContent className="h-[80vh]"></DialogContent>
+        {data.length > 0 && (
+          <DialogContent className="h-[80vh]"></DialogContent>
+        )}
       </Dialog>
       <p className="text-[0.6275rem] text-neutral-700 mt-auto">Attachments</p>
     </div>
