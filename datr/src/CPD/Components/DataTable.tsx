@@ -4,7 +4,7 @@ import { BsThreeDots } from "react-icons/bs";
 import { MdAssignmentInd } from "react-icons/md";
 import { IoMdArrowDown } from "react-icons/io";
 import { FaRegEdit } from "react-icons/fa";
-import { NavigateFunction, useNavigate, useParams } from "react-router-dom";
+import { NavigateFunction, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CiCircleCheck } from "react-icons/ci";
 import { IoMdClose } from "react-icons/io";
 import {
@@ -66,7 +66,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectArrow } from "@radix-ui/react-select";
-
+import { format } from "date-fns";
+import {useAxiosClient} from "../../api/useAxiosClient"
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/api/useAuth";
+import { toast } from "@/components/ui/use-toast";
 type ExtendedColumnDef<TData extends unknown, TValue = unknown> = ColumnDef<
   TData,
   TValue
@@ -205,11 +210,11 @@ export const RecentTicketsTable = () => {
 
 const generalTicketColumnDefiniton: ExtendedColumnDef<GeneralTicket>[] = [
   {
-    accesorKey: "complainant",
+    accesorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complaint_type",
+    accesorKey: "complainantType",
     header: "Complainant Type",
   },
   {
@@ -221,11 +226,11 @@ const generalTicketColumnDefiniton: ExtendedColumnDef<GeneralTicket>[] = [
     header: "Group",
   },
   {
-    accesorKey: "status",
+    accesorKey: "ticketStatus",
     header: "Status",
   },
   {
-    accesorKey: "date",
+    accesorKey: "dateTimeCreated",
     header: "Date",
   },
 ];
@@ -297,7 +302,7 @@ const generalTicketData: GeneralTicket[] = [
   // Add more data as needed
 ];
 
-export const GeneralTicketsTable = () => {
+export const GeneralTicketsTable = ({generalTicketData}:{generalTicketData:GeneralTicket[]}) => {
   return (
     <div className="max-h-full overflow-y-auto bg-white  shadow-md">
       <TicketsDataTable
@@ -326,20 +331,52 @@ export function TicketsDataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
   });
   const nav = useNavigate();
+  const {axios}=useAxiosClient()
+  const {user}=useAuth()
   const [selectedCell, setSelectedCell] = useState(-1);
+  const [isAssigning,setIsAssigning]=useState(false)
+  const [searchedCpo,setSearchedCpo]=useState("")
   const [cellTransform, setCellTransform] = useState({ right: 0, top: 0 });
-  const cells = useRef<HTMLTableCellElement[]>([]);
   const dropdownRef = useRef<HTMLDivElement | undefined>();
+  const client=useQueryClient()
 
-  const displayAssignment = (index: number) => {
-    setSelectedCell(() => index);
-    const element = cells.current[index];
-    setCellTransform(() => ({
-      right: element.offsetWidth,
-      top: element.offsetTop,
-    }));
-    element.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
+  const cposQuery = useQuery({
+    queryKey: ["cpos"],
+    queryFn: () =>
+      axios("/cpo/all", {
+        method: "GET",
+      }).then((resp:any) =>{
+        console.log(resp.data)
+        return resp.data}),
+    staleTime: Infinity,
+  });
+
+  const tryAssignTicket=(id:number,cpo:string)=>{
+    if(!cpo) return
+    setIsAssigning(true)
+    axios("/tickets/assign",{
+      method:"PUT",
+      data:{
+        supervisorEmail:user.email,
+        cpoEmail:cpo,
+        ticketId:id
+      }
+    }).then((resp:any)=>{
+      setIsAssigning(false)
+      toast({
+        title:"Success!",
+        description:`Ticket successfully assigned to ${cpo}`
+      })
+client.invalidateQueries({queryKey:["tickets", "unassigned"]})
+    }).catch((err:Error)=>{
+      setIsAssigning(false)
+      toast({
+        title:"Error!",
+        description:err.message==="Request failed with status code 400"?"You need to be a terminal supervisor to assign a ticket!":err.message,
+        variant:"destructive"
+      })
+    })
+  }
   return (
     <div className="rounded-md border bg-white shadow-md  relative">
       {selectedCell != -1 && (
@@ -384,7 +421,7 @@ export function TicketsDataTable<TData, TValue>({
                   </TableHead>
                 );
               })}
-              {hasAssignment && (
+              {hasAssignment && data.length>0 && (
                 <TableHead className="text-center">
                   <span className="t">Assign To </span>
                 </TableHead>
@@ -408,7 +445,7 @@ export function TicketsDataTable<TData, TValue>({
                   {row
                     .getVisibleCells()
                     .map((cell: any, colindex: number) =>
-                      cell.column.columnDef.accesorKey === "status" ? (
+                      cell.column.columnDef.accesorKey === "ticketStatus"   ? (
                         <StatusTableCell cell={cell} row={row} />
                       ) : cell.column.columnDef.accesorKey === "cpo" ? (
                         <CpoTableCell cell={cell} row={row} />
@@ -420,16 +457,13 @@ export function TicketsDataTable<TData, TValue>({
                         />
                       )
                     )}
-                  {hasAssignment && (
-                    // <TableCell className='grid place-items-center' ref={(el:HTMLTableCellElement)=>cells.current[index]=el} >
-                    //   <span className='w-6  aspect-square rounded-full  bg-darkBlue  text-white grid place-items-center ' onClick={()=>displayAssignment(index)} >
-                    //   <MdAssignmentInd />
-                    //   </span>
-                    // </TableCell>
-                    <TableCell className="grid place-items-center">
+                  {hasAssignment &&  data.length>0 && (
+                 
+                    <TableCell className="grid place-items-center bg-transparent ">
                       <Popover>
                         <PopoverTrigger
-                          className="w-8 aspect-square rounded-full bg-darkBlue grid place-items-center text-white"
+                        disabled={isAssigning}
+                          className="w-8 aspect-square rounded-full bg-darkBlue grid place-items-center disabled:bg-neutral-600 disabled:hover:cursor-wait  text-white"
                           onClick={(e) => {
                             e.stopPropagation();
                           }}
@@ -437,39 +471,57 @@ export function TicketsDataTable<TData, TValue>({
                           {" "}
                           <MdAssignmentInd />
                         </PopoverTrigger>
-                        <PopoverContent
-                          side="left"
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-2 py-1 w-[14rem] md:w-[20rem] z-[5]"
-                        >
-                          <Command className="p-0 m-0 min-h-52 md:min-h-60">
-                            <p className="text-[1.3rem] text-blue-300 mb-2">
-                              Assign Ticket
-                            </p>
-                            <CommandInput
-                              className="border-none ring-0 focus:border-none focus:ring-0 h-8 text-[0.8275rem] text-neutral-700"
-                              placeholder="Search for an agent... "
-                            />
-                            <Select>
-                              <SelectTrigger className="w-full my-2 ring-0 focus:ring-0 ">
-                                <SelectValue placeholder="Filter By Group..." />{" "}
+                       {
+                        cposQuery.isSuccess &&  <PopoverContent
+                        side="left"
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-2 py-1 w-[14rem] md:w-[20rem] z-[5] "
+                      >
+                        <Command className="p-0 m-0 min-h-52 md:min-h-60">
+                          <p className="text-[1.3rem] text-blue-300 mb-2">
+                            Assign Ticket
+                          </p>
+                         <div className="px-1">
+                         <Select  onValueChange={(value)=>{tryAssignTicket(row.original.id,value)}} defaultValue="" onOpenChange={(open)=>{if(!open)setSearchedCpo("")}}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a CPO"/>
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="p-1">
+                                <Input className="my-3 w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]" onChange={(e)=>setSearchedCpo(e.target.value)}/>
                                 <SelectGroup>
-                                  <SelectLabel>User Groups</SelectLabel>
-                                  <SelectItem value="usd">
-                                    User Supervisory Department
-                                  </SelectItem>
-                                  <SelectItem value="none">None</SelectItem>
+                                  { 
+                                    cposQuery.data.filter((_cpo:any)=>_cpo.ncaaUserEmail.startsWith(searchedCpo)).map((_cpo:any)=>{
+                                    return  <SelectItem value={_cpo.ncaaUserEmail}>{_cpo.ncaaUserEmail}</SelectItem>
+                                    })
+                                  }
+                                  {
+                                    cposQuery.data.filter((_cpo:any)=>_cpo.ncaaUserEmail.startsWith(searchedCpo)).length===0 && <p className="text-neutral-400 text-[0.8275rem] text-center m-auto">User Doesn't exist</p>
+                                  }
                                 </SelectGroup>
                               </SelectContent>
-                            </Select>
-                            <CommandEmpty className="text-neutral-400 text-[0.8275rem] text-center m-auto">
-                              Agent Doesn't exist...
-                            </CommandEmpty>
-                            <CommandGroup></CommandGroup>
-                          </Command>
-                        </PopoverContent>
+                          </Select>
+                         </div>
+                        
+                          <div className="p-1 mt-auto">
+                          <Select>
+                            <SelectTrigger className="w-full my-2 ring-0 focus:ring-0  mt-auto">
+                              <SelectValue placeholder="Filter By Group..." />{" "}
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel>User Groups</SelectLabel>
+                                <SelectItem value="usd">
+                                  User Supervisory Department
+                                </SelectItem>
+                                <SelectItem value="none">None</SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          </div>
+                        
+                        </Command>
+                      </PopoverContent>
+                       }
                       </Popover>
                     </TableCell>
                   )}
@@ -585,20 +637,20 @@ const openTicketColumnDefinition: ExtendedColumnDef<openTicket>[] = [
   },
 
   {
-    accesorKey: "complainant",
+    accesorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complaint_type",
+    accesorKey: "complainantType",
     header: "Complainant Type",
   },
 
   {
-    accesorKey: "status",
+    accesorKey: "ticketStatus",
     header: "Status",
   },
   {
-    accesorKey: "date",
+    accesorKey: "dateOfIncident",
     header: "Date due",
   },
 ];
@@ -709,11 +761,11 @@ const openTicketData: openTicket[] = [
     date: "2023-12-04",
   },
 ];
-export const OpenTicketsTable = () => {
+export const OpenTicketsTable = ({data}:{data:openTicket[]}) => {
   return (
     <div>
       <TicketsDataTable
-        data={openTicketData}
+        data={data}
         columns={openTicketColumnDefinition}
         isDraft={false}
         hasAssignment={true}
@@ -748,7 +800,7 @@ const RegularTableCell = ({
         cell.column.columnDef.accesorKey === "id"
           ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
           : row.original[cell.column.columnDef.accesorKey]?.length > 0
-          ? row.original[cell.column.columnDef.accesorKey]
+          ?  cell.column.columnDef.accesorKey === "dateTimeCreated"? format(new Date(row.original[cell.column.columnDef.accesorKey]),'dd/MM/yyyy'): row.original[cell.column.columnDef.accesorKey]
           : "----",
         cell.getContext()
       )}
@@ -858,17 +910,14 @@ const FromTableCell = ({
 const StatusTableCell = ({ cell, row }: { cell: any; row: any }) => {
   const resolveStatus: (status: string) => string = (status = "") => {
     const btnStyles: Record<string, string> = {
-      Pending: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
-      Unresolved: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
-      Resolved: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
-      Open: "bg-[#FF585821] border-2 border-[#FF5858]",
-      Escalated: "bg-[#D016DD21] border-2 border-[#D116DD]",
-      Unassigned: "",
+      PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+      UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+      RESOLVED: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+      OPENED : "bg-[#FF585821] border-2 border-[#FF5858]",
+      ESCALATED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+      UNASSIGNED: "",
     };
 
-    if (!btnStyles[status]) {
-      return "";
-    }
 
     return `${btnStyles[status]} inline h-max p-1`;
   };
@@ -898,15 +947,15 @@ const ResolvedTicketColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
   },
 
   {
-    accesorKey: "complainant",
+    accesorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complaint_type",
+    accesorKey: "complainantType",
     header: "Complainant Type",
   },
   {
-    accesorKey: "cpo",
+    accesorKey: "creatorName",
     header: "CPO",
   },
   {
@@ -914,11 +963,11 @@ const ResolvedTicketColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
     header: "Group",
   },
   {
-    accesorKey: "status",
+    accesorKey: "ticketStatus",
     header: "Status",
   },
   {
-    accesorKey: "date",
+    accesorKey: "dateOfIncident",
     header: "Date due",
   },
 ];
@@ -1060,12 +1109,12 @@ const resolvedTicketPlaceholderData: ResolvedTicket[] = [
   },
 ];
 
-export const ResolvedTicketsTable = () => {
+export const ResolvedTicketsTable = ({data}:{data:ResolvedTicket[]}) => {
   return (
     <div className="w-full h-full  overflow-y-auto">
       <TicketsDataTable
         isDraft={false}
-        data={resolvedTicketPlaceholderData}
+        data={data}
         columns={ResolvedTicketColumnDefinition}
         hasAssignment={false}
         hasNav={true}
@@ -1081,15 +1130,15 @@ const UnresolvedTicketsColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
   },
 
   {
-    accesorKey: "complainant",
+    accesorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complaint_type",
+    accesorKey: "complainantType",
     header: "Complainant Type",
   },
   {
-    accesorKey: "cpo",
+    accesorKey: "creatorName",
     header: "CPO",
   },
   {
@@ -1097,11 +1146,11 @@ const UnresolvedTicketsColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
     header: "Group",
   },
   {
-    accesorKey: "status",
+    accesorKey: "ticketStatus",
     header: "Status",
   },
   {
-    accesorKey: "date",
+    accesorKey: "dateOfIncident",
     header: "Date due",
   },
 ];
@@ -1243,11 +1292,11 @@ const UnresolvedTicketsPlaceholderData: ResolvedTicket[] = [
     cpo: "Kunle Ojo",
   },
 ];
-export const UnresolvedTicketsTable = () => {
+export const UnresolvedTicketsTable = ({data}:{data:ResolvedTicket[]}) => {
   return (
     <div className="w-full h-full  overflow-y-auto">
       <TicketsDataTable
-        data={UnresolvedTicketsPlaceholderData}
+        data={data}
         isDraft={false}
         columns={UnresolvedTicketsColumnDefinition}
         hasAssignment={true}
@@ -1263,15 +1312,15 @@ const unassignedTicketColumnDefinition: ExtendedColumnDef<unassignedTicket>[] =
       header: "ID",
     },
     {
-      accesorKey: "complainant",
+      accesorKey: "complainantName",
       header: "Complainant",
     },
     {
-      accesorKey: "complaint_type",
+      accesorKey: "complainantType",
       header: "Complainant Type",
     },
     {
-      accesorKey: "cpo",
+      accesorKey: "creatorName",
       header: "CPO",
     },
     {
@@ -1279,11 +1328,11 @@ const unassignedTicketColumnDefinition: ExtendedColumnDef<unassignedTicket>[] =
       header: "Group",
     },
     {
-      accesorKey: "status",
+      accesorKey: "assignStatus",
       header: "Status",
     },
     {
-      accesorKey: "date",
+      accesorKey: "dateOfIncident",
       header: "Date due",
     },
   ];
@@ -1346,14 +1395,14 @@ const unassignedTicketData: unassignedTicket[] = [
     date: "2023-11-28",
   },
 ];
-export const UnassignedTicketsTable = () => {
+export const UnassignedTicketsTable = ({data}:{data:unassignedTicket[]}) => {
   return (
     <div className="w-full h-full  overflow-y-auto">
       <TicketsDataTable
-        data={unassignedTicketData}
+        data={data}
         isDraft={false}
         columns={unassignedTicketColumnDefinition}
-        hasAssignment={false}
+        hasAssignment={true}
         hasNav={true}
       />
     </div>
@@ -1497,11 +1546,11 @@ const escalatedTicketsPlaceholder: ResolvedTicket[] = [
     cpo: "Kunle Ojo",
   },
 ];
-export const EscalatedTicketsTable = () => {
+export const EscalatedTicketsTable = ({data}:{data:ResolvedTicket[]}) => {
   return (
     <div className="w-full h-full  overflow-y-auto">
       <TicketsDataTable
-        data={escalatedTicketsPlaceholder}
+        data={data}
         isDraft={false}
         columns={UnresolvedTicketsColumnDefinition}
         hasAssignment={true}
@@ -1581,7 +1630,7 @@ export function MessageDataTable<TData, TValue>({
                 {row
                   .getVisibleCells()
                   .map((cell: any, cellIndex: number) =>
-                    cell.column.columnDef.accesorKey === "status" ? (
+                    cell.column.columnDef.accesorKey.toLowerCase().includes("status") ? (
                       <StatusTableCell cell={cell} row={row} />
                     ) : cell.column.columnDef.accesorKey === "recipient" ? (
                       <FromTableCell cell={cell} row={row} isDraft={isDraft} />
@@ -2325,14 +2374,14 @@ const generalGroupPlaceholderData: GeneralGroup[] = [
     members: "400",
   },
 ];
-export const  GeneralGroupTable = () => {
+export const  GeneralGroupTable = ({data}:{data:GeneralGroup[]}) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
       <GroupConfigDT
         hasAssignment={false}
         isDraft={false}
         columns={generalGroupColumnDef}
-        data={generalGroupPlaceholderData}
+        data={data}
         navRegion="groupName"
         navUrl="/CPD/Configuration/Groups/"
         hasEdit={false}
@@ -2827,10 +2876,7 @@ type cpo = {
 };
 
 export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
-  {
-    accesorKey: "name",
-    header: "Name",
-  },
+ 
   {
     accesorKey: "id",
     header: "ID",
@@ -2839,6 +2885,14 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
     accesorKey: "email",
     header: "Email",
   },
+  {
+    accesorKey: "firstName",
+    header: "First Name",
+  },
+  {
+    accesorKey:"lastName",
+    header:"Last Name"
+  }
 ];
 
 export function CpoViewTable<TData, TValue>({
@@ -2851,6 +2905,9 @@ export function CpoViewTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
   });
   const navTo = useNavigate();
+  const [searchParams,setSearchParams]=useSearchParams()
+  const group = searchParams.get("group")
+  console.log(data)
   return (
     <div className="rounded-md border bg-white shadow-md  relative ">
       <Table>
@@ -2883,7 +2940,7 @@ export function CpoViewTable<TData, TValue>({
               {row
                 .getVisibleCells()
                 .map((cell: Cell<TData, unknown>, index: number) => (
-                  <RegularTableCellCPO cell={cell} navto={navTo} row={row} />
+                  <RegularTableCellCPO cell={cell} group={group||""} navto={navTo} row={row} />
                 ))}
 
               <TableCell>
@@ -2961,28 +3018,30 @@ const RegularTableCellCPO = ({
   cell,
   row,
   navto,
+  group
 }: {
   cell: any;
   row: any;
   navto: (id: string) => void;
-}) => {
-  return cell.column.columnDef.accesorKey === "name" ? (
+  group:string
+}) => { 
+  return cell.column.columnDef.accesorKey.toLowerCase().includes("email")  ? (
     <TableCell
       key={cell.id}
       onClick={() => {
-        if (cell.column.columnDef.accesorKey === "name") {
-          navto(`/CPD/Tickets/CPO/${row.original["name"]}`);
+        if (cell.column.columnDef.accesorKey.toLowerCase().includes("email") ) {
+          navto(`/CPD/Tickets/CPO/${row.original["id"]}?group=${group}`);
         }
       }}
       className={`${
-        cell.column.columnDef.accesorKey === "name" &&
+        cell.column.columnDef.accesorKey.toLowerCase().includes("email")  &&
         "text-center whitespace-nowrap hover:text-blue-300 hover:cursor-pointer"
       } text-center`}
     >
       {flexRender(
         cell.column.columnDef.accesorKey === "id"
           ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
-          : row.original[cell.column.columnDef.accesorKey].toString(),
+          : row.original[cell.column.columnDef.accesorKey],
         cell.getContext()
       )}
     </TableCell>
