@@ -49,12 +49,12 @@ export const TicketPage = () => {
       }).then((resp) => resp.data),
   });
   const btnStyles = {
-    Pending: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
-    Unresolved: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
-    Resolved: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
-    Open: "bg-[#FF585821] border-2 border-[#FF5858]",
-    Escalated: "bg-[#D016DD21] border-2 border-[#D116DD]",
-    Unassigned: "",
+    PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+    UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+    RESOLVED: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+    OPENED: "bg-[#FF585821] border-2 border-[#FF5858]",
+    ESCALATED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+    UNASSIGNED: "",
   };
 
   return (
