@@ -26,16 +26,10 @@ export const GroupView = () => {
   if (!group) return redirect("/CPD/Dashboard");
 
   const [page, setPage] = useState(1);
-  const urlMap = {
-    All: "/users/all?page=0&size=10",
-    Consumer_Protection_Officers: `/cpo/all/paginated?page=${page - 1}&size=20`,
-    Terminal_Supervisors: `/supervisors/all`,
-  };
-
   const groupDataQuery = useQuery({
     queryKey: ["groups", group, page - 1],
     queryFn: () =>
-      axios(urlMap[group], {
+      axios(`users/role?value=${group}&page=0&size=10`, {
         method: "GET",
       }).then((resp) => resp.data),
   });
@@ -91,11 +85,7 @@ export const GroupView = () => {
           {groupDataQuery.isSuccess && (
             <CpoViewTable
               columns={cpoTableColumnDef}
-              data={
-                groupDataQuery.data.ncaaUserResponseDtoList ||
-                groupDataQuery.data.cpoProfileResponseList ||
-                groupDataQuery.data
-              }
+              data={groupDataQuery.data.ncaaUserResponseDtoList}
             />
           )}
         </div>
