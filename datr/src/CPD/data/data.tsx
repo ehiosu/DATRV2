@@ -1,6 +1,7 @@
 export type slaEntry = {
   title: string;
   state: boolean;
+  value:string,
 };
 export type requestType = {
   title: string;
@@ -82,36 +83,44 @@ export const startSlaEntries: slaEntry[] = [
   {
     title: "Ticket Created",
     state: false,
+    value:"TICKET_CREATION"
   },
   {
     title: "Assignee:From Unassigned",
     state: false,
+    value:"FROM_UNASSIGNED"
   },
   {
     title: "Assignee:To unassigned",
     state: false,
+    value:""
   },
   {
     title: "Assignee changed",
     state: false,
+    value:""
   },
 ];
 export const pauseSlaEntries: slaEntry[] = [
   {
     title: "Status: Waiting for Approval",
     state: false,
+    value:""
   },
   {
     title: "Status: Waiting for Customer",
     state: true,
+    value:""
   },
   {
     title: "Assignee set",
     state: false,
+    value:""
   },
   {
     title: "Assignee not set",
     state: false,
+    value:"TO_UNASSIGNED"
   },
 ];
 
@@ -119,18 +128,22 @@ export const stopEntries: slaEntry[] = [
   {
     title: "Comment: For Customers",
     state: true,
+    value:""
   },
   {
     title: "Entered Status: Waiting for Customer",
     state: false,
+    value:""
   },
   {
     title: "Resolution set",
     state: true,
+    value:""
   },
   {
-    title: "Assignee: To Unassigned",
+    title: "To:Assigned",
     state: false,
+    value:"TO_ASSIGNED"
   },
 ];
 
