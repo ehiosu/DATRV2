@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "../../components/ui/dialog.tsx";
 import { cn } from "../../lib/utils.ts";
+import sanitizeHtml from "sanitize-html";
 export const SignleMessage = ({
   name,
   username,
@@ -98,7 +99,36 @@ export const SignleTicketMessage = ({
   message,
   priority,
   complaintDetails = [],
+  isMessage = false,
+  setReplyingTo,
 }) => {
+  const cleanHtml = (message) => {
+    return sanitizeHtml(message, {
+      allowedTags: [
+        "b",
+        "i",
+        "em",
+        "strong",
+        "a",
+        "span",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "ul",
+        "ol",
+        "li",
+        "blockquote",
+      ],
+      allowedAttributes: {
+        a: ["href"],
+      },
+      allowedIframeHostnames: ["www.youtube.com"],
+    });
+  };
+
   return (
     <div className="w-full flex flex-col ">
       <div className="flex justify-between items-center ">
@@ -116,7 +146,13 @@ export const SignleTicketMessage = ({
         <div className="flex flex-col items-end gap-2">
           <Actions>
             <SingleAction name={"Print"} Icon={FiPrinter} />
-            <SingleAction name={"Reply"} Icon={GoReply} />
+            <SingleAction
+              name={"Reply"}
+              Icon={GoReply}
+              onClick={() => {
+                setReplyingTo(username);
+              }}
+            />
             <SingleAction name={"Forward"} Icon={TbArrowForward} />
             <SingleAction name={"Add Note"} Icon={CiStickyNote} />
           </Actions>
@@ -143,10 +179,16 @@ export const SignleTicketMessage = ({
           })}
         </div>
       )}
-      {message && (
-        <div className="px-6 mx-auto text-[0.7275rem] py-2 bg-neutral-200 rounded-md leading-4 mt-4">
+      {message && !isMessage && (
+        <div className="px-6  text-[0.7275rem] py-2 bg-neutral-200 rounded-md leading-4 mt-4">
           {message}
         </div>
+      )}
+      {message && isMessage && (
+        <div
+          className=" ticketMessage px-6  py-2 bg-neutral-200 rounded-md leading-4 mt-4"
+          dangerouslySetInnerHTML={{ __html: cleanHtml(message) }}
+        ></div>
       )}
     </div>
   );
