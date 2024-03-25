@@ -48,7 +48,7 @@ export const AuthForm = () => {
       throw new Error("Ensure both fields are filled");
     }
     try {
-      const resp = await axios("http://localhost:8080/api/users/login", {
+      const resp = await axios("http://176.58.117.18:8080/api/users/login", {
         method: "Post",
         data: values,
       });
