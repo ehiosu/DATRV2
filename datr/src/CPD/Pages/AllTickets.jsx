@@ -236,17 +236,21 @@ const FilterButton = ({ assignee, status, cpo }) => {
     queryFn: () =>
       axios("tickets/statuses", {
         method: "GET",
-      }).then((resp) => {
-        console.log(resp.data);
-        return resp.data;
-      }),
+      })
+        .then((resp) => {
+          console.log(resp.data);
+          return resp.data;
+        })
+        .catch((err) => {
+          console.log(err);
+        }),
     staleTime: Infinity,
   });
   const cposQuery = useQuery({
     queryKey: ["cpos"],
     retry: false,
     queryFn: () =>
-      axios("/cpo/all", {
+      axios("cpo/all", {
         method: "GET",
       }).then((resp) => resp.data),
     staleTime: Infinity,
@@ -281,7 +285,7 @@ const FilterButton = ({ assignee, status, cpo }) => {
           </PopoverTrigger>
           {true && (
             <PopoverContent className="px-2 py-2 pb-6" side="left">
-              {cpo && (
+              {/* {cpo && (
                 <div className="flex items-center">
                   <p className="text-[0.8275rem] flex flex-col whitespace-nowrap ">
                     Active CPO: <span className="font-semibold">{cpo}</span>
@@ -296,7 +300,7 @@ const FilterButton = ({ assignee, status, cpo }) => {
                     <AiOutlineClose />
                   </Button>
                 </div>
-              )}
+              )} */}
               <Input
                 placeholder="Search CPO email"
                 className="text-[0.8275rem]  dark:bg-white dark:focus:bg-neutral-200 dark:border-2 dark:border-neutral-500 transition-colors my-5 h-8 text-neutral-400 placeholder:text-neutral-600"
@@ -332,7 +336,7 @@ const FilterButton = ({ assignee, status, cpo }) => {
           </PopoverTrigger>
           {cposQuery.isSuccess && (
             <PopoverContent className="px-2 " side="left">
-              {status && (
+              {/* {status && (
                 <div className="flex items-center">
                   <p className="text-[0.8275rem] flex flex-col whitespace-nowrap ">
                     Active Status:{" "}
@@ -348,7 +352,7 @@ const FilterButton = ({ assignee, status, cpo }) => {
                     <AiOutlineClose />
                   </Button>
                 </div>
-              )}
+              )} */}
               <Input
                 placeholder="Search for a status"
                 className="text-[0.8275rem]  dark:bg-white dark:focus:bg-neutral-200 dark:border-2 dark:border-neutral-500 transition-colors my-5 h-8 text-neutral-400 placeholder:text-neutral-600"
@@ -388,7 +392,7 @@ const FilterButton = ({ assignee, status, cpo }) => {
           </PopoverTrigger>
           {cposQuery.isSuccess && (
             <PopoverContent className="px-2 py-2 pb-6" side="left">
-              {assignee && (
+              {/* {assignee && (
                 <div className="flex items-center">
                   <p className="text-[0.8275rem] flex flex-col whitespace-nowrap ">
                     Active Assignee:{" "}
@@ -404,7 +408,7 @@ const FilterButton = ({ assignee, status, cpo }) => {
                     <AiOutlineClose />
                   </Button>
                 </div>
-              )}
+              )} */}
               <Input
                 placeholder="Search for a status"
                 className="text-[0.8275rem]  dark:bg-white dark:focus:bg-neutral-200 dark:border-2 dark:border-neutral-500 transition-colors my-5 h-8 text-neutral-400 placeholder:text-neutral-600"
