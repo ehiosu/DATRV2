@@ -34,7 +34,7 @@ export const CPOView = () => {
   const { axios } = useAxiosClient();
   const updatedGroup = group.replaceAll("_", " ");
   const userQuery = useQuery({
-    queryKey: [group, agent],
+    queryKey: ["user", agent],
     refetchOnMount: true,
     queryFn: () =>
       axios(`/users/${agent}`, {
@@ -62,7 +62,7 @@ export const CPOView = () => {
           ]}
         />
         {userQuery.isSuccess && userQuery.data && (
-          <UserCard group={updatedGroup} user={userQuery.data} />
+          <UserCard group={group} id={agent} user={userQuery.data} />
         )}
         {/* <div>
           <AlertDialog>
@@ -125,7 +125,7 @@ export const BreadCrumb = ({ last, previous, current }) => {
   );
 };
 
-const UserCard = ({ group, user }) => {
+const UserCard = ({ group, user, id }) => {
   const { axios } = useAxiosClient();
   const client = useQueryClient();
   const [newRole, setNewRole] = useState("");
@@ -144,7 +144,7 @@ const UserCard = ({ group, user }) => {
             title: "Success!",
             description: "User Successfully upgraded!",
           });
-          client.invalidateQueries({ queryKey: [group, user.id] });
+          client.invalidateQueries({ queryKey: ["user", id] });
           return resp.data;
         })
         .catch((err) => {
@@ -164,7 +164,10 @@ const UserCard = ({ group, user }) => {
     <div className="flex  my-3 px-2 gap-4 items-center flex-wrap">
       <div className="w-20 aspect-square rounded-full overflow-hidden ">
         <img
-          src="https://cdn.leonardo.ai/users/be34e3d9-8456-49f8-b15a-dda75af03b5d/generations/7644e4fa-acce-4a9f-a06b-0595e0069f67/Leonardo_Diffusion_XL_user_avatar_image_0.jpg"
+          src={
+            user.imageUrl ||
+            "https://th.bing.com/th/id/OIP.xo-BCC1ZKFpLL65D93eHcgHaGe?rs=1&pid=ImgDetMain"
+          }
           className="w-full aspect-square rounded-full object-cover"
           alt="User Image"
         />
