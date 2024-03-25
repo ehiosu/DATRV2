@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import { CiTrash } from "react-icons/ci";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { useAuth } from "../api/useAuth";
+import { User } from "lucide-react";
 export const SearchPage = ({ children, heading, isRedirect = false }) => {
   const [searching, setSearching] = useState(false);
 
@@ -77,7 +78,11 @@ const UserHeader = ({ searching }) => {
       <DropdownMenuTrigger
         className={`outline-none ${searching ? "hidden" : "block"} ml-auto`}
       >
-        <Avatar className="w-8  aspect-square rounded-full  border-2  border-gray-400/40  grid  place-items-center">
+        <Avatar className="w-8  aspect-square rounded-full  border-2  border-gray-400/40  grid  place-items-center overflow-hidden">
+          <AvatarImage
+            className="w-full aspect-square object-cover"
+            src={user.imageUrl}
+          />
           <AvatarFallback>{user.firstName[0]}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
