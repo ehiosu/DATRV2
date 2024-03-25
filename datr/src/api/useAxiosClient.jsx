@@ -11,8 +11,9 @@ import createAxiosClient from "./axios";
 import axios from "axios";
 export const AxiosClient = ({ children }) => {
   const { refresh, access, updateTokens, updateUser } = useAuth();
+  const baseUrl = "http://176.58.117.18:8080/api/";
   const getNewToken = () => {
-    return axios("http://localhost:8080/api/users/refresh/token", {
+    return axios(`${baseUrl}users/refresh/token`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${refresh}`,
