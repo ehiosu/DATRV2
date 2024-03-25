@@ -26,7 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Input } from "../../components/ui/input";
 import { FormDatePicker } from "../../components/Datepicker";
 import { toast } from "../../components/ui/use-toast";
@@ -38,7 +38,15 @@ export const NewTicket = () => {
   if (!user.roles.includes("CPO") && !user.roles.includes("ADMIN")) {
     return <Navigate to={"/CPD/Dashboard"} />;
   }
-
+  const getSlasQuery = useQuery({
+    queryKey: ["slas", "all"],
+    queryFn: () =>
+      axios("admin/sla", {
+        method: "GET",
+      })
+        .then((resp) => resp.data)
+        .catch((err) => err),
+  });
   const formSchema = z.object({
     complainantName: z.string().min(1, { message: "Enter a valid email!" }),
     complainantEmail: z
@@ -80,7 +88,7 @@ export const NewTicket = () => {
   const formSubmitMutation = useMutation({
     mutationFn: (values) => {
       console.log(values);
-      return axios("/tickets/create", {
+      return axios("tickets/create", {
         method: "Post",
         data: {
           ...values,
@@ -561,28 +569,32 @@ export const NewTicket = () => {
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
-                      <SelectTrigger className="w-full h-8 outline-none bg-white rounded-md  dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent">
+                      <SelectTrigger
+                        disabled={
+                          getSlasQuery.isError || getSlasQuery.isLoading
+                        }
+                        className="w-full h-8 outline-none bg-white rounded-md  dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent"
+                      >
                         <SelectValue
-                          placeholder="Critical"
+                          placeholder="Select a priority..."
                           className="text-neutral-500"
                         />
                       </SelectTrigger>
-                      <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none ">
-                        <SelectItem
-                          value="AS"
-                          className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center"
-                        >
-                          Critical
-                        </SelectItem>
-                        <Separator />
-                        <SelectItem
-                          className=" text-[0.9rem] text-neutral-400 text-center inline p-1 hover:cursor-pointer"
-                          value="Ml"
-                        >
-                          Morderate
-                        </SelectItem>
-                        <Separator />
-                      </SelectContent>
+                      {getSlasQuery.isSuccess && (
+                        <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none ">
+                          {getSlasQuery.data.map((sla) => (
+                            <>
+                              <SelectItem
+                                value={sla.slaName}
+                                className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center"
+                              >
+                                {sla.slaName}
+                              </SelectItem>
+                              <Separator />
+                            </>
+                          ))}
+                        </SelectContent>
+                      )}
                     </Select>
                   </FormControl>
                   <FormMessage />
