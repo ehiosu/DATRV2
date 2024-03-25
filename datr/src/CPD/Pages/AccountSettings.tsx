@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { Sidebar } from "../Sidebar/Sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/api/useAuth";
-// import { useAxiosClient } from "@/api/useAxiosClient";
-import axios from "axios"
+import { useAxiosClient } from "@/api/useAxiosClient";
+import Axios from "axios";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { GoPencil } from "react-icons/go";
 import { MdClose } from "react-icons/md";
-import {  useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   FormControl,
   FormDescription,
@@ -22,10 +23,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  Form
+  Form,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
+import { Cloudinary } from "@cloudinary/url-gen";
+
 export const AccountSettings = () => {
   return (
     <section className="flex flex-row space-x-3  bg-[#FAFAFA]">
@@ -64,8 +67,8 @@ export const AccountSettings = () => {
 };
 
 const MyProfile = () => {
-  const { user,access } = useAuth();
-  // const {axios}=useAxiosClient()
+  const { user, access } = useAuth();
+  const { axios } = useAxiosClient();
   const containsSpecialCharacter = (input: string) => {
     return /[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]/.test(input);
   };
@@ -102,37 +105,37 @@ const MyProfile = () => {
       message: "Passwords don't match",
     });
   const resetPasswordForm = useForm<z.infer<typeof resetPasswordSchema>>({
-    mode:"onChange",
+    mode: "onChange",
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  const tryChangePassword=async(values:z.infer<typeof resetPasswordSchema>) =>{
-    await axios('http://localhost:8080/passwords/change',{
-      headers:{
-        Authorization:`Bearer ${access}`
+  const tryChangePassword = async (
+    values: z.infer<typeof resetPasswordSchema>
+  ) => {
+    await axios("password/change", {
+      method: "PUT",
+      data: {
+        email: user.email,
+        ...values,
       },
-      method:"PUT",
-      data:{
-        email:user.email,
-        ...values
-      }
-    }).then((resp:any)=>{
-      toast({
-        title:"Success!",
-        description:resp.data.message,
-        variant:"default"
-      })
-    return true
-    }).catch((err:Error)=>{
-      toast({
-        title:"Error!",
-        description:err.message,
-        variant:"destructive"
-      })
-      return false
     })
-
-  }
+      .then((resp: any) => {
+        toast({
+          title: "Success!",
+          description: resp.data.message,
+          variant: "default",
+        });
+        return true;
+      })
+      .catch((err: Error) => {
+        toast({
+          title: "Error!",
+          description: err.message,
+          variant: "destructive",
+        });
+        return false;
+      });
+  };
   return (
     <section className="flex flex-col gap3 w-full md:w-[80%] mx-auto">
       <p className="font-semibold text-[1.3rem]">My Profile</p>
@@ -140,7 +143,8 @@ const MyProfile = () => {
         <img
           className="h-24 aspect-square rounded-full object-cover "
           src={
-            "https://cdn.leonardo.ai/users/2873f752-1089-4391-999f-1f947e3baa50/generations/01e3023e-5b9f-4164-9149-8b97452f5fa2/variations/Default_Create_an_image_of_the_Viking_Ragnar_Lothbrok_looks_an_0_01e3023e-5b9f-4164-9149-8b97452f5fa2_0.jpg?w=512"
+            user.imageUrl ||
+            "https://th.bing.com/th/id/OIP.xo-BCC1ZKFpLL65D93eHcgHaGe?rs=1&pid=ImgDetMain"
           }
           alt="User logo"
         />
@@ -157,7 +161,7 @@ const MyProfile = () => {
             <p>Edit</p>
             <GoPencil />
           </AlertDialogTrigger>
-          <AlertDialogContent></AlertDialogContent>
+          <UpdateUserImageComponent id={user.id} />
         </AlertDialog>
       </div>
       <div className="border-2 rounded-xl border-neutral-100 p-4 whitespace-nowrap">
@@ -264,11 +268,143 @@ const MyProfile = () => {
                   </FormItem>
                 )}
               />
-              <button type="submit" disabled={resetPasswordForm.formState.isSubmitting} className="disabled:bg-neutral-500 disabled:hover:bg-neutral-700 bg-lightPink text-white grid place-items-center py-2 w-full h-12 rounded-xl my-4 hover:bg-darkBlue transition-colors">Change Password</button>
+              <button
+                type="submit"
+                disabled={resetPasswordForm.formState.isSubmitting}
+                className="disabled:bg-neutral-500 disabled:hover:bg-neutral-700 bg-lightPink text-white grid place-items-center py-2 w-full h-12 rounded-xl my-4 hover:bg-darkBlue transition-colors"
+              >
+                Change Password
+              </button>
             </form>
           </Form>
         </AlertDialogContent>
       </AlertDialog>
     </section>
+  );
+};
+
+const UpdateUserImageComponent = ({ id }: { id: string }) => {
+  const { axios } = useAxiosClient();
+  const { updateImageUrl, access } = useAuth();
+  const [image, setImage] = useState("");
+  const [isImageUploading,setIsImageUploading]=useState(false)
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dialogCloseRef=useRef<HTMLButtonElement>(null)
+  const recieveUploadedImages = (files: FileList | null) => {
+    const target_file = files ? files[0] : null;
+    if (target_file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(target_file);
+      reader.onloadend = () => {
+        // const img = new Image()
+        console.log(reader.result);
+        setImage(reader.result as string);
+      };
+    }
+  };
+  const handleUploadImage = async () => {
+    if (!image) {
+      inputRef.current?.click();
+    }
+    if (image) {
+      setIsImageUploading(true)
+      const { success, url, err } = await getuploadImageUrl(image);
+      if (success) {
+        axios(`users/${id}`, {
+          method: "PATCH",
+          data: [{ op: "replace", path: "/imageUrl", value: `${url}` }],
+        })
+          .then((resp: any) => {
+            setIsImageUploading(false)
+            toast({
+              title: "Success!",
+              description: "image uploaded successfully!",
+            });
+            updateImageUrl(url);
+            dialogCloseRef.current?.click()
+          })
+          .catch((err: Error) => {
+            setIsImageUploading(false)
+
+            toast({
+              title: "Error",
+              description: err.message,
+              variant: "destructive",
+            });
+          });
+      } else {
+        setIsImageUploading(false)
+
+        toast({
+          title: "Error",
+          description: err,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  const getuploadImageUrl = async (file: string) => {
+    const preset = "asseco-ncaa";
+    const cloud = "dpxuxtdbh";
+    let url = "";
+    let success = false;
+    let err = "";
+    await Axios(`https://api.cloudinary.com/v1_1/${cloud}/upload`, {
+      method: "POST",
+      data: {
+        upload_preset: preset,
+        tags: "user_image_upload",
+        file: file,
+      },
+    })
+      .then((resp) => {
+        console.log(resp.data);
+        url = resp.data.url;
+        success = true;
+      })
+      .catch((err) => {
+        err = err.message;
+      });
+    return { url, success, err };
+  };
+  return (
+    <AlertDialogContent className="w-[40%]  flex flex-col items-center">
+      <div className="flex flex-row justify-end items-center w-full ">
+        <AlertDialogCancel ref={dialogCloseRef}>
+          <MdClose />
+        </AlertDialogCancel>
+      </div>
+
+      <div
+        className={`w-[50%] aspect-square rounded-full overflow-hidden ${
+          !image && "bg-neutral-300"
+        }`}
+      >
+        {image !== null && (
+          <img
+            src={image}
+            className="w-full h-full object-cover object-top"
+          ></img>
+        )}
+      </div>
+      <button
+        disabled={isImageUploading}
+        className="w-full disabled:bg-neutral-500 disabled:cursor-wait disabled:text-black disabled:font-semibold  h-9 text-white font-semibold py-2 flex flex-row items-center justify-center bg-lightPink rounded-full hover:bg-darkBlue transition-all"
+        onClick={() => {
+          handleUploadImage();
+        }}
+      >
+        Upload Image
+      </button>
+      <input
+        type="file"
+        className=" hidden"
+        accept="image/*"
+        ref={inputRef}
+        onChange={(e) => {
+          recieveUploadedImages(e.target.files);
+        }}
+      />
+    </AlertDialogContent>
   );
 };
