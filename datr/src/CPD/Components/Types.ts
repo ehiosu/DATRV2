@@ -53,12 +53,16 @@ export type TicketDistribution={
 export type SlaGeneral={
   slaName:string,
   resolutionTime:string,
-  responseTime:string
+  responseTime:string,
+  resolutionHour?:string,
+  resolutionMinute?:string,
+  responseHour?:string,
+  responseMinute?:string
 }
 export type GeneralGroup={
-  groupName:string,
   groupDescription:string,
-  members:string
+  count:string,
+  name:string
 }
 
 export type GeneralTerminal={
