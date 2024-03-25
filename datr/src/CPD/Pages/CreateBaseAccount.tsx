@@ -46,7 +46,7 @@ export const CreateBaseAccount = () => {
 
   const createAccountMutation=useMutation({
     mutationKey:["createAccount"],
-    mutationFn:(values:z.infer<typeof formSchema>)=>axios('http://localhost:8080/api/users/create',{
+    mutationFn:(values:z.infer<typeof formSchema>)=>axios('http://176.58.117.18:8080/api/users/create',{
       method:"POST",
       data:{...values}
     }).then((resp:any)=>{
@@ -74,12 +74,12 @@ export const CreateBaseAccount = () => {
       <img
             src={logo}
             alt=""
-            className="absolute  opacity-30 left-0 -translate-x-1/3 w-[440px] top-0 -translate-y-1/4"
+            className="absolute  opacity-30 left-0 -translate-x-1/3 w-[440px] top-0 -translate-y-1/4 "
           />
       <div onClick={()=>{nav("/")}} className="absolute left-4 top-4 w-12 hover:scale-105 transition-all hover:cursor-pointer aspect-square bg-white rounded-bl-xl rounded-tr-xl grid place-items-center">
           <ArrowBigLeft/>
       </div>
-      <div className="min-w-[420px] px-5 py-4 bg-white rounded-md shadow-md xl:w-[32%] shadow-blue-100/50">
+      <div className="min-w-[420px] px-5 py-4 bg-white rounded-md shadow-md xl:w-[32%] shadow-blue-100/50 relative z-20">
         <p className="text-2xl text-center font-[800]">Create Your Account</p>
 
         <Form {...form}>
