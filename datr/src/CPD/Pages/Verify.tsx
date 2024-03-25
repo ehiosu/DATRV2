@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {useAxiosClient} from '../../api/useAxiosClient.jsx'
 import { toast } from '@/components/ui/use-toast'
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/api/useAuth.js'
+import axios from 'axios'
 export const Verify = () => {
     const [otp,setOtp]=useState<string[]>(Array(6).fill(""))
+    const [canResendOtp,setCanResendOtp]=useState<boolean>(true)
+    const {updateVerified,user:{email}}=useAuth()
     const [activeInput,setActiveInput]=useState(0)
     const inputRefs=useRef<HTMLInputElement|null>(null)
-    const {axios}=useAxiosClient()
     const nav=useNavigate()
-    const {updateVerified}=useAuth()
+
+
     const handleChange=(e:React.ChangeEvent<HTMLInputElement>,index:number):void=>{
         const value=e.target.value.substring(e.target.value.length-1)
         let temp = [...otp]
@@ -21,9 +23,6 @@ export const Verify = () => {
        }
       else{
         setActiveInput(index+1)
-      }
-      if(otp.join("").length===6){
-        tryVerifyCode()
       }
     }
     const handlePaste=(e:React.ClipboardEvent<HTMLInputElement>,index:number)=>{
@@ -39,7 +38,7 @@ export const Verify = () => {
                 variant:"destructive"
             })
         }
-        await axios(`/users/verify?otp=${code}`,{
+        await axios(`http://176.58.117.18:8080/api/users/verify?otp=${code}`,{
             method:"GET"
         }).then((resp:any)=>{
             toast({
@@ -51,12 +50,35 @@ export const Verify = () => {
             setTimeout(()=>{nav('/Home')},1000)
         }).catch((err:Error)=>{
             console.log(err.message)
+            setCanResendOtp(true)
             toast({
                 title:"Error!",
                 description:err.message,
                 variant:"destructive"
             })
         })
+    }
+
+    const resendOtp=async()=>{
+      setCanResendOtp(false)
+     try{
+      const resp = await axios(`http://176.58.117.18:8080/api/users/verification/resend?email=${email}`)
+      if(resp.data){
+       
+        toast({
+          title:"Success!",
+          description:"OTP successfully resent."
+        })
+      }
+     } catch(err){
+      setCanResendOtp(true)
+        toast({
+          title:"Error",
+          description:"Error resending otp,try again in a few minutes.",
+          variant:"destructive"
+        })
+     }
+     
     }
     useEffect(()=>{
         inputRefs.current?.focus()
@@ -84,6 +106,7 @@ export const Verify = () => {
                 ))
             }
          </div>
+         <button  onClick={()=>{resendOtp()}} className='text-[0.75rem] text-blue-300 my-2 cursor-pointer font-semibold hover:underline-offset-2 hover:udnerline-2  transition-all hover:underline-offset-blue-300' disabled={!canResendOtp}>Resend OTP</button>
          <button className='w-full bg-lightPink text-white text-center py-2 rounded-2xl hover:ring-offset-4 transition-all hover:ring-2 hover:ring-lightPink my-4' onClick={()=>{tryVerifyCode()}}>Verify</button>
         </div>
     </div>
