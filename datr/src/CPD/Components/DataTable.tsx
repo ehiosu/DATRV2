@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { CiClock1 } from "react-icons/ci";
 import { BsThreeDots } from "react-icons/bs";
 import { MdAssignmentInd } from "react-icons/md";
@@ -7,6 +7,7 @@ import { FaRegEdit } from "react-icons/fa";
 import { NavigateFunction, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CiCircleCheck } from "react-icons/ci";
 import { IoMdClose } from "react-icons/io";
+
 import {
   Cell,
   ColumnDef,
@@ -72,6 +73,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/api/useAuth";
 import { toast } from "@/components/ui/use-toast";
+import { Pencil } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import SelectionContext from "../context/SelectionContext";
 type ExtendedColumnDef<TData extends unknown, TValue = unknown> = ColumnDef<
   TData,
   TValue
@@ -343,7 +347,7 @@ export function TicketsDataTable<TData, TValue>({
   const cposQuery = useQuery({
     queryKey: ["cpos"],
     queryFn: () =>
-      axios("/cpo/all", {
+      axios("cpo/all", {
         method: "GET",
       }).then((resp:any) =>{
         console.log(resp.data)
@@ -354,7 +358,7 @@ export function TicketsDataTable<TData, TValue>({
   const tryAssignTicket=(id:number,cpo:string)=>{
     if(!cpo) return
     setIsAssigning(true)
-    axios("/tickets/assign",{
+    axios("tickets/assign",{
       method:"PUT",
       data:{
         supervisorEmail:user.email,
@@ -768,7 +772,7 @@ export const OpenTicketsTable = ({data}:{data:openTicket[]}) => {
         data={data}
         columns={openTicketColumnDefinition}
         isDraft={false}
-        hasAssignment={true}
+        hasAssignment={false}
         hasNav={true}
       />
     </div>
@@ -2102,17 +2106,106 @@ export const TicketDistributionTable = () => {
 };
 const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
   {
-    accesorKey: "slaName",
-    header: "SLA Name",
+    id:"Select",
+    header: ({ table }) => {
+      const {selectedSlas,setSelectedSlas}=useContext(SelectionContext)
+      const toggeleChecked=(value:boolean)=>{
+        if(value){
+          let selected = table.getCoreRowModel().rows.map((row)=>row.original["slaName"])
+          console.log(selected)
+          setSelectedSlas([...selected])
+        }
+        else{
+          setSelectedSlas([])
+        }
+        table.toggleAllPageRowsSelected(!!value)
+      }
+      return(
+      
+      <Checkbox
+      className="border-neutral-400  bg-white dark:border-neutral-400 border-2"
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={toggeleChecked}
+        aria-label="Select all"
+      />
+    )},
+    cell: ({ row }) => {
+      const {selectedSlas,setSelectedSlas}= useContext(SelectionContext)
+      const toggleSlaSelection=(value:boolean)=>{
+        console.log(value)
+        let _temp = [...selectedSlas]
+        const id =row.original['slaName']
+
+        if(value){
+          _temp.push(id)
+          setSelectedSlas([..._temp])
+        }
+        else{
+          setSelectedSlas((state)=>state.filter((item)=>item!=id))
+        }
+        row.toggleSelected(!!value)
+        console.log(selectedSlas)
+      }
+      return(
+        <div className="w-full flex items-center justify-center">
+        <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={toggleSlaSelection}
+        aria-label="Select row"
+        className="border-neutral-400  bg-white dark:border-neutral-400 border-2"
+      />
+      </div>
+      )
+     
+  },
+    enableSorting: false,
+    enableHiding: false,
   },
   {
-    accesorKey: "resolutionTime",
+    accesorKey: "slaName",
+    header: "SLA Name",
+    cell:({row})=>{
+     return <div className="text-center">
+        <p>{row.original["slaName"]}</p>
+      </div> 
+    }
+  },
+  {
+    accesorKey: "resolutionHour",
     header: "Resolution Time",
+    cell:({row})=>{
+      const resolutionTime = `${row.original["resolutionHour"]} hour(s) ${row.original["resolutionMinute"]} minute(s) ` 
+    return  <div className="text-center">
+      <p>{resolutionTime}</p>
+      </div>
+    }
   },
   {
     accesorKey: "responseTime",
     header: "Response Time",
+    cell:({row})=>{
+      const resolutionTime = `${row.original["responseHour"]} hour(s) ${row.original["responseMinute"]} minute(s) ` 
+    return  <div className="text-center">
+      <p>{resolutionTime}</p>
+      </div>
+    }
   },
+  {
+    accessorKey:"resolutionTime",
+    header:"",
+    cell:({row})=>{
+      const nav=useNavigate()
+      return <div className="grid place-items-center group-hover:text-black" role="button" onClick={()=>{
+        nav(`/CPD/Configuration/Sla/edit/?slaName=${row.original["slaName"].replace(" ","_")}`)
+      }}>
+        <Pencil size={14} className="hover:scale-115 transition text-neutral-500 hover:text-blue-300 hover:font-semibold"/>
+      </div>
+    }
+  }
+
 ];
 
 const slaGeneralPlaceholderData: SlaGeneral[] = [
@@ -2182,50 +2275,39 @@ export function SlADataTable<TData, TValue>({
                   </TableHead>
                 );
               })}
-             {
-              hasEdit && <TableHead className="w-20 bg-neutral-100"></TableHead>
-             }
+           
             </TableRow>
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row: any) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell: any, index: number) => (
-                  <RegularTableCell cell={cell} index={index} row={row} />
-                ))}
-
-                {hasEdit && (
-                  <TableCell>
-                    <span className="block w-24">
-                      <FaRegEdit
-                        className="text-[1.2rem] text-blue-400 hover:cursor-pointer"
-                        onClick={() => {
-                          nav(
-                            `${navUrl}${row.original[navRegion].replaceAll(
-                              " ",
-                              "_"
-                            )}`
-                          );
-                        }}
-                      />
-                    </span>
-                  </TableCell>
-                )}
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                className="data-[state=selected]:bg-neutral-200 dark:data-[state=selected]:bg-neutral-200"
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
+            )}
+          </TableBody>
       </Table>
     </div>
   );
@@ -2274,61 +2356,46 @@ export function GroupConfigDT<TData, TValue>({
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row: any) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell: any, index: number) => {
-                return  cell.column.columnDef.accesorKey === "groupName"?<TableCell className="hover:text-blue-400 hover:cursor-pointer  text-center" onClick={()=>{nav(`/CPD/user_groups/?group=${row.original["groupName"].replaceAll(" ","_")}`,{replace:true})}}>
-                    {
-                      flexRender(row.original[cell.column.columnDef.accesorKey].toString(),cell.getContext())
-                    }
-                  </TableCell>:
-                  <RegularTableCell cell={cell} index={index} row={row} />
-})}
-
-                {hasEdit && (
-                  <TableCell>
-                    <span className="block w-24">
-                      <FaRegEdit
-                        className="text-[1.2rem] text-blue-400 hover:cursor-pointer"
-                        onClick={() => {
-                          nav(
-                            `${navUrl}${row.original[navRegion].replaceAll(
-                              " ",
-                              "_"
-                            )}`
-                          );
-                        }}
-                      />
-                    </span>
-                  </TableCell>
-                )}
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
+            )}
+          </TableBody>
       </Table>
     </div>
   );
 }
 
-export const GeneralSlaDataTable = () => {
+export const GeneralSlaDataTable = ({data}:{data:SlaGeneral[]}) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
       <SlADataTable
         isDraft={false}
         hasAssignment={false}
         columns={slaGeneralColumnDef}
-        data={slaGeneralPlaceholderData}
+        data={data}
         navUrl="/CPD/Configuration/Sla/Edit/"
         navRegion="slaName"
         hasEdit={true}
@@ -2339,41 +2406,43 @@ export const GeneralSlaDataTable = () => {
 
 const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
   {
-    accesorKey: "groupName",
+    accesorKey: "name",
     header: "Group Name",
+    cell:({row})=>{
+      const groupMap={
+        USER:"All",
+        ADMIN:"Admin",
+        CPO:"Consumer Protection Officer",
+        TERMINAL_SUPERVISOR:"Terminal Supervisor",
+        SHIFT_SUPERVISOR:"Shift Supervisor",
+        DATA_STATISTIC:"Data Statistic",
+        DGO:"Director General ",
+        CPD_D:"CPD Director",
+        CPD_GM:"CPD General Manager"
+      }
+      const nav = useNavigate()
+      return(<div className="w-full flex items-center justify-center hover:text-blue-300 transition" role="button" onClick={()=>{nav(`/CPD/user_groups/?group=${row.original["name"]}`)}}>
+        <p>{groupMap[row.original["name"] as keyof typeof groupMap]}</p>
+      </div>)
+    }
   },
   {
     accesorKey: "groupDescription",
     header: "Group Description",
+    cell:({row})=><div className="w-full flex justify-center items-center">
+      <p>Short group Description</p>
+    </div>
   },
   {
-    accesorKey: "members",
+    accesorKey: "count",
     header: "Members",
+    cell:({row})=><div className="w-full flex justify-center items-center">
+    <p>{row.original["count" ] }</p>
+  </div>
   },
 ];
 
-const generalGroupPlaceholderData: GeneralGroup[] = [
-  {
-    groupName: "User / Supervisory Department",
-    groupDescription: "Short Description of group Properties",
-    members: "400",
-  },
-  {
-    groupName: "Regional Head / Terminal Head",
-    groupDescription: "Short Description of group Properties",
-    members: "30",
-  },
-  {
-    groupName: "Area Managers",
-    groupDescription: "Short Description of group Properties",
-    members: "10",
-  },
-  {
-    groupName: "General Managers / Directors",
-    groupDescription: "Short Description of group Properties",
-    members: "400",
-  },
-];
+
 export const  GeneralGroupTable = ({data}:{data:GeneralGroup[]}) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
