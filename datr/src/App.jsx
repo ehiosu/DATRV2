@@ -42,6 +42,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "./api/useAuth.ts";
 import { AllUsers } from "./CPD/Pages/AllUsers.jsx";
 import { CreateBaseAccount } from "./CPD/Pages/CreateBaseAccount.tsx";
+import { SlaEdit } from "./CPD/Pages/SlaEdit.tsx";
+import NotFound from "./CPD/Pages/NotFound.jsx";
 const queryClient = new QueryClient();
 function App() {
   const { user } = useAuth();
@@ -52,6 +54,7 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<AdminDashboardLogin />} />
+              <Route path="*" element={<NotFound />} />
               <Route path="/Create-Account" element={<CreateBaseAccount />} />
               <Route path="/Home" element={<Home />} />
               <Route path="/Reset-Password" element={<ResetPassword />} />
@@ -67,6 +70,10 @@ function App() {
                     errorElement={<Navigate to={"/CPD/Home"} />}
                   />
                 )}
+                <Route
+                  element={<SlaEdit />}
+                  path="/CPD/Configuration/Sla/edit"
+                />
                 <Route path="/CPD/Tickets/All" element={<AllTickets />} />
                 <Route path="/CPD/Tickets/Open" element={<OpenTickets />} />
                 <Route
