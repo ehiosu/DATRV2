@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { redirect, useParams } from "react-router";
 import { SearchPage } from "../../Reusable/SearchPage";
 import {
@@ -33,21 +33,30 @@ import {
   CommandInput,
 } from "../../components/ui/command";
 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "../../components/ui/form";
 import useWindowSize from "../Sidebar/Hooks/useWindowSize";
-import { SignleTicketMessage } from "../Components/SingleMessage";
 import { TipTapEditor } from "../Components/TipTapEditor";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as sanitizeHtml from "sanitize-html";
 
 export const TicketPage = () => {
   const { id } = useParams();
   if (!id) return redirect("/CPD/Dashboard");
   const { axios } = useAxiosClient();
-  const ticketQuery = useQuery({
-    queryKey: ["tickets", `${id}`],
-    queryFn: () =>
-      axios(`tickets/${id}`, {
-        method: "Get",
-      }).then((resp) => resp.data),
-  });
+  const [messages, setMessages] = useState([]);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const messageEndRef = useRef(null);
+  const containerRef = useRef(null);
+  const currentMessageCount = useRef(0);
+  const scrollArrowRef = useRef(null);
+  const [replyingTo, setReplyingTo] = useState("");
   const btnStyles = {
     PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
     UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
@@ -57,6 +66,67 @@ export const TicketPage = () => {
     UNASSIGNED: "",
   };
 
+  const ticketQuery = useQuery({
+    queryKey: ["tickets", `${id}`],
+    queryFn: () =>
+      axios(`tickets/${id}`, {
+        method: "Get",
+      }).then((resp) => resp.data),
+  });
+
+  useEffect(() => {
+    if (
+      currentMessageCount.current < messages.length &&
+      scrollArrowRef.current
+    ) {
+      console.log("new messages");
+      scrollArrowRef.current.style.setProperty("opacity", 100);
+      setNewMessageCount(messages.length - currentMessageCount.current);
+      currentMessageCount.current = messages.length;
+    } else {
+      console.log("equal number of messages");
+    }
+  }, [messages]);
+
+  const scrollToNewMessages = () => {
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+      scrollArrowRef.current.style.setProperty("opacity", 0);
+      currentMessageCount.current = messages.length;
+    }
+  };
+  const commentsQuery = useQuery({
+    queryKey: ["comments", `${id}`],
+    queryFn: () =>
+      axios(`comments/ticket-id?value=${id}`, {
+        method: "GET",
+      })
+        .then((resp) => {
+          setMessages(resp.data);
+          return resp.data;
+        })
+        .catch((err) => err),
+  });
+
+  const addMessage = (message) => {
+    let _messages = [...messages];
+    _messages.push(message);
+    setMessages([..._messages]);
+  };
+  const handleMouseMove = (e) => {
+    console.log("mouse move");
+    if (containerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+      console.log({ scrollTop, scrollHeight, clientHeight });
+      const isAtBottom =
+        Math.abs(scrollHeight - Math.round(scrollTop)) <= clientHeight;
+      if (isAtBottom) {
+        console.log("is at bottom");
+        scrollArrowRef.current.style.setProperty("opacity", 0);
+        currentMessageCount.current = messages.length;
+      }
+    }
+  };
   return (
     <section className="w-full max-h-screen overflow-y-auto">
       {ticketQuery.isSuccess && (
@@ -94,15 +164,31 @@ export const TicketPage = () => {
           </div>
           <div className="flex mt-3 ">
             <div className="flex-[2.5] border-r-2 border-t-2 p-2 h-[70vh] max-w-full relative">
-              <div className=" border-neutral-200 flex flex-col px-5 py-2 gap-3  h-[45vh] overflow-y-auto relative">
+              <div
+                role="button"
+                className="w-6 hover:scale-110 transition hover:font-semibold aspect-square rounded-full shadow-md p-1 absolute bottom-28 text-white   right-12 z-[10] bg-darkBlue flex flex-col items-center justify-center space-y-2"
+                ref={scrollArrowRef}
+                style={{ opacity: 0 }}
+                onClick={() => {
+                  scrollToNewMessages();
+                }}
+              >
+                <ArrowDown size={12} />
+              </div>
+              <div
+                className=" border-neutral-200 flex flex-col px-5 py-2 gap-3  h-[45vh] overflow-y-auto relative"
+                ref={containerRef}
+                onScroll={handleMouseMove}
+              >
                 <SignleTicketMessage
                   name={"DG"}
                   username={"DG Office"}
-                  priority={"High Priority"}
+                  priority={ticketQuery.data.slaName}
                   date={format(
                     new Date(ticketQuery.data.dateTimeCreated),
                     "dd, MMMM yyyy"
                   )}
+                  setReplyingTo={() => {}}
                   message={""}
                   complaintDetails={[
                     {
@@ -130,8 +216,42 @@ export const TicketPage = () => {
                     },
                   ]}
                 />
+                {commentsQuery.isSuccess &&
+                  messages.map((comment) => (
+                    <SignleTicketMessage
+                      isMessage={comment.commentType === "MESSAGE"}
+                      name={`${comment.authorName.split(" ")[0][0]} ${
+                        comment.authorName.split(" ")[1][0]
+                      }`}
+                      username={comment.authorName}
+                      setReplyingTo={setReplyingTo}
+                      message={comment.content}
+                      date={format(
+                        new Date(comment.dateTimeCreated),
+                        "dd, MMMM yyyy"
+                      )}
+                    />
+                  ))}
+                <div ref={messageEndRef} />
               </div>
-              <TipTapEditor />
+              {replyingTo && (
+                <div className="text-[0.8275rem] w-[40%] bg-neutral-200 py-1 px-3 rounded-sm shadow-sm flex items-center justify-between group/reply">
+                  <p>{replyingTo}</p>
+                  <div className="h-full aspect-square group/reply-btn  group-hover/reply:opacity-100 transition duration-300 group-hover/reply:bg-neutral-300  p-1 rounded-md opacity-0">
+                    <CgClose
+                      onClick={() => {
+                        setReplyingTo("");
+                      }}
+                      className="group-hover/reply-btn:font-bold group-hover/reply-btn:text-red-600 group-hover/reply-btn:scale-110 transition"
+                      role="button"
+                    />
+                  </div>
+                </div>
+              )}
+              <TipTapEditor
+                disabled={!commentsQuery.isSuccess}
+                addMessage={addMessage}
+              />
             </div>
             <LeftPanel />
           </div>
@@ -142,22 +262,89 @@ export const TicketPage = () => {
 };
 const AddNotePopover = () => {
   const { screenSize } = useWindowSize();
+  const { axios } = useAxiosClient();
+  const { id } = useParams();
+  const client = useQueryClient();
+  const popoverTrigger = useRef(null);
+  const noteFormSchema = z.object({
+    content: z.string("Enter a valid comment!"),
+  });
+  const addNoteForm = useForm({
+    defaultValues: {
+      content: "",
+    },
+    resolver: zodResolver(noteFormSchema),
+  });
+  const addNoteMutation = useMutation({
+    mutationKey: ["note"],
+    mutationFn: (content) =>
+      axios("/comments/add", {
+        method: "POST",
+        data: {
+          commentType: "COMMENT",
+          mentions: [],
+          ticketId: id,
+          content: content,
+        },
+      })
+        .then((resp) => {
+          addNoteForm.reset({
+            content: "",
+          });
+          popoverTrigger.current?.click();
+          toast({
+            title: "Success!",
+            description: "Comment successfully added.",
+          });
+          client.invalidateQueries({ queryKey: ["comments", `${id}`] });
+          return resp.data;
+        })
+        .catch((err) => err),
+  });
+
+  const tryAddNote = (values) => {
+    addNoteMutation.mutate(values.content);
+  };
   return (
     <Popover>
-      <PopoverTrigger className="text-xs text-center w-full hover:cursor-pointer hover:text-blue-400 h-6 my-2">
-        Add Note
+      <PopoverTrigger
+        className="text-xs text-center  w-full hover:cursor-pointer hover:text-blue-400 h-6 my-2"
+        ref={popoverTrigger}
+      >
+        Add Comment
       </PopoverTrigger>
       <PopoverContent
         side={screenSize == "small" ? "top" : "left"}
         className="w-80 h-40"
       >
-        <Textarea
-          placeholder="Please Type here"
-          className="focus:outline-none focus:ring-0 focus-visible:ring-0"
-        />
-        <Button variant={"outline"} className="w-full my-2">
-          Submit
-        </Button>
+        <Form {...addNoteForm}>
+          <form onSubmit={addNoteForm.handleSubmit(tryAddNote)}>
+            <FormField
+              name="content"
+              control={addNoteForm.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Please Type here"
+                      {...field}
+                      className="focus:outline-none focus:ring-0 focus-visible:ring-0"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <Button
+                    disabled={addNoteMutation.isPending}
+                    type="submit"
+                    variant={"outline"}
+                    className="w-full my-2  disabled:cursor-wait "
+                  >
+                    Submit
+                  </Button>
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
       </PopoverContent>
     </Popover>
   );
@@ -307,8 +494,8 @@ const ActionsComponent = () => {
       <PopoverContent side="bottom" className="w-44">
         <AddNotePopover />
         <AddReminderPopover />
-        <AddWorkLogPopover />
-        <AddCommentDialog />
+        {/* <AddWorkLogPopover /> */}
+        {/* <AddCommentDialog /> */}
         <EscalatePopover />
       </PopoverContent>
     </Popover>
@@ -330,23 +517,52 @@ const ExtraActions = () => {
 
 const LeftPanel = () => {
   return (
-    <div className="flex-[1] border-t-2 border-neutral-200">
-      <div className="ml-2 h-24 w-[80%] mt-2 border-2 border-neutral-200 rounded-lg bg-white text-center flex flex-col items-center justify-center">
-        <p className="text-darkBlue text-[1.3rem] font-semibold">
-          Time To Expiry:
-        </p>
-        <p className="text-blue-400 text-[1.3rem] font-semibold">3:20:23</p>
-      </div>
+    <div className="flex-[1] border-t-2 border-neutral-200 md:block hidden">
+      <TimerComponent />
       <ExtraActions />
     </div>
   );
 };
-import { CgDetailsMore } from "react-icons/cg";
+
+const TimerComponent = () => {
+  const { id } = useParams();
+  const client = useQueryClient();
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+  const [timeToTimeout, setTimeToTimeout] = useState("");
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const expiry = new Date(ticketData.dateTimeTicketExpired);
+      const now = new Date();
+      let dif = now - expiry;
+      const hours = Math.abs(Math.floor(dif / 3600000)); // 1 hour = 3600000 milliseconds
+      dif %= 3600000;
+      const minutes = Math.abs(Math.floor(dif / 60000)); // 1 minute = 60000 milliseconds
+      dif %= 60000;
+      const seconds = Math.abs(Math.floor(dif / 1000));
+      setTimeToTimeout(`${hours} h : ${minutes} m : ${seconds} s`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <div className=" ml-2 h-24 w-[80%] mt-2 border-2 border-neutral-200 rounded-lg bg-white text-center flex flex-col items-center justify-center">
+      <p className="text-darkBlue lg:text-[1.3rem] font-semibold">
+        Time To Expiry:
+      </p>
+      <p className="text-blue-400 lg:text-[1.3rem] font-semibold">
+        {timeToTimeout}
+      </p>
+    </div>
+  );
+};
+import { CgClose, CgDetailsMore } from "react-icons/cg";
 import { MdHistory } from "react-icons/md";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
-import { format } from "date-fns";
+import { differenceInHours, differenceInMinutes, format } from "date-fns";
 import { toast } from "../../components/ui/use-toast";
+import { SignleTicketMessage } from "../Components/SingleMessage";
+import { useForm } from "react-hook-form";
 const DetailsSubAction = () => {
   const { id } = useParams();
   const client = useQueryClient();
@@ -363,7 +579,7 @@ const DetailsSubAction = () => {
     Approval_Status: "Not Approved",
     Attachments: ticketData.attachment.attachmentUrl.length,
     Responded_Date: format(new Date(ticketData.dateTimeModified), "dd/MM/yyyy"),
-    Due_By: format(new Date(ticketData.dateTimeTicketAssigned), "dd/MM/yyyy"),
+    Due_By: format(new Date(ticketData.dateTimeTicketExpired), "dd/MM/yyyy"),
     Working_Timer: "4h:30M:20S",
     Assigner: ticketData.assigneeName,
   };
@@ -466,21 +682,6 @@ const DetailCellManager = ({ cellKey, value }) => {
       <p className="text-[0.6275rem] text-neutral-400"></p>
     </div>
   );
-};
-
-const detailsData = {
-  ticketID: "#01091291201201",
-  status: "Unresolved",
-  life_Cycle: "24 Hours",
-  Consumer_Protection_Officer: "Bambi Stevens",
-  Tasks: "0",
-  Reminders: " ",
-  Approval_Status: "Not Approved",
-  Attachments: "0",
-  Responded_Date: "Oct 14, 2020.12:49pm",
-  Due_By: "Oct 15, 2020. 15:00pm",
-  Working_Timer: "4:39:66",
-  Assigner: "Clement Adigun",
 };
 
 const HistorySubAction = () => {
