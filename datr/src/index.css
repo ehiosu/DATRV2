@@ -2,7 +2,113 @@
 @tailwind components;
 @tailwind utilities;
 
-
+.transparent-scrollbar{
+  scrollbar-width: thin; /* "auto" or "thin" depending on your preference */
+    scrollbar-color: transparent transparent;
+}
+.transparent-scrollbar::-webkit-scrollbar-track{
+  background: transparent;
+}
+.transparent-scrollbar::-webkit-scrollbar-thumb{
+  background-color: transparent;
+  border: none;
+}
 .spin-button-none::-webkit-inner-spin-button{
     display: none;
+  }
+
+  .ticketMessage h1{
+    @apply text-[1.4rem] font-semibold
+  }
+
+  .ticketMessage h2{
+    @apply text-[1.25rem] font-semibold;
+     line-height: 1.1;
+  }
+  .ticketMessage h3{
+    @apply text-[1.05rem] font-semibold
+  }
+  .ticketMessage h4{
+    @apply text-[0.9275rem] font-semibold
+  }
+  .ticketMessage p{
+    @apply font-[400] text-[0.8275rem]
+  }
+
+  .ticketMessage ul {
+    list-style-type: circle;
+    @apply divide-y divide-neutral-300 space-y-3 
+  }
+  .ticketMessage ol {
+    list-style-type:lower-roman;
+    @apply divide-y divide-neutral-300 space-y-3 
+  }
+
+  .ticketMessage span{
+    @apply text-blue-300 mx-2
+  }
+
+  .ticketMessage blockquote{
+    @apply text-lg italic font-semibold text-gray-900 border-s-4 border-gray-300 bg-gray-50/40 my-1
+  }
+  .ticketMessage{
+    @apply leading-8 text-[0.8275rem]
+  }
+
+  .tiptap > * + * {
+    margin-top: 0.75em;
+  }
+  .tiptap p{
+    margin :0
+  }
+  .tiptap ul,
+  .tiptap ol {
+    padding: 0 1rem;
+  }
+  
+  .tiptap h1,
+  .tiptap h2,
+  .tiptap h3,
+  .tiptap h4,
+  .tiptap h5,
+  .tiptap h6 {
+    @apply leading-tight;
+    margin :0
+
+  }
+  
+  .tiptap code {
+    background-color: rgba(97, 97, 97, 0.1);
+    color: #616161;
+  }
+  
+  .tiptap pre {
+    background: #0D0D0D;
+    color: #FFF;
+    font-family: 'JetBrainsMono', monospace;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+  }
+  
+  .tiptap pre code {
+    color: inherit;
+    padding: 0;
+    background: none;
+    font-size: 0.8rem;
+  }
+  
+  .tiptap img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .tiptap blockquote {
+    padding-left: 1rem;
+    border-left: 2px solid rgba(13, 13, 13, 0.1);
+  }
+  
+  .tiptap hr {
+    border: none;
+    border-top: 2px solid rgba(13, 13, 13, 0.1);
+    margin: 2rem 0;
   }
