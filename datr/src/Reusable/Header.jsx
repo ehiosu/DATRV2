@@ -1,4 +1,4 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import { BiArchiveIn, BiBell, BiTrashAlt } from "react-icons/bi";
 import { AiOutlineSearch } from "react-icons/ai";
 import img from "/OIP.jpg";
@@ -13,7 +13,7 @@ export const Header = ({
   header,
   attachment,
   onclick,
-  customCSS
+  customCSS,
 }) => {
   image ? image : (image = img);
   const [isSearching, SetIsSearching] = useState(false);
@@ -39,14 +39,17 @@ export const Header = ({
 
   return (
     <motion.section
-      className="w-full overflow-hidden sm:h-auto sm:p-1 lg:min-h-[10vh]  h-auto"
+      className="w-full overflow-hidden sm:p-1 lg:min-h-[10vh]  h-auto"
       initial={{ opacity: 0 }}
       transition={{ duration: 1 }}
       whileInView={{ opacity: 1 }}
     >
-      <div className=" flex lg:flex-row flex-col lg:gap-0 gap-6 justify-between  lg:items-center">
+      <div className=" flex lg:flex-row flex-col lg:gap-0 gap-6 justify-between  lg:items-center items-start">
         {!isSearching && (
-          <p className={`font-semibold  text-[2rem] md:text-xl ${customCSS}`} onClick={() => onclick()}>
+          <p
+            className={`font-semibold  text-[2rem] md:text-xl ${customCSS}`}
+            onClick={() => onclick()}
+          >
             {header}{" "}
             <span className="text-xs text-blue-400 mx-2">{attachment}</span>
           </p>
