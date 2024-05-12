@@ -112,3 +112,57 @@
     border-top: 2px solid rgba(13, 13, 13, 0.1);
     margin: 2rem 0;
   }
+  /* .react-datetime-picker__wrapper{
+    border-color: transparent;
+  } */
+  .react-datetime-picker__inputGroup__input {
+  background-color: transparent;
+  @apply inline p-0 mx-2 
+  }
+
+  .react-datetime-picker__clock .react-datetime-picker__clock--open{
+    @apply bg-white z-[99999]
+  }
+
+  .expiredSla{
+   
+    animation: glow 1s infinite ease-in-out;
+    @apply shadow-red-400
+  }
+  @keyframes glow {
+    from{
+      @apply shadow-sm shadow-red-600
+    }
+    to{
+      @apply shadow-lg shadow-red-600
+    }
+    
+  }
+  .react-time-picker__wrapper{
+    @apply border-transparent border-opacity-0 h-8 bg-white rounded-xl
+  }
+  .react-time-picker__inputGroup__input{
+    @apply py-0 px-2 focus:border-transparent focus-within:border-transparent focus:outline-none focus-within:outline-none
+  }
+  input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.react-datetime-picker__clock {
+  display: none;
+}
+
+.react-time-picker__clock {
+  display: none;
+}
+
+.upload-widget{
+  z-index: 99999;
+}
