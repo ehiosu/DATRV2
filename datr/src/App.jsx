@@ -44,6 +44,7 @@ import { AllUsers } from "./CPD/Pages/AllUsers.jsx";
 import { CreateBaseAccount } from "./CPD/Pages/CreateBaseAccount.tsx";
 import { SlaEdit } from "./CPD/Pages/SlaEdit.tsx";
 import NotFound from "./CPD/Pages/NotFound.jsx";
+import { AccountRequests } from "./CPD/Pages/AccountRequests.tsx";
 const queryClient = new QueryClient();
 function App() {
   const { user } = useAuth();
@@ -111,6 +112,10 @@ function App() {
                   element={<CpdConfigurationLayout />}
                   path="/CPD/Configuration"
                 >
+                  <Route
+                    path="/CPD/Configuration/Accounts"
+                    element={<AccountRequests />}
+                  />
                   <Route
                     element={<GeneralConfigurations />}
                     path="/CPD/Configuration/General"
