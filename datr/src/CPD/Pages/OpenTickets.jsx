@@ -11,25 +11,31 @@ import { AiOutlineArrowDown } from "react-icons/ai";
 import { OpenTicketsTable } from "../Components/DataTable";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { useQuery } from "@tanstack/react-query";
+import { NewTicketBtn } from "../../components/NewTicketBtn";
+import { useAuth } from "../../api/useAuth";
 
 export const OpenTickets = () => {
   const { axios } = useAxiosClient();
+  const { user } = useAuth();
+  const isAirline = user.roles.includes("AIRLINE");
   const ticketsQuery = useQuery({
     queryKey: ["tickets", "open"],
     queryFn: () =>
-      axios("tickets/status?value=OPENED", {
-        method: "GET",
-      }).then((resp) => resp.data),
+      axios(
+        isAirline
+          ? "tickets/airline/status?value=OPENED&page=0&size=10"
+          : "tickets/status?value=OPENED",
+        {
+          method: "GET",
+        }
+      ).then((resp) => resp.data),
   });
   return (
     <section className="w-full">
       <SearchPage heading={"Open Tickets"}>
         <div className="w-full  flex-wrap   flex">
           <div className="flex    gap-4   items-center">
-            <ViewChangeBtn />
-            <button className="w-44 bg-darkBlue rounded-md  text-white  h-10">
-              New Application
-            </button>
+            <NewTicketBtn />
           </div>
           <div className="ml-auto flex    gap-3 flex-wrap md:my-0 my-2">
             <FilterButton />
