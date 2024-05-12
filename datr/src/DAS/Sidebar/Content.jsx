@@ -8,7 +8,7 @@ import { BsClipboard2Data } from "react-icons/bs";
 export const content = [
   {
     Name: "Terminals",
-    Icon: <AiOutlineStock className="text-2xl" />,
+    Icon: <AiOutlineStock className="text-2xl " />,
     SubMenu: [],
     to: "/CPD/DAS",
   },
