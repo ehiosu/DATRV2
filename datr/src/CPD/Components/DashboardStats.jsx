@@ -3,33 +3,110 @@ import { statData } from "../data/data";
 import { PiWarningCircle } from "react-icons/pi";
 import ReactApexChart from "react-apexcharts";
 import { cn } from "../../lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { useAxiosClient } from "../../api/useAxiosClient";
+import { Skeleton } from "../../components/ui/skeleton";
+import { useNavigate } from "react-router";
+import { useAuth } from "../../api/useAuth";
 const colors = ["#00CCF2", "#FF007C"];
 export const DashboardStats = () => {
+  const { axios } = useAxiosClient();
+  const { user } = useAuth();
+  const isAirline = user.roles.includes("AIRLINE");
+  const nav = useNavigate();
+  const newTicketQuery = useQuery({
+    queryKey: ["dashboard", "tickets", "new"],
+    queryFn: () =>
+      axios(
+        isAirline
+          ? "tickets/airline/status?value=NEW&page=0&size=10"
+          : "tickets/status?value=NEW"
+      ).then((resp) => resp.data.totalElements),
+  });
+  const resolvedTickets = useQuery({
+    queryKey: ["dashboard", "tickets", "resolved"],
+    queryFn: () =>
+      axios(
+        isAirline
+          ? "tickets/airline/status?value=RESOLVED&page=0&size=10"
+          : "tickets/status?value=RESOLVED"
+      ).then((resp) => resp.data.totalElements),
+  });
+  const openTickets = useQuery({
+    queryKey: ["dashboard", "tickets", "open"],
+    queryFn: () =>
+      axios(
+        isAirline
+          ? "tickets/airline/status?value=OPENED&page=0&size=10"
+          : "tickets/status?value=OPENED"
+      ).then((resp) => resp.data.totalElements),
+  });
   return (
     <div className="flex  gap-4 justify-evenly  my-2  items-center  flex-wrap">
-      {statData.map((datum) => {
-        return <StatCard {...datum} key={datum.id} />;
-      })}
+      {!newTicketQuery.isError && newTicketQuery.isSuccess ? (
+        <StatCard
+          title={"New Tickets"}
+          figure={newTicketQuery.data}
+          onClick={() => {
+            nav("/CPD/Tickets/All");
+          }}
+        />
+      ) : (
+        <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+      )}
+      {!resolvedTickets.isError && resolvedTickets.isSuccess ? (
+        <StatCard
+          title={"Resolved Tickets"}
+          figure={resolvedTickets.data}
+          onClick={() => {
+            nav("/CPD/Tickets/Resolved");
+          }}
+        />
+      ) : (
+        <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+      )}
+      {!openTickets.isError && openTickets.isSuccess ? (
+        <StatCard
+          title={"Open Tickets"}
+          figure={openTickets.data}
+          onClick={() => {
+            nav("/CPD/Tickets/Open");
+          }}
+        />
+      ) : (
+        <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+      )}
     </div>
   );
 };
 
-export const StatCard = ({ figure, title, className }) => {
+export const StatCard = ({
+  figure,
+  title,
+  className,
+  onClick = () => {},
+  showTotal = true,
+}) => {
+  const nav = useNavigate();
   return (
     <div
+      role={showTotal ? "button" : ""}
       className={cn(
         "md:w-40 w-32 aspect-square  rounded-lg   flex    flex-col    items-center bg-white   shadow-md p-2      ",
         className
       )}
+      onClick={() => {
+        onClick();
+      }}
     >
-      <PiWarningCircle className="ml-auto  text-[0.8rem]   hover:cursor-pointer" />
-      <p className="mt-auto text-[1.2rem]  md:text-[1.6rem]  font-semibold ">
-        {figure}
-      </p>
-      <p className="font-thin  text-neutral-600 mb-auto text-[0.75rem] md:text-[0.8275rem] text-center">
-        {title}
-      </p>
-      <p className="text-xs  text-blue-400   hover:underline underline-offset-2">{`{total}`}</p>
+      <div className="h-full  flex flex-col justify-center items-center w-full ">
+        <p className=" text-[1.2rem]  md:text-[1.6rem]  font-semibold ">
+          {figure}
+        </p>
+        <p className="font-thin  text-neutral-600  text-[0.75rem] md:text-[0.8275rem] text-center">
+          {title}
+        </p>
+      </div>
     </div>
   );
 };
@@ -105,7 +182,12 @@ export const TicketStatistics = () => {
   ];
   return (
     <div className="w-full h-full   bg-white   rounded-md   shadow-md   p-3">
-      <ReactApexChart options={chartOptions} series={chartSeries} type="bar" />
+      <ReactApexChart
+        options={chartOptions}
+        series={chartSeries}
+        type="bar"
+        height={"95%"}
+      />
     </div>
   );
 };
