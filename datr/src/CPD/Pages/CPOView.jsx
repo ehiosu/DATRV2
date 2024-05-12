@@ -179,71 +179,71 @@ const UserCard = ({ group, user, id }) => {
         <p className="text-neutral-400 text-[0.725rem]">{user.id}</p>
         <p className="text-[0.65rem]  text-blue-500">{user.email}</p>
       </div>
-      <div className="w-max h-8 rounded-full border-2 border-neutral-500 bg-neutral-200 grid place-items-center px-4 ">
-        <p className="text-[0.725rem] text-neutral-600 whitespace-nowrap">
-          {group}
-        </p>
-      </div>
+
       <div className="flex flex-col space-y-1 items-center justify-center">
         <p className="w-max px-6 bg-darkBlue text-white rounded-full py-1 text-xs font-bold">
           {user.roles[user.roles.length - 1]}
         </p>
-        <AlertDialog>
-          <AlertDialogTrigger className="text-xs font-semibold hover:text-blue-300 text-neutral-400">
-            Change Role
-          </AlertDialogTrigger>
-          <AlertDialogContent className="text-center">
-            <p className="text-[1.4rem] font-semibold text-neutral-700">
-              Change User Role
-            </p>
-            <p className="my-2 text-[0.77rem] text-neutral-400">
-              Doing this will revoke access to or grant the user access to
-              certain modules and/ or features of the system.
-            </p>
+        {user.roles[user.roles.length - 1] === "USER" && (
+          <AlertDialog>
+            <AlertDialogTrigger className="text-xs font-semibold hover:text-blue-300 text-neutral-400">
+              Change Role
+            </AlertDialogTrigger>
+            <AlertDialogContent className="text-center">
+              <p className="text-[1.4rem] font-semibold text-neutral-700">
+                Change User Role
+              </p>
+              <p className="my-2 text-[0.77rem] text-neutral-400">
+                Doing this will revoke access to or grant the user access to
+                certain modules and/ or features of the system.
+              </p>
 
-            <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start">
-              Select a new Role
-            </p>
-            <Select
-              onValueChange={(value) => {
-                setNewRole(value);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="New Role..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="CPO">Consumer Protection Officer</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="TERMINAL_SUPERVISOR">
-                  Terminal Supervisor
-                </SelectItem>
-                <SelectItem value="SHIFT_SUPERVISOR">
-                  Shift Supervisor
-                </SelectItem>
-                <SelectItem value="DATA_STATISTIC">
-                  Data and Statistics Officer
-                </SelectItem>
-                <SelectItem value="DGO"> Director General</SelectItem>
-                <SelectItem value="CPD_D">CPD Director</SelectItem>
-                <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
-              </SelectContent>
-            </Select>
-            <AlertDialogFooter>
-              <AlertDialogAction
-                className="flex-grow"
-                onClick={() => {
-                  changeRoleMutation.mutate();
+              <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start">
+                Select a new Role
+              </p>
+              <Select
+                onValueChange={(value) => {
+                  setNewRole(value);
                 }}
               >
-                Save
-              </AlertDialogAction>
-              <AlertDialogCancel className="flex-grow">
-                Cancel
-              </AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                <SelectTrigger>
+                  <SelectValue placeholder="New Role..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CPO">
+                    Consumer Protection Officer
+                  </SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="TERMINAL_SUPERVISOR">
+                    Terminal Supervisor
+                  </SelectItem>
+                  <SelectItem value="SHIFT_SUPERVISOR">
+                    Shift Supervisor
+                  </SelectItem>
+                  <SelectItem value="DATA_STATISTIC">
+                    Data and Statistics Officer
+                  </SelectItem>
+                  <SelectItem value="DGO"> Director General</SelectItem>
+                  <SelectItem value="CPD_D">CPD Director</SelectItem>
+                  <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
+                </SelectContent>
+              </Select>
+              <AlertDialogFooter>
+                <AlertDialogAction
+                  className="flex-grow"
+                  onClick={() => {
+                    changeRoleMutation.mutate();
+                  }}
+                >
+                  Save
+                </AlertDialogAction>
+                <AlertDialogCancel className="flex-grow">
+                  Cancel
+                </AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     </div>
   );
