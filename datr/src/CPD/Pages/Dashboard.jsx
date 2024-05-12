@@ -7,19 +7,22 @@ import { RecentTickets } from "../Components/RecentTickets";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../api/useAuth";
 export const Dashboard = () => {
+  const { user } = useAuth();
   return (
     <section className=" w-full  p-4 lg:p-2 max-h-screen overflow-y-auto">
       <SearchPage heading={"CPD Dashboard"}>
         <TicketButton />
         <DashboardStats />
         <DashboardPerformanceGraph />
-        <div className="flex  md:max-h-[60vh]  flex-wrap md:gap-0 gap-3">
-          <div className="md:w-[60%] w-full  h-full  max-h-full md:mt-0 mt-3">
+        <div className="flex  md:max-h-[60vh]  flex-wrap md:gap-0 ">
+          <div className="md:w-[60%] w-full  h-full min-w-[320px]  max-h-full md:mt-0 mt-3 flex-grow ">
             <RecentTickets />
           </div>
-          <div className=" w-full md:w-[40%] md:p-4 md:my-0 my-2 h-1/2">
-            <TicketStatistics />
-          </div>
+          {!user.roles.includes("AIRLINE") && (
+            <div className=" w-full md:w-[40%] lg:p-3 min-w-[320px] flex-grow  md:my-0 my-2 h-[45vh]   md:h-[300px]">
+              <TicketStatistics />
+            </div>
+          )}
         </div>
       </SearchPage>
     </section>
