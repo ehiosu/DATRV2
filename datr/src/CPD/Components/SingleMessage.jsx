@@ -160,7 +160,7 @@ export const SignleTicketMessage = ({
         </div>
       </div>
       {complaintDetails.length > 0 && (
-        <div className="w-full  rounded-lg bg-neutral-300 my-2 grid grid-cols-4 grid-rows-2 p-2 gap-y-3">
+        <div className="w-full  rounded-lg bg-neutral-300 my-2 grid grid-cols-3  md:grid-cols-4 md:grid-rows-2 p-2 gap-y-3 text-center">
           {complaintDetails?.map((complaintInfo) => {
             if (complaintInfo.title === "Attachments")
               return <Attachments data={complaintInfo.data} />;
@@ -208,7 +208,13 @@ const Attachments = ({ data }) => {
           View Attachments
         </DialogTrigger>
         {data.length > 0 && (
-          <DialogContent className="h-[80vh]"></DialogContent>
+          <DialogContent className="">
+            {data.map((link) => (
+              <a href={link} target="_blank" className="text-sm text-blue-5a00">
+                {link}
+              </a>
+            ))}
+          </DialogContent>
         )}
       </Dialog>
       <p className="text-[0.6275rem] text-neutral-700 mt-auto">Attachments</p>
