@@ -11,29 +11,35 @@ import { AiOutlineArrowDown } from "react-icons/ai";
 import { UnresolvedTicketsTable } from "../Components/DataTable";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { useQuery } from "@tanstack/react-query";
+import { NewTicketBtn } from "../../components/NewTicketBtn";
+import { useAuth } from "../../api/useAuth";
 
 export const UnresolvedTickets = () => {
   const { axios } = useAxiosClient();
+  const { user } = useAuth();
+  const isAirline = user.roles.includes("AIRLINE");
   const ticketsQuery = useQuery({
     queryKey: ["tickets", "unresolved"],
     queryFn: () =>
-      axios("tickets/status?value=UNRESOLVED", {
-        method: "GET",
-      })
+      axios(
+        isAirline
+          ? "tickets/airline/status?value=UNRESOLVED&page=0&size=10"
+          : "tickets/status?value=UNRESOLVED",
+        {
+          method: "GET",
+        }
+      )
         .then((resp) => resp.data)
         .catch((err) => err),
   });
   return (
     <section className="w-full">
       <SearchPage heading={"Unresolved Tickets"}>
-        <div className="w-full  flex-wrap   flex">
-          <div className="flex    gap-4   items-center">
-            <ViewChangeBtn />
-            <button className="w-44 bg-darkBlue rounded-md  text-white  h-10">
-              New Application
-            </button>
+        <div className="w-full   flex-wrap   flex">
+          <div className="flex    gap-4   items-center flex-wrap">
+            <NewTicketBtn />
           </div>
-          <div className="ml-auto flex    gap-3 md:my-0 my-2 flex-wrap">
+          <div className="md:ml-auto flex    gap-3 md:my-0 my-2 flex-wrap">
             <FilterButton />
             <RangeSelectButton />
           </div>
