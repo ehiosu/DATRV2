@@ -21,6 +21,7 @@ import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../api/useAuth";
+import { NewTicketBtn } from "../../components/NewTicketBtn";
 export const AllTickets = () => {
   const cpo = useLocalQuery().get("cpo");
   const status = useLocalQuery().get("status");
@@ -29,15 +30,22 @@ export const AllTickets = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [maxPages, setMaxPages] = useState(1);
   const nav = useNavigate();
+  const { user } = useAuth();
+  const isAirline = user.roles.includes("AIRLINE");
   const ticketsQuery = useQuery({
     queryKey: ["tickets", "all", `${currentPage}`],
     retry: false,
     staleTime: Infinity,
     queryFn: () => {
       if (!cpo && !status && !assignee) {
-        return axios("tickets/all?page=0&size=10", {
-          method: "GET",
-        }).then((resp) => {
+        return axios(
+          isAirline
+            ? "tickets/airline?page=0&size=10"
+            : "tickets/all?page=0&size=10",
+          {
+            method: "GET",
+          }
+        ).then((resp) => {
           setMaxPages(() => resp.data.totalPages);
           return resp.data;
         });
@@ -105,10 +113,7 @@ export const AllTickets = () => {
       <SearchPage heading={"All Tickets"}>
         <div className="w-full  flex-wrap   flex justify-between md:gap-0 ">
           <div className="flex    gap-4   items-center">
-            <ViewChangeBtn />
-            <button className="w-44 bg-darkBlue rounded-md  text-white  h-10">
-              New Application
-            </button>
+            <NewTicketBtn />
           </div>
           <div className="md:ml-auto flex    gap-3  flex-wrap md:my-0 my-2">
             <FilterButton assignee={assignee} cpo={cpo} status={status} />
@@ -185,6 +190,7 @@ export const AllTickets = () => {
         <div className="w-full  flex-1 ">
           {ticketsQuery.isSuccess && (
             <GeneralTicketsTable
+              currentPage={currentPage}
               generalTicketData={ticketsQuery.data.tickets}
             />
           )}
@@ -227,7 +233,12 @@ const ViewChangeBtn = () => {
   );
 };
 
-const FilterButton = ({ assignee, status, cpo }) => {
+const FilterButton = ({
+  assignee,
+  status,
+  cpo,
+  options = { status: false, cpo: false, assignee: false },
+}) => {
   const { axios } = useAxiosClient();
   const [searchedName, setSearchedName] = useState("");
   const { user } = useAuth();
@@ -246,6 +257,7 @@ const FilterButton = ({ assignee, status, cpo }) => {
         }),
     staleTime: Infinity,
   });
+  if (user.roles.includes("AIRLINE")) return <></>;
   const cposQuery = useQuery({
     queryKey: ["cpos"],
     retry: false,
