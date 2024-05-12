@@ -4,9 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TicketRequestType } from "../Components/TicketRequestType";
 import { TicketStatusTypes } from "../Components/TicketStatusTypes";
 import { TicketAlerts } from "../Components/TicketAlerts";
+import { useQuery } from "@tanstack/react-query";
+import { useAxiosClient } from "../../api/useAxiosClient";
 
 export const TicketsConfiguration = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const { axios } = useAxiosClient();
+
   return (
     <AnimatePresence>
       <motion.section
