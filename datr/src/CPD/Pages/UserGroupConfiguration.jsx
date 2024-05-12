@@ -43,34 +43,6 @@ export const UserGroupConfiguration = () => {
         animate={{ scale: 1, opacity: 1 }}
         className="w-[90%]  mx-auto max-h-[80vh] md:overflow-y-auto flex flex-col p-2"
       >
-        <AlertDialog>
-          <AlertDialogTrigger className="bg-darkBlue text-white flex items-center gap-2 justify-center h-9 w-32 rounded-md">
-            <AiOutlinePlus />
-            New Group
-          </AlertDialogTrigger>
-          <AlertDialogContent className="flex flex-col ">
-            <AlertDialogCancel className="ml-auto">
-              <AiOutlineClose />
-            </AlertDialogCancel>
-            <AlertDialogHeader className="text-[1.2rem] font-semibold text-darkBlue">
-              New Group
-            </AlertDialogHeader>
-            <GroupName />
-            <SlaType />
-            <Textarea
-              placeholder="Group description"
-              className="placeholder:text-neutral-400 placeholder:text-[0.67rem] text-[0.75rem] text-neutral-500 resize-none focus:outline-none focus-within:outline-none dark:focus:outline-none dark:focus-within:outline-none"
-            ></Textarea>
-            <div className="flex flex-wrap items-center gap-2">
-              <AlertDialogAction className="flex-1  bg-darkBlue h-9 hover:bg-white hover:text-darkBlue hover:shadow-sm transition-all hover:border-2 hover:border-darkBlue">
-                Submit
-              </AlertDialogAction>
-              <AlertDialogCancel className="flex-1  h-9 bg-lightPink rounded-md text-white hover:bg-purple-500 transition-colors">
-                Cancel
-              </AlertDialogCancel>
-            </div>
-          </AlertDialogContent>
-        </AlertDialog>
         <div className="w-full my-5 shadow-md">
           {getUserGroupQuery.isSuccess && (
             <GeneralGroupTable data={getUserGroupQuery.data} />
