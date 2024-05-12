@@ -3,6 +3,7 @@ import { SearchPage } from "../../Reusable/SearchPage";
 import { BreadCrumb3 } from "./CPOView";
 import { Navigate, redirect, useParams } from "react-router";
 import {
+  AirlineTableColumnDef,
   CpoViewTable,
   cpoTableColumnDef,
   cpoViewPlaceholderData,
@@ -26,12 +27,44 @@ export const GroupView = () => {
   if (!group) return redirect("/CPD/Dashboard");
 
   const [page, setPage] = useState(1);
+  const [paginationInfo, setPaginationInfo] = useState({
+    totalPages: 0,
+    totalElements: 0,
+  });
   const groupDataQuery = useQuery({
     queryKey: ["groups", group, page - 1],
     queryFn: () =>
-      axios(`users/role?value=${group}&page=0&size=10`, {
-        method: "GET",
-      }).then((resp) => resp.data),
+      axios(
+        group === "AIRLINE"
+          ? "users/role/non-pageable?value=AIRLINE"
+          : `users/role?value=${group}&page=${page - 1}&size=10`,
+        {
+          method: "GET",
+        }
+      ).then((resp) => {
+        if (group !== "AIRLINE") {
+          console.log(resp);
+          setPaginationInfo({
+            totalPages: resp.data.totalPages,
+            totalElements: resp.data.totalElements,
+          });
+          return resp.data;
+        } else {
+          console.log("else");
+          const result = {
+            ncaaUserResponseDtoList: resp.data.sort((a, b) => {
+              if (a.airline < b.airline) {
+                return -1;
+              } else if (a.airline > b.airline) {
+                return 1;
+              }
+              return 0;
+            }),
+          };
+          console.log(result);
+          return result;
+        }
+      }),
   });
   const updated_group = group.replaceAll("_", " ");
   console.log(updated_group);
@@ -55,27 +88,32 @@ export const GroupView = () => {
           Members
         </p>
         <div className="flex justify-between items-center flex-wrap  md:gap-0 gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger className="w-max px-4 py-[6px] md:py-2 bg-darkBlue rounded-md text-white text-[0.7275rem] md:text-[0.875rem]">
-              + Add New Group
-            </AlertDialogTrigger>
-            <AlertDialogContent className="flex flex-col ">
-              <AlertDialogCancel className="w-max ml-auto border-none">
-                <CgClose />
-              </AlertDialogCancel>
-            </AlertDialogContent>
-          </AlertDialog>
           <div className="flex items-center text-[0.8275rem] text-neutral-600 font-semibold ">
             <p>Show on Page </p>
             <span className="ml-2">
               <span className="text-neutral-600">1</span> --{" "}
-              <span className="text-neutral-600">11</span> out of{" "}
-              <span className="text-neutral-600">30</span>
+              <span className="text-neutral-600">
+                {groupDataQuery.isSuccess &&
+                  groupDataQuery.data.ncaaUserResponseDtoList.length}
+              </span>{" "}
+              out of{" "}
+              <span className="text-neutral-600">
+                {paginationInfo.totalElements}
+              </span>
             </span>
-            <button className="ml-3 text-[0.975rem] hover:text-blue-400">
+            <button
+              disabled={page === 1}
+              className="ml-3 text-[0.975rem] hover:text-blue-400 disabled:cursor-not-allowed disabled:text-neutral-500"
+              onClick={() => {
+                setPage((currentPage) => currentPage - 1);
+              }}
+            >
               {"<"}
             </button>
-            <button className="ml-3 hover:text-blue-400 text-[0.975rem]">
+            <button
+              disabled={page === paginationInfo.totalPages}
+              className="ml-3 hover:text-blue-400 text-[0.975rem] disabled:cursor-not-allowed disabled:text-neutral-500"
+            >
               {">"}
             </button>
           </div>
@@ -84,7 +122,9 @@ export const GroupView = () => {
         <div className="max-h-[50vh] overflow-y-auto">
           {groupDataQuery.isSuccess && (
             <CpoViewTable
-              columns={cpoTableColumnDef}
+              columns={
+                group === "AIRLINE" ? AirlineTableColumnDef : cpoTableColumnDef
+              }
               data={groupDataQuery.data.ncaaUserResponseDtoList}
             />
           )}
