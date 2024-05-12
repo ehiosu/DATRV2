@@ -83,7 +83,7 @@ export const adminSidebarContent = [
     Name: "Configuration",
     Icon: <FiSettings />,
     SubMenu: [],
-    to: "/CPD/Configuration/General",
+    to: "/CPD/Configuration/Sla",
   },
   {
     Name: "Help",
