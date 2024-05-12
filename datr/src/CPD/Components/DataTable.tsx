@@ -1,10 +1,16 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { CiClock1 } from "react-icons/ci";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { CiClock1, CiWarning } from "react-icons/ci";
 import { BsThreeDots } from "react-icons/bs";
 import { MdAssignmentInd } from "react-icons/md";
 import { IoMdArrowDown } from "react-icons/io";
 import { FaRegEdit } from "react-icons/fa";
-import { NavigateFunction, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  NavigateFunction,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { CiCircleCheck } from "react-icons/ci";
 import { IoMdClose } from "react-icons/io";
 
@@ -15,7 +21,11 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  Filters,
+  getFilteredRowModel,
+  ColumnFilter
 } from "@tanstack/react-table";
+
 
 import { Link } from "react-router-dom";
 import {
@@ -32,6 +42,7 @@ import {
   GeneralTerminal,
   GeneralTicket,
   Message,
+  Report,
   ResolvedTicket,
   SlaGeneral,
   TicketDistribution,
@@ -63,19 +74,31 @@ import {
   SelectGroup,
   SelectItem,
   SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { SelectArrow } from "@radix-ui/react-select";
 import { format } from "date-fns";
-import {useAxiosClient} from "../../api/useAxiosClient"
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAxiosClient } from "../../api/useAxiosClient";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/api/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import { Pencil } from "lucide-react";
+import { Archive, ArrowDownToLine, Check, CheckCheck, Pencil, Trash, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import SelectionContext from "../context/SelectionContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 type ExtendedColumnDef<TData extends unknown, TValue = unknown> = ColumnDef<
   TData,
   TValue
@@ -85,11 +108,11 @@ type ExtendedColumnDef<TData extends unknown, TValue = unknown> = ColumnDef<
 
 const columnDefinition: ExtendedColumnDef<recieptData>[] = [
   {
-    accesorKey: "complainant",
+    accesorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complaint_type",
+    accesorKey: "complainantType",
     header: "Complainant Type",
   },
   {
@@ -172,35 +195,7 @@ export function DataTable<TData, TValue>({
   );
 }
 
-export const RecentTicketsTable = () => {
-  const data: recieptData[] = [
-    {
-      complainant: "Chijioke Okonkwo",
-      complaint_type: "Lost Luggage",
-      id: "A1B2C3",
-    },
-    {
-      complainant: "Ngozi Eze",
-      complaint_type: "Delayed Flight",
-      id: "D4E5F6",
-    },
-    {
-      complainant: "Obi Okafor",
-      complaint_type: "Poor Customer Service",
-      id: "G7H8I9",
-    },
-    {
-      complainant: "Amina Mohammed",
-      complaint_type: "Security Concern",
-      id: "J1K2L3",
-    },
-    {
-      complainant: "Emeka Nwosu",
-      complaint_type: "Facility Cleanliness",
-      id: "M4N5O6",
-    },
-  ];
-
+export const RecentTicketsTable = ({ data }: { data: recieptData[] }) => {
   return (
     <TicketsDataTable
       columns={columnDefinition}
@@ -306,9 +301,13 @@ const generalTicketData: GeneralTicket[] = [
   // Add more data as needed
 ];
 
-export const GeneralTicketsTable = ({generalTicketData}:{generalTicketData:GeneralTicket[]}) => {
+export const GeneralTicketsTable = ({
+  generalTicketData,
+}: {
+  generalTicketData: GeneralTicket[];
+}) => {
   return (
-    <div className="max-h-full overflow-y-auto bg-white  shadow-md">
+    <div className=" overflow-y-auto bg-white  shadow-md max-h-[60vh]">
       <TicketsDataTable
         isDraft={false}
         columns={generalTicketColumnDefiniton}
@@ -322,12 +321,23 @@ export const GeneralTicketsTable = ({generalTicketData}:{generalTicketData:Gener
 interface TicketTableProps<TData, Tvalue>
   extends DataTableProps<TData, Tvalue> {
   hasNav: boolean;
+  currentPage?: number;
 }
+
+import { toast as sonnerToast } from "sonner";
+import { createWordReport } from "@/lib/utils";
+import { Packer } from "docx";
+import { saveAs } from "file-saver";
+import { jsPDF } from "jspdf";
+import { removeTags } from "@/lib/utils";
+import { AiOutlineClose } from "react-icons/ai";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 export function TicketsDataTable<TData, TValue>({
   columns,
   data,
   hasAssignment = false,
   hasNav = false,
+  currentPage,
 }: TicketTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -335,52 +345,292 @@ export function TicketsDataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
   });
   const nav = useNavigate();
-  const {axios}=useAxiosClient()
-  const {user}=useAuth()
+  const { axios } = useAxiosClient();
+  const { user } = useAuth();
   const [selectedCell, setSelectedCell] = useState(-1);
-  const [isAssigning,setIsAssigning]=useState(false)
-  const [searchedCpo,setSearchedCpo]=useState("")
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [searchedCpo, setSearchedCpo] = useState("");
   const [cellTransform, setCellTransform] = useState({ right: 0, top: 0 });
   const dropdownRef = useRef<HTMLDivElement | undefined>();
-  const client=useQueryClient()
+  const [isDownloading, setIsDownloading] = useState({
+    pdf: false,
+    doc: false,
+  });
+  const client = useQueryClient();
 
   const cposQuery = useQuery({
     queryKey: ["cpos"],
     queryFn: () =>
       axios("cpo/all", {
         method: "GET",
-      }).then((resp:any) =>{
-        console.log(resp.data)
-        return resp.data}),
+      }).then((resp: any) => {
+        console.log(resp.data);
+        return resp.data;
+      }),
     staleTime: Infinity,
   });
+  const deleteMutation = useMutation({
+    mutationKey: ["ticket", "delete"],
+    mutationFn: (id: string) =>
+      new Promise((resolve, reject) =>
+        axios(`tickets/remove/${id}`, {
+          method: "DELETE",
+        })
+          .then((resp: any) => resolve(resp.data))
+          .catch((err: any) => reject(err))
+      ),
+  });
 
-  const tryAssignTicket=(id:number,cpo:string)=>{
-    if(!cpo) return
-    setIsAssigning(true)
-    axios("tickets/assign",{
-      method:"PUT",
-      data:{
-        supervisorEmail:user.email,
-        cpoEmail:cpo,
-        ticketId:id
+  const tryDelete = (id: string) => {
+    console.log(id);
+    sonnerToast.promise(
+      new Promise((resolve, reject) =>
+        deleteMutation.mutate(id, {
+          onSuccess: (res) => {
+            resolve(res);
+            client.invalidateQueries({
+              queryKey: ["tickets"],
+              exact: false,
+            });
+          },
+          onError: (err) => {
+            console.log(err);
+            reject(err);
+          },
+        })
+      ),
+      {
+        loading: "Trying to delete ticket...",
+        success: "Ticket Deleted Succesfully.",
+        error: "Error deleting ticket.",
       }
-    }).then((resp:any)=>{
-      setIsAssigning(false)
-      toast({
-        title:"Success!",
-        description:`Ticket successfully assigned to ${cpo}`
-      })
-client.invalidateQueries({queryKey:["tickets", "unassigned"]})
-    }).catch((err:Error)=>{
-      setIsAssigning(false)
-      toast({
-        title:"Error!",
-        description:err.message==="Request failed with status code 400"?"You need to be a terminal supervisor to assign a ticket!":err.message,
-        variant:"destructive"
-      })
+    );
+  };
+  const tryAssignTicket = (id: number, cpo: string) => {
+    if (!cpo) return;
+    setIsAssigning(true);
+    axios("tickets/assign", {
+      method: "PUT",
+      data: {
+        supervisorEmail: user.email,
+        cpoEmail: cpo,
+        ticketId: id,
+      },
     })
-  }
+      .then((resp: any) => {
+        setIsAssigning(false);
+        toast({
+          title: "Success!",
+          description: `Ticket successfully assigned to ${cpo}`,
+        });
+        client.invalidateQueries({ queryKey: ["tickets", "unassigned"] });
+      })
+      .catch((err: Error) => {
+        setIsAssigning(false);
+        toast({
+          title: "Error!",
+          description:
+            err.message === "Request failed with status code 400"
+              ? "You need to be a terminal supervisor to assign a ticket!"
+              : err.message,
+          variant: "destructive",
+        });
+      });
+  };
+  const requestWordDocument = async (id: string) => {
+    const ticketDataPromise = new Promise((resolve) =>
+      resolve(getTicketData(id))
+    );
+    const commentsPromise = new Promise((resolve) =>
+      resolve(getTicketComments(id))
+    );
+    let comments: any;
+    let ticketData: any;
+    let hasPulled = false;
+    setIsDownloading((state) => ({ ...state, doc: true }));
+    sonnerToast.promise(
+      Promise.all([ticketDataPromise, commentsPromise])
+        .then((values) => {
+          ticketData = values[0];
+          comments = values[1];
+          console.log(values);
+          hasPulled = true;
+
+          const report = createWordReport(values[0], values[1]);
+          Packer.toBlob(report).then((blob) => {
+            console.log("report complete");
+            saveAs(
+              blob,
+              `${ticketData.complainantName}-${ticketData.id}-${format(
+                new Date(ticketData.dateTimeCreated),
+                "dd/mmmm/yyyy"
+              )}`
+            );
+          });
+          console.log("downloaded report");
+          setIsDownloading((state) => ({ ...state, doc: false }));
+        })
+        .catch((err) => {
+          hasPulled = true;
+          setIsDownloading((state) => ({ ...state, doc: false }));
+
+          return err;
+        }),
+      {
+        loading: "Trying to Create your document...",
+        success: "Document Created Successfully!",
+        error: "Error Creating document...",
+      }
+    );
+  };
+
+  const requestPdfDocument = async (id: string) => {
+    const ticketDataPromise = new Promise((resolve) =>
+      resolve(getTicketData(id))
+    );
+    const commentsPromise = new Promise((resolve) =>
+      resolve(getTicketComments(id))
+    );
+
+    let ticketData: any;
+    setIsDownloading((state) => ({ ...state, pdf: true }));
+    sonnerToast.promise(
+      Promise.all([ticketDataPromise, commentsPromise])
+        .then((values) => {
+          ticketData = values[0];
+          const comments: any = values[1];
+          let _ticketContent = "";
+          const _ticketContentInfo = [
+            { key: "id", title: "Ticket ID" },
+            { key: "assignerName", title: "Assignee" },
+            { key: "complainantType", title: "Complaint Type" },
+            { key: "slaName", title: "SLA Type" },
+            { key: "airline", title: "Airline" },
+            { key: "route", title: "Route" },
+            { key: "dateOfIncident", title: "Date Of Incident" },
+            {
+              key: "dateTimeCreated",
+              title: "Ticket Creation Date",
+              text: (value: any) =>
+                `${format(new Date(value), "dd / MM / yyyy")}`,
+            },
+            { key: "redress", title: "Redress Sought" },
+          ];
+          _ticketContentInfo.map(
+            (ticketContent) =>
+              (_ticketContent += `
+    <div class="w-44 flex flex-row items-center h-4 ">
+    <div class="w-1/3  flex flex-row bg-neutral-200 items-center justify-start h-full">
+        <p class="text-[0.2rem] mb-1 ml-1">${ticketContent.title}</p>
+    </div>
+    <div class="w-2/3 bg-[#FAFAFA] flex flex-row items-center justify-start h-full">
+        <p class="text-[0.2rem]  mb-1 ml-1">${
+          ticketContent.text
+            ? ticketContent.text(ticketData[ticketContent.key])
+            : ticketData[ticketContent.key] || "None"
+        }</p>
+    </div>
+    </div>
+    
+    `)
+          );
+          let _messages = "";
+          comments.map(
+            (comment: any, index: number) =>
+              (_messages += `
+  <div class="w-48 flex flex-col  ${index !== 0 && ""} justify-center">
+  <div class="flex flex-col w-40 ${index === 0 && ""}  my-1 outline'>
+    <div class="w-full h-3 p-2 flex-1 bg-neutral-300">
+      <p class="text-[0.23rem] px-[0.1rem] font-semibold  h-3 bg-neutral-200 whitespace-nowrap">
+        ${
+          comment.commentType === "COMMENT"
+            ? "Comment sent by:"
+            : "Message sent by :"
+        }${"  "}<span class="font-bold">${comment.authorName}</span>
+      </p>
+    </div>
+    <div class="w-40 px-[0.2rem]   flex-1">
+  <p class="text-[0.2rem] mb-1 font-semibold"> ${removeTags(
+    comment.content
+  )}</p>
+
+    </div>
+    <div>
+
+    </div>    
+    
+    `)
+          );
+
+          const doc = new jsPDF();
+          doc.html(
+            `<div class="flex flex-col p-2 w-48">
+      <div class="flex flex-col h-7  justify-center  items-center  bg-neutral-100 w-full space-x-2 ">
+        <p class="text-[0.3rem] tracking-widest ">${
+          ticketData.complainantName
+        }'s ${" "} ${ticketData.complainantType} ${" "} Ticket </>
+        <p class="text-[0.18rem] text-center tracking-widest mt-1 font-thin flex flex-row flex-wrap justify-center items-center "><span>Contact Mail: ${
+          ticketData.complainantEmail
+        }</span> ${" "} <span>Complainant Phone Number: ${
+              ticketData.complainantPhoneNo
+            }</span> ${" "}  </>
+      </div>
+    <p class="my-2 tracking-wider underline-2 text-[0.26rem] font-semibold text-darkBlue">
+    Ticket Information:
+    </p>
+<div class="">
+${_ticketContent}
+</div>
+<p class="my-2 tracking-wider underline-2 text-[0.26rem] font-semibold text-darkBlue w-40 ">
+Ticket Messages / Comments:
+</p>
+
+${_messages}
+
+    </div>`,
+            {
+              callback: (_doc) => {
+                _doc.save(
+                  `${ticketData.complainantName}-${ticketData.id}-${format(
+                    new Date(ticketData.dateTimeCreated),
+                    "dd/mmmm/yyyy"
+                  )}`
+                );
+                setIsDownloading((state) => ({ ...state, pdf: false }));
+              },
+
+              autoPaging: "slice",
+              margin: 10,
+              width: 170,
+            }
+          );
+
+          console.log("downloaded report");
+        })
+        .catch((err) => {
+          setIsDownloading((state) => ({ ...state, pdf: false }));
+
+          return err;
+        }),
+      {
+        loading: "Trying to Create your document...",
+        success: "Document Created Successfully!",
+        error: "Error Creating document...",
+      }
+    );
+  };
+  const getTicketData = async (id: string) => {
+    const ticketInformation = await axios(`tickets/${id}`, {
+      method: "GET",
+    }).then((resp: any) => resp.data);
+    return ticketInformation;
+  };
+  const getTicketComments = async (id: string) => {
+    const comments = await axios(`comments/ticket-id?value=${id}`).then(
+      (resp: any) => resp.data
+    );
+    return comments;
+  };
   return (
     <div className="rounded-md border bg-white shadow-md  relative">
       {selectedCell != -1 && (
@@ -406,7 +656,10 @@ client.invalidateQueries({queryKey:["tickets", "unassigned"]})
       <Table>
         <TableHeader className="sticky top-0  ">
           {table.getHeaderGroups().map((headerGroup: any) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow
+              key={headerGroup.id}
+              className="dark:hover:bg-neutral-100 hover:bg-neutral-100"
+            >
               {headerGroup.headers.map((header: any, headerIndex: number) => {
                 return (
                   <TableHead
@@ -425,11 +678,13 @@ client.invalidateQueries({queryKey:["tickets", "unassigned"]})
                   </TableHead>
                 );
               })}
-              {hasAssignment && data.length>0 && (
-                <TableHead className="text-center">
-                  <span className="t">Assign To </span>
-                </TableHead>
-              )}
+              {user.roles.includes("ADMIN") &&
+                hasAssignment &&
+                data.length > 0 && (
+                  <TableHead className="text-center">
+                    <span className="t">Assign To </span>
+                  </TableHead>
+                )}
             </TableRow>
           ))}
         </TableHeader>
@@ -438,6 +693,7 @@ client.invalidateQueries({queryKey:["tickets", "unassigned"]})
             table.getRowModel().rows.map((row: any, index: number) => {
               return (
                 <TableRow
+                  className="dark:hover:bg-neutral-50 hover:bg-neutral-100"
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   onClick={() => {
@@ -449,7 +705,7 @@ client.invalidateQueries({queryKey:["tickets", "unassigned"]})
                   {row
                     .getVisibleCells()
                     .map((cell: any, colindex: number) =>
-                      cell.column.columnDef.accesorKey === "ticketStatus"   ? (
+                      cell.column.columnDef.accesorKey === "ticketStatus" ? (
                         <StatusTableCell cell={cell} row={row} />
                       ) : cell.column.columnDef.accesorKey === "cpo" ? (
                         <CpoTableCell cell={cell} row={row} />
@@ -461,74 +717,205 @@ client.invalidateQueries({queryKey:["tickets", "unassigned"]})
                         />
                       )
                     )}
-                  {hasAssignment &&  data.length>0 && (
-                 
-                    <TableCell className="grid place-items-center bg-transparent ">
-                      <Popover>
-                        <PopoverTrigger
-                        disabled={isAssigning}
-                          className="w-8 aspect-square rounded-full bg-darkBlue grid place-items-center disabled:bg-neutral-600 disabled:hover:cursor-wait  text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          {" "}
-                          <MdAssignmentInd />
-                        </PopoverTrigger>
-                       {
-                        cposQuery.isSuccess &&  <PopoverContent
-                        side="left"
+                  {user.roles.includes("ADMIN") &&
+                    hasAssignment &&
+                    data.length > 0 && (
+                      <TableCell className="grid place-items-center bg-transparent ">
+                        <Popover>
+                          <PopoverTrigger
+                            disabled={isAssigning}
+                            className="w-8 aspect-square rounded-full bg-darkBlue grid place-items-center disabled:bg-neutral-600 disabled:hover:cursor-wait  text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            {" "}
+                            <MdAssignmentInd />
+                          </PopoverTrigger>
+                          {cposQuery.isSuccess && (
+                            <PopoverContent
+                              side="left"
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-2 py-1 w-[14rem] md:w-[20rem] z-[5] "
+                            >
+                              <Command className="p-0 m-0 min-h-52 md:min-h-60">
+                                <p className="text-[1.3rem] text-blue-300 mb-2">
+                                  Assign Ticket
+                                </p>
+                                <div className="px-1">
+                                  <Select
+                                    onValueChange={(value) => {
+                                      tryAssignTicket(row.original.id, value);
+                                    }}
+                                    defaultValue=""
+                                    onOpenChange={(open) => {
+                                      if (!open) setSearchedCpo("");
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select a CPO" />
+                                    </SelectTrigger>
+                                    <SelectContent className="p-1">
+                                      <Input
+                                        className="my-3 w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                                        onChange={(e) =>
+                                          setSearchedCpo(e.target.value)
+                                        }
+                                      />
+                                      <SelectGroup>
+                                        {cposQuery.data
+                                          .filter((_cpo: any) =>
+                                            _cpo.ncaaUserEmail.startsWith(
+                                              searchedCpo
+                                            )
+                                          )
+                                          .map((_cpo: any) => {
+                                            return (
+                                              <SelectItem
+                                                value={_cpo.ncaaUserEmail}
+                                              >
+                                                {_cpo.ncaaUserEmail}
+                                              </SelectItem>
+                                            );
+                                          })}
+                                        {cposQuery.data.filter((_cpo: any) =>
+                                          _cpo.ncaaUserEmail.startsWith(
+                                            searchedCpo
+                                          )
+                                        ).length === 0 && (
+                                          <p className="text-neutral-400 text-[0.8275rem] text-center m-auto">
+                                            User Doesn't exist
+                                          </p>
+                                        )}
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="p-1 mt-auto">
+                                  <Select>
+                                    <SelectTrigger className="w-full my-2 ring-0 focus:ring-0  mt-auto">
+                                      <SelectValue placeholder="Filter By Group..." />{" "}
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectGroup>
+                                        <SelectLabel>User Groups</SelectLabel>
+                                        <SelectItem value="usd">
+                                          User Supervisory Department
+                                        </SelectItem>
+                                        <SelectItem value="none">
+                                          None
+                                        </SelectItem>
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </Command>
+                            </PopoverContent>
+                          )}
+                        </Popover>
+                      </TableCell>
+                    )}
+
+                  <TableCell>
+                    <Popover>
+                      <PopoverTrigger
+                        className="hover:bg-neutral-100/40 rounded-md p-1"
                         onClick={(e) => e.stopPropagation()}
-                        className="px-2 py-1 w-[14rem] md:w-[20rem] z-[5] "
                       >
-                        <Command className="p-0 m-0 min-h-52 md:min-h-60">
-                          <p className="text-[1.3rem] text-blue-300 mb-2">
-                            Assign Ticket
-                          </p>
-                         <div className="px-1">
-                         <Select  onValueChange={(value)=>{tryAssignTicket(row.original.id,value)}} defaultValue="" onOpenChange={(open)=>{if(!open)setSearchedCpo("")}}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a CPO"/>
-                              </SelectTrigger>
-                              <SelectContent className="p-1">
-                                <Input className="my-3 w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]" onChange={(e)=>setSearchedCpo(e.target.value)}/>
-                                <SelectGroup>
-                                  { 
-                                    cposQuery.data.filter((_cpo:any)=>_cpo.ncaaUserEmail.startsWith(searchedCpo)).map((_cpo:any)=>{
-                                    return  <SelectItem value={_cpo.ncaaUserEmail}>{_cpo.ncaaUserEmail}</SelectItem>
-                                    })
-                                  }
-                                  {
-                                    cposQuery.data.filter((_cpo:any)=>_cpo.ncaaUserEmail.startsWith(searchedCpo)).length===0 && <p className="text-neutral-400 text-[0.8275rem] text-center m-auto">User Doesn't exist</p>
-                                  }
-                                </SelectGroup>
-                              </SelectContent>
-                          </Select>
-                         </div>
-                        
-                          <div className="p-1 mt-auto">
-                          <Select>
-                            <SelectTrigger className="w-full my-2 ring-0 focus:ring-0  mt-auto">
-                              <SelectValue placeholder="Filter By Group..." />{" "}
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                <SelectLabel>User Groups</SelectLabel>
-                                <SelectItem value="usd">
-                                  User Supervisory Department
-                                </SelectItem>
-                                <SelectItem value="none">None</SelectItem>
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                          </div>
-                        
-                        </Command>
+                        <BsThreeDots />
+                      </PopoverTrigger>
+                      <PopoverContent className="p-1 w-48">
+                        {user.roles.includes("ADMIN") && (
+                          <AlertDialog>
+                            <AlertDialogTrigger
+                              className="w-full"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                            >
+                              <div
+                                role="button"
+                                className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm"
+                              >
+                                <Trash className="w-5 h-5 shrink" />
+                                <p>Delete Ticket</p>
+                              </div>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Are you absolutely sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will
+                                  permanently delete your account and remove
+                                  your data from our servers.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                >
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    tryDelete(row.original["id"]);
+                                  }}
+                                >
+                                  Continue
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+
+                        <Popover>
+                          <PopoverTrigger
+                            className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ArrowDownToLine className="w-5 h-5 shrink  mr-1" />
+                            Download Report
+                          </PopoverTrigger>
+                          <PopoverContent
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            className="p-0 w-40"
+                            side="left"
+                          >
+                            <div
+                              aria-disabled={isDownloading.pdf}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                requestPdfDocument(row.original["id"]);
+                              }}
+                              role="button"
+                              className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                            >
+                              <p>Download as PDF</p>
+                            </div>
+                            <div
+                              aria-disabled={isDownloading.doc}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                requestWordDocument(row.original["id"]);
+                              }}
+                              role="button"
+                              className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                            >
+                              <p>Download as Word</p>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </PopoverContent>
-                       }
-                      </Popover>
-                    </TableCell>
-                  )}
+                    </Popover>
+                  </TableCell>
                 </TableRow>
               );
             })
@@ -600,9 +987,9 @@ export function FlightsDataTable<TData, TValue>({
                         } whitespace-nowrap hover:cursor-pointer hover:text-blue-300`}
                         onClick={() => {
                           nav(
-                            row.original[
-                              cell.column.columnDef.accesorKey
-                            ].toString()
+                            row.original[cell.column.columnDef.accesorKey]
+                              .toString()
+                              .replaceAll(" ", "_")
                           );
                         }}
                       >
@@ -765,7 +1152,7 @@ const openTicketData: openTicket[] = [
     date: "2023-12-04",
   },
 ];
-export const OpenTicketsTable = ({data}:{data:openTicket[]}) => {
+export const OpenTicketsTable = ({ data }: { data: openTicket[] }) => {
   return (
     <div>
       <TicketsDataTable
@@ -804,7 +1191,12 @@ const RegularTableCell = ({
         cell.column.columnDef.accesorKey === "id"
           ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
           : row.original[cell.column.columnDef.accesorKey]?.length > 0
-          ?  cell.column.columnDef.accesorKey === "dateTimeCreated"? format(new Date(row.original[cell.column.columnDef.accesorKey]),'dd/MM/yyyy'): row.original[cell.column.columnDef.accesorKey]
+          ? cell.column.columnDef.accesorKey === "dateTimeCreated"
+            ? format(
+                new Date(row.original[cell.column.columnDef.accesorKey]),
+                "dd/MM/yyyy"
+              )
+            : row.original[cell.column.columnDef.accesorKey]
           : "----",
         cell.getContext()
       )}
@@ -917,14 +1309,40 @@ const StatusTableCell = ({ cell, row }: { cell: any; row: any }) => {
       PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
       UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
       RESOLVED: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
-      OPENED : "bg-[#FF585821] border-2 border-[#FF5858]",
+      OPENED: "bg-[#FF585821] border-2 border-[#FF5858]",
       ESCALATED: "bg-[#D016DD21] border-2 border-[#D116DD]",
       UNASSIGNED: "",
+      NEW: "bg-blue-200 border-2 border-blue-400",
+      CLOSED: "bg-neutral-200 border-2 border-neutral-400",
     };
-
 
     return `${btnStyles[status]} inline h-max p-1`;
   };
+
+  if (row.original["slaMode"] === "EXPIRED") {
+    return (
+      <TableCell
+        key={cell.id}
+        className="grid place-items-center grid-rows-1 grid-cols-1 relative"
+      >
+        <div className=" " />
+
+        <span
+          className={`${resolveStatus(
+            row.original[cell.column.columnDef.accesorKey]
+          )} rounded-lg my-auto relative z-[2]  ${
+            row.original["slaMode"] === "EXPIRED" && "expiredSla"
+          }`}
+        >
+          {flexRender(
+            row.original[cell.column.columnDef.accesorKey],
+            cell.getContext()
+          )}
+        </span>
+      </TableCell>
+    );
+  }
+
   return (
     <TableCell
       key={cell.id}
@@ -1113,7 +1531,7 @@ const resolvedTicketPlaceholderData: ResolvedTicket[] = [
   },
 ];
 
-export const ResolvedTicketsTable = ({data}:{data:ResolvedTicket[]}) => {
+export const ResolvedTicketsTable = ({ data }: { data: ResolvedTicket[] }) => {
   return (
     <div className="w-full h-full  overflow-y-auto">
       <TicketsDataTable
@@ -1296,7 +1714,11 @@ const UnresolvedTicketsPlaceholderData: ResolvedTicket[] = [
     cpo: "Kunle Ojo",
   },
 ];
-export const UnresolvedTicketsTable = ({data}:{data:ResolvedTicket[]}) => {
+export const UnresolvedTicketsTable = ({
+  data,
+}: {
+  data: ResolvedTicket[];
+}) => {
   return (
     <div className="w-full h-full  overflow-y-auto">
       <TicketsDataTable
@@ -1399,7 +1821,11 @@ const unassignedTicketData: unassignedTicket[] = [
     date: "2023-11-28",
   },
 ];
-export const UnassignedTicketsTable = ({data}:{data:unassignedTicket[]}) => {
+export const UnassignedTicketsTable = ({
+  data,
+}: {
+  data: unassignedTicket[];
+}) => {
   return (
     <div className="w-full h-full  overflow-y-auto">
       <TicketsDataTable
@@ -1550,7 +1976,7 @@ const escalatedTicketsPlaceholder: ResolvedTicket[] = [
     cpo: "Kunle Ojo",
   },
 ];
-export const EscalatedTicketsTable = ({data}:{data:ResolvedTicket[]}) => {
+export const EscalatedTicketsTable = ({ data }: { data: ResolvedTicket[] }) => {
   return (
     <div className="w-full h-full  overflow-y-auto">
       <TicketsDataTable
@@ -1634,7 +2060,9 @@ export function MessageDataTable<TData, TValue>({
                 {row
                   .getVisibleCells()
                   .map((cell: any, cellIndex: number) =>
-                    cell.column.columnDef.accesorKey.toLowerCase().includes("status") ? (
+                    cell.column.columnDef.accesorKey
+                      .toLowerCase()
+                      .includes("status") ? (
                       <StatusTableCell cell={cell} row={row} />
                     ) : cell.column.columnDef.accesorKey === "recipient" ? (
                       <FromTableCell cell={cell} row={row} isDraft={isDraft} />
@@ -2106,106 +2534,123 @@ export const TicketDistributionTable = () => {
 };
 const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
   {
-    id:"Select",
+    id: "Select",
     header: ({ table }) => {
-      const {selectedSlas,setSelectedSlas}=useContext(SelectionContext)
-      const toggeleChecked=(value:boolean)=>{
-        if(value){
-          let selected = table.getCoreRowModel().rows.map((row)=>row.original["slaName"])
-          console.log(selected)
-          setSelectedSlas([...selected])
+      const { selectedSlas, setSelectedSlas } = useContext(SelectionContext);
+      const toggeleChecked = (value: boolean) => {
+        if (value) {
+          let selected = table
+            .getCoreRowModel()
+            .rows.map((row) => row.original["slaName"]);
+          console.log(selected);
+          setSelectedSlas([...selected]);
+        } else {
+          setSelectedSlas([]);
         }
-        else{
-          setSelectedSlas([])
-        }
-        table.toggleAllPageRowsSelected(!!value)
-      }
-      return(
-      
-      <Checkbox
-      className="border-neutral-400  bg-white dark:border-neutral-400 border-2"
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={toggeleChecked}
-        aria-label="Select all"
-      />
-    )},
-    cell: ({ row }) => {
-      const {selectedSlas,setSelectedSlas}= useContext(SelectionContext)
-      const toggleSlaSelection=(value:boolean)=>{
-        console.log(value)
-        let _temp = [...selectedSlas]
-        const id =row.original['slaName']
-
-        if(value){
-          _temp.push(id)
-          setSelectedSlas([..._temp])
-        }
-        else{
-          setSelectedSlas((state)=>state.filter((item)=>item!=id))
-        }
-        row.toggleSelected(!!value)
-        console.log(selectedSlas)
-      }
-      return(
-        <div className="w-full flex items-center justify-center">
+        table.toggleAllPageRowsSelected(!!value);
+      };
+      return (
         <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={toggleSlaSelection}
-        aria-label="Select row"
-        className="border-neutral-400  bg-white dark:border-neutral-400 border-2"
-      />
-      </div>
-      )
-     
-  },
+          className="border-neutral-400  bg-white dark:border-neutral-400 border-2"
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={toggeleChecked}
+          aria-label="Select all"
+        />
+      );
+    },
+    cell: ({ row }) => {
+      const { selectedSlas, setSelectedSlas } = useContext(SelectionContext);
+      const toggleSlaSelection = (value: boolean) => {
+        console.log(value);
+        let _temp = [...selectedSlas];
+        const id = row.original["slaName"];
+
+        if (value) {
+          _temp.push(id);
+          setSelectedSlas([..._temp]);
+        } else {
+          setSelectedSlas((state) => state.filter((item) => item != id));
+        }
+        row.toggleSelected(!!value);
+        console.log(selectedSlas);
+      };
+      return (
+        <div className="w-full flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={toggleSlaSelection}
+            aria-label="Select row"
+            className="border-neutral-400  bg-white dark:border-neutral-400 border-2"
+          />
+        </div>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
   {
     accesorKey: "slaName",
     header: "SLA Name",
-    cell:({row})=>{
-     return <div className="text-center">
-        <p>{row.original["slaName"]}</p>
-      </div> 
-    }
+    cell: ({ row }) => {
+      return (
+        <div className="text-center">
+          <p>{row.original["slaName"]}</p>
+        </div>
+      );
+    },
   },
   {
     accesorKey: "resolutionHour",
     header: "Resolution Time",
-    cell:({row})=>{
-      const resolutionTime = `${row.original["resolutionHour"]} hour(s) ${row.original["resolutionMinute"]} minute(s) ` 
-    return  <div className="text-center">
-      <p>{resolutionTime}</p>
-      </div>
-    }
+    cell: ({ row }) => {
+      const resolutionTime = `${row.original["resolutionHour"]} hour(s) ${row.original["resolutionMinute"]} minute(s) `;
+      return (
+        <div className="text-center">
+          <p>{resolutionTime}</p>
+        </div>
+      );
+    },
   },
   {
     accesorKey: "responseTime",
     header: "Response Time",
-    cell:({row})=>{
-      const resolutionTime = `${row.original["responseHour"]} hour(s) ${row.original["responseMinute"]} minute(s) ` 
-    return  <div className="text-center">
-      <p>{resolutionTime}</p>
-      </div>
-    }
+    cell: ({ row }) => {
+      const resolutionTime = `${row.original["responseHour"]} hour(s) ${row.original["responseMinute"]} minute(s) `;
+      return (
+        <div className="text-center">
+          <p>{resolutionTime}</p>
+        </div>
+      );
+    },
   },
   {
-    accessorKey:"resolutionTime",
-    header:"",
-    cell:({row})=>{
-      const nav=useNavigate()
-      return <div className="grid place-items-center group-hover:text-black" role="button" onClick={()=>{
-        nav(`/CPD/Configuration/Sla/edit/?slaName=${row.original["slaName"].replace(" ","_")}`)
-      }}>
-        <Pencil size={14} className="hover:scale-115 transition text-neutral-500 hover:text-blue-300 hover:font-semibold"/>
-      </div>
-    }
-  }
-
+    accessorKey: "resolutionTime",
+    header: "",
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      return (
+        <div
+          className="grid place-items-center group-hover:text-black"
+          role="button"
+          onClick={() => {
+            nav(
+              `/CPD/Configuration/Sla/edit/?slaName=${row.original[
+                "slaName"
+              ].replace(" ", "_")}`
+            );
+          }}
+        >
+          <Pencil
+            size={14}
+            className="hover:scale-115 transition text-neutral-500 hover:text-blue-300 hover:font-semibold"
+          />
+        </div>
+      );
+    },
+  },
 ];
 
 const slaGeneralPlaceholderData: SlaGeneral[] = [
@@ -2275,44 +2720,36 @@ export function SlADataTable<TData, TValue>({
                   </TableHead>
                 );
               })}
-           
             </TableRow>
           ))}
         </TableHeader>
         <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
                 className="data-[state=selected]:bg-neutral-200 dark:data-[state=selected]:bg-neutral-200"
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
-            )}
-          </TableBody>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
       </Table>
     </div>
   );
 }
-
 
 export function GroupConfigDT<TData, TValue>({
   columns,
@@ -2329,11 +2766,11 @@ export function GroupConfigDT<TData, TValue>({
   });
   const nav: NavigateFunction = useNavigate();
   return (
-    <div className=" border bg-white shadow-md ">
+    <div className=" border bg-white shadow-md relative">
       <Table>
-        <TableHeader className="sticky top-0">
+        <TableHeader className="">
           {table.getHeaderGroups().map((headerGroup: any) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow className="sticky top-0" key={headerGroup.id}>
               {headerGroup.headers.map((header: any) => {
                 return (
                   <TableHead
@@ -2349,46 +2786,40 @@ export function GroupConfigDT<TData, TValue>({
                   </TableHead>
                 );
               })}
-             {
-              hasEdit && <TableHead className="w-20 bg-neutral-100"></TableHead>
-             }
+              {hasEdit && (
+                <TableHead className="w-20 bg-neutral-100"></TableHead>
+              )}
             </TableRow>
           ))}
         </TableHeader>
         <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
-            )}
-          </TableBody>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
       </Table>
     </div>
   );
 }
 
-export const GeneralSlaDataTable = ({data}:{data:SlaGeneral[]}) => {
+export const GeneralSlaDataTable = ({ data }: { data: SlaGeneral[] }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
       <SlADataTable
@@ -2408,42 +2839,55 @@ const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
   {
     accesorKey: "name",
     header: "Group Name",
-    cell:({row})=>{
-      const groupMap={
-        USER:"All",
-        ADMIN:"Admin",
-        CPO:"Consumer Protection Officer",
-        TERMINAL_SUPERVISOR:"Terminal Supervisor",
-        SHIFT_SUPERVISOR:"Shift Supervisor",
-        DATA_STATISTIC:"Data Statistic",
-        DGO:"Director General ",
-        CPD_D:"CPD Director",
-        CPD_GM:"CPD General Manager"
-      }
-      const nav = useNavigate()
-      return(<div className="w-full flex items-center justify-center hover:text-blue-300 transition" role="button" onClick={()=>{nav(`/CPD/user_groups/?group=${row.original["name"]}`)}}>
-        <p>{groupMap[row.original["name"] as keyof typeof groupMap]}</p>
-      </div>)
-    }
+    cell: ({ row }) => {
+      const groupMap = {
+        USER: "All",
+        ADMIN: "Admin",
+        CPO: "Consumer Protection Officer",
+        TERMINAL_SUPERVISOR: "Terminal Supervisor",
+        SHIFT_SUPERVISOR: "Shift Supervisor",
+        DATA_STATISTIC: "Data Statistic",
+        DGO: "Director General ",
+        CPD_D: "CPD Director",
+        CPD_GM: "CPD General Manager",
+        AIRLINE: "Airline",
+        FOU:"Flight Operation Unit"
+      };
+      const nav = useNavigate();
+      return (
+        <div
+          className="w-full flex items-center justify-center hover:text-blue-300 transition"
+          role="button"
+          onClick={() => {
+            nav(`/CPD/user_groups/?group=${row.original["name"]}`);
+          }}
+        >
+          <p>{groupMap[row.original["name"] as keyof typeof groupMap]}</p>
+        </div>
+      );
+    },
   },
   {
     accesorKey: "groupDescription",
     header: "Group Description",
-    cell:({row})=><div className="w-full flex justify-center items-center">
-      <p>Short group Description</p>
-    </div>
+    cell: ({ row }) => (
+      <div className="w-full flex justify-center items-center">
+        <p>Short group Description</p>
+      </div>
+    ),
   },
   {
     accesorKey: "count",
     header: "Members",
-    cell:({row})=><div className="w-full flex justify-center items-center">
-    <p>{row.original["count" ] }</p>
-  </div>
+    cell: ({ row }) => (
+      <div className="w-full flex justify-center items-center">
+        <p>{row.original["count"]}</p>
+      </div>
+    ),
   },
 ];
 
-
-export const  GeneralGroupTable = ({data}:{data:GeneralGroup[]}) => {
+export const GeneralGroupTable = ({ data }: { data: GeneralGroup[] }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
       <GroupConfigDT
@@ -2463,10 +2907,60 @@ const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
   {
     accesorKey: "id",
     header: "ID",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p>{row.original["id"]}</p>
+        </div>
+      );
+    },
   },
   {
     accesorKey: "name",
     header: "Name",
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      return (
+        <div
+          onClick={() => {
+            if (row.original.abbreviation) {
+              nav(`/DAS/${row.original.name}/Dashboard`);
+            }
+          }}
+          role="button"
+          className="hover:text-blue-300"
+        >
+          <p>{row.original.name}</p>
+        </div>
+      );
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-end">
+          <Popover>
+            <PopoverTrigger>
+              <BsThreeDots />
+            </PopoverTrigger>
+            <PopoverContent side="left" className="p-1">
+              <ConfirmationDialog onClick={()=>{}}>
+                <div
+                  role="button"
+                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                >
+                  <Trash className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <p className="text-[0.8275rem] group-hover:font-semibold">
+                    Delete Terminal
+                  </p>
+                </div>
+              </ConfirmationDialog>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
   },
 ];
 
@@ -2489,19 +2983,15 @@ export function GeneralTerminalDataTable<TData, TValue>({
   return (
     <div className=" border bg-white shadow-md ">
       <Table>
-        <TableHeader className="sticky top-0  ">
-          {table.getHeaderGroups().map((headerGroup: any) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header: any) => {
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow
+              className="hover:bg-neutral-100 dark:hover:bg-neutral-100"
+              key={headerGroup.id}
+            >
+              {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead
-                    key={header.id}
-                    className={`text-center h-12 bg-neutral-100 ${
-                      header.column.columnDef.header !== "Name"
-                        ? "w-20"
-                        : "text-start"
-                    } `}
-                  >
+                  <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -2511,26 +3001,22 @@ export function GeneralTerminalDataTable<TData, TValue>({
                   </TableHead>
                 );
               })}
-              <TableHead className="w-20 bg-neutral-100"></TableHead>
             </TableRow>
           ))}
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row: any) => (
+            table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                className="hover:bg-neutral-100 dark:hover:bg-neutral-100"
               >
-                {row.getVisibleCells().map((cell: any) => (
-                  <RegularTableCellDAS cell={cell} navto={navTo} row={row} />
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
                 ))}
-
-                <TableCell>
-                  <span className=" w-24 flex items-center justify-end">
-                    <FaRegEdit className="text-[1.2rem] text-blue-400" />
-                  </span>
-                </TableCell>
               </TableRow>
             ))
           ) : (
@@ -2582,159 +3068,80 @@ export const TerminalDataTable: React.FC<terminalCompProps> = ({
   );
 };
 
-export const DelayedFlightsColumnDef: ExtendedColumnDef<DelayedFlight>[] = [
-  {
-    accesorKey: "id",
-    header: "Airline",
-  },
-  {
-    accesorKey: "numberOfFlights",
-    header: "Number Of Flights",
-  },
-  {
-    accesorKey: "delays",
-    header: "Delays",
-  },
-  {
-    accesorKey: "delayL1",
-    header: "Delays < 1 Hour",
-  },
-  {
-    accesorKey: "delay1_2",
-    header: "Delays Between 1 and 2 Hours",
-  },
-  {
-    accesorKey: "delayg2",
-    header: "Delays > 2 Hours",
-  },
-];
 
-export const DelayedFlightData: DelayedFlight[] = [
-  {
-    id: "Air Peace",
-    numberOfFlights: "26",
-    delays: "23",
-    delayL1: "11",
-    delay1_2: "1",
-    delayg2: "1",
-  },
-  {
-    id: "Arik Air",
-    numberOfFlights: "26",
-    delays: "2",
-    delayL1: "1",
-    delay1_2: "0",
-    delayg2: "0",
-  },
-  {
-    id: "Max Air",
-    numberOfFlights: "32",
-    delays: "16",
-    delayL1: "1",
-    delay1_2: "6",
-    delayg2: "0",
-  },
-  {
-    id: "Aero",
-    numberOfFlights: "28",
-    delays: "4",
-    delayL1: "1",
-    delay1_2: "1",
-    delayg2: "0",
-  },
-  {
-    id: "Dana Air",
-    numberOfFlights: "20",
-    delays: "4",
-    delayL1: "2",
-    delay1_2: "0",
-    delayg2: "0",
-  },
-  {
-    id: "Azman Air",
-    numberOfFlights: "0",
-    delays: "0",
-    delayL1: "0",
-    delay1_2: "0",
-    delayg2: "0",
-  },
-  {
-    id: "Overland",
-    numberOfFlights: "14",
-    delays: "7",
-    delayL1: "1",
-    delay1_2: "1",
-    delayg2: "2",
-  },
-  {
-    id: "Ibom Air",
-    numberOfFlights: "28",
-    delays: "8",
-    delayL1: "5",
-    delay1_2: "1",
-    delayg2: "0",
-  },
-  {
-    id: "United Nigeria",
-    numberOfFlights: "14",
-    delays: "2",
-    delayL1: "1",
-    delay1_2: "0",
-    delayg2: "0",
-  },
-  {
-    id: "Overland",
-    numberOfFlights: "12",
-    delays: "4",
-    delayL1: "2",
-    delay1_2: "0",
-    delayg2: "0",
-  },
-  {
-    id: "Valeu Jet",
-    numberOfFlights: "6",
-    delays: "1",
-    delayL1: "0",
-    delay1_2: "0",
-    delayg2: "0",
-  },
-];
+
+
 type flightDataTableProps = {
-  columns: [];
-  data: [];
-  nav: () => {};
+  data: DelayedFlight[];
 };
 
+const flightsColumnDef:ColumnDef<DelayedFlight>[]=[
+  {
+    accessorKey:"airline",
+    header:"Airline",
+    cell:({row})=> {
+      const nav=useNavigate();
+      const {Location}=useParams();
+      return(
+        <div role="button" className="group-hover:text-blue-500 group-hover:cursor-pointer" onClick={()=>{nav(`/DAS/${Location}/Report/${row.original.airline.replace(" ","_")}`)}}>
+          <p className="">{row.original["airline"]}</p>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey:"numberOfFlight",
+    header:"Number Of Flights"
+  },
+  {
+    accessorKey:"numberOfDelays",
+    header:"Number Of Delays"
+  },
+  {
+    accessorKey:"delayLessThanHour",
+    header:"Delay < 1 hour"
+  },
+  {
+    accessorKey:"delayInBetweenOneAndTwoHour",
+    header:"Delay 1-2 hours"
+  },
+  {
+    accessorKey:"delayGreaterThanTwoHour",
+    header:"Delay > 2 hours"
+  },
+  
+]
 export const FlightDataTable: React.FC<flightDataTableProps> = ({
-  columns,
-  data,
-  nav,
+  data
 }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
-      <FlightsDataTable
-        isDraft={false}
-        hasAssignment={false}
-        columns={columns}
-        data={data}
-        nav={nav}
-      />
+    <GenericDataTable data={data} columns={flightsColumnDef}/>
+    </div>
+  );
+};
+export const CancelledFlightsDataTable: React.FC<flightDataTableProps> = ({
+  data
+}) => {
+  return (
+    <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
+    <GenericDataTable data={data} columns={cancelledFlightColumnDef}/>
     </div>
   );
 };
 
-export const cancelledFlightColumnDef: ExtendedColumnDef<cancelledFlight>[] = [
+export const cancelledFlightColumnDef: ColumnDef<cancelledFlight>[] = [
   {
-    accesorKey: "id",
+    accessorKey: "airline",
     header: "Airline",
   },
   {
-    accesorKey: "cancelledFlights",
+    accessorKey: "cancelledFlights",
     header: "Cancelled Flights",
   },
   {
-    accesorKey: "numberOfFlights",
-    header: "Number of Cancelled Flights",
+    accessorKey: "numberOfFlights",
+    header: "Number of Flights",
   },
 ];
 
@@ -2798,40 +3205,117 @@ export const cancelledFlightPlaceholderData: cancelledFlight[] = [
 
 const reportsColumnDef: ExtendedColumnDef<Report>[] = [
   {
-    accesorKey: "fltNo",
+    accessorKey: "flightNumber",
     header: "Flight Number",
   },
   {
-    accesorKey: "route",
+    accessorKey: "route",
     header: "Route",
   },
   {
-    accesorKey: "sta",
-    header: "STA",
+    accessorKey: "sta",
+    header: "STA / STD",
+    cell:({row})=> {
+     return( <div>
+        <p className="text-sm">{row.original["stipulatedTimeArrived"] || row.original.stipulatedTimeDeparted}</p>
+      </div>)
+    },
   },
   {
-    accesorKey: "ata",
-    header: "ATA",
+    accessorKey: "ata",
+    header: "ATA / ATD",
+    cell:({row})=> {
+      return( <div>
+         <p className="text-sm">{row.original.actualTimeArrived || row.original.actualTimeDeparted}</p>
+       </div>)
+    }
   },
   {
-    accesorKey: "delay",
+    accessorKey: "delayedDifferenceInHour",
     header: "Delay",
+    cell:({row})=> {
+      const hours = Math.floor(parseInt(row.original["delayedDifferenceInHour"]!)/3600)
+      const remainingSeconds =Math.floor(parseInt(row.original["delayedDifferenceInHour"]!)%3600)
+      const minutes = Math.floor(remainingSeconds/60);
+      return( <div>
+         <p className="text-sm">{row.original["delayedDifferenceInHour"]?`${hours} hours , ${minutes} minutes`:'----'}</p>
+       </div>)
+    }
   },
   {
-    accesorKey: "isDelayed",
+    accessorKey: "isDelayed",
     header: "Is Delayed",
+    cell:({row})=>{
+      return (
+        <div className="w-full flex flex-row items-center justify-center">
+          {
+            row.original["delayed"]?<Check className="w-5 h-5 shrink text-green-600 "/>:<X className="w-5 h-5 shrink text-red-500"/>
+          }
+        </div>
+      )
+    }
   },
   {
-    accesorKey: "isOnTime",
+    accessorKey: "isOnTime",
     header: "Is On Time",
+    cell:({row})=>{
+      return (
+        <div className="w-full flex flex-row items-center justify-center">
+          {
+            row.original["onTime"]?<Check className="w-5 h-5 shrink text-green-600 "/>:<X className="w-5 h-5 shrink text-red-500"/>
+          }
+        </div>
+      )
+    }
   },
   {
-    accesorKey: "isCancelled",
+    accessorKey: "isCancelled",
     header: "isCancelled",
+    cell:({row})=>{
+      return (
+        <div className="w-full flex flex-row items-center justify-center">
+          {
+            row.original["cancelled"]?<Check className="w-5 h-5 shrink text-green-600 "/>:<X className="w-5 h-5 shrink text-red-500"/>
+          }
+        </div>
+      )
+    }
   },
   {
-    accesorKey: "type",
-    header: "Type",
+    accessorKey: "reportType",
+    enableColumnFilter:true,
+  header:({table})=> {
+    const {currentFilters,setCurrentFilters}=useContext(FilterContext)
+    return (
+      <Select onValueChange={(value)=>{setCurrentFilters((state)=>([...state,{
+        id:"reportType",
+        value
+      }]))}}>
+        <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent">
+          <SelectValue placeholder="Select A Reprot Type."/>
+        </SelectTrigger>
+        <SelectContent>
+            <SelectItem value="ARRIVAL">
+              Arrival
+            </SelectItem>
+            <SelectItem value="DEPARTURE">
+              Departure
+            </SelectItem>
+        </SelectContent>
+      </Select>
+    )
+  },
+    cell:({row})=>{
+      return (
+        <div className="w-full flex flex-row items-center justify-center">
+          <p className="text-sm">
+          {
+            row.original["reportType"]==="ARRIVAL"?'Arrival':'Departure'
+          }
+          </p>
+        </div>
+      )
+    }
   },
 ];
 
@@ -2923,17 +3407,12 @@ export function ReportsDataTable<TData, TValue>({
 }
 
 type reportProps = {
-  data: [];
+  data: any[];
 };
 export const ReportsTable: React.FC<reportProps> = ({ data }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
-      <ReportsDataTable
-        hasAssignment={false}
-        isDraft={false}
-        data={data}
-        columns={reportsColumnDef}
-      />
+      <GenericDataTable data={data} columns={reportsColumnDef}/>
     </div>
   );
 };
@@ -2944,8 +3423,14 @@ type cpo = {
   email: string;
 };
 
+type airline={
+  id:string,
+  email:string,
+  firstName:string,
+  lastName:string,
+  airline:string
+}
 export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
- 
   {
     accesorKey: "id",
     header: "ID",
@@ -2959,11 +3444,34 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
     header: "First Name",
   },
   {
-    accesorKey:"lastName",
-    header:"Last Name"
-  }
+    accesorKey: "lastName",
+    header: "Last Name",
+  },
 ];
 
+export const AirlineTableColumnDef:ColumnDef<airline>[]=[
+  {
+    accesorKey: "id",
+    header: "ID",
+  },
+  {
+    accesorKey:"airline",
+    header:"Airline"
+  },
+  {
+    accesorKey: "email",
+    header: "Email",
+  },
+  {
+    accesorKey: "firstName",
+    header: "First Name",
+  },
+  {
+    accesorKey: "lastName",
+    header: "Last Name",
+  },
+
+]
 export function CpoViewTable<TData, TValue>({
   columns,
   data,
@@ -2974,9 +3482,9 @@ export function CpoViewTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
   });
   const navTo = useNavigate();
-  const [searchParams,setSearchParams]=useSearchParams()
-  const group = searchParams.get("group")
-  console.log(data)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const group = searchParams.get("group");
+  console.log(data);
   return (
     <div className="rounded-md border bg-white shadow-md  relative ">
       <Table>
@@ -3009,7 +3517,12 @@ export function CpoViewTable<TData, TValue>({
               {row
                 .getVisibleCells()
                 .map((cell: Cell<TData, unknown>, index: number) => (
-                  <RegularTableCellCPO cell={cell} group={group||""} navto={navTo} row={row} />
+                  <RegularTableCellCPO
+                    cell={cell}
+                    group={group || ""}
+                    navto={navTo}
+                    row={row}
+                  />
                 ))}
 
               <TableCell>
@@ -3087,23 +3600,23 @@ const RegularTableCellCPO = ({
   cell,
   row,
   navto,
-  group
+  group,
 }: {
   cell: any;
   row: any;
   navto: (id: string) => void;
-  group:string
-}) => { 
-  return cell.column.columnDef.accesorKey.toLowerCase().includes("email")  ? (
+  group: string;
+}) => {
+  return cell.column.columnDef.accesorKey.toLowerCase().includes("email") ? (
     <TableCell
       key={cell.id}
       onClick={() => {
-        if (cell.column.columnDef.accesorKey.toLowerCase().includes("email") ) {
+        if (cell.column.columnDef.accesorKey.toLowerCase().includes("email")) {
           navto(`/CPD/Tickets/CPO/${row.original["id"]}?group=${group}`);
         }
       }}
       className={`${
-        cell.column.columnDef.accesorKey.toLowerCase().includes("email")  &&
+        cell.column.columnDef.accesorKey.toLowerCase().includes("email") &&
         "text-center whitespace-nowrap hover:text-blue-300 hover:cursor-pointer"
       } text-center`}
     >
@@ -3132,3 +3645,332 @@ const RegularTableCellCPO = ({
     </TableCell>
   );
 };
+
+type accountRequest = {
+  id:string;
+  email: string;
+  contactNumber: string;
+  contactmail: string;
+  airlineName: string;
+};
+
+const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
+  {
+    accessorKey:"id",
+    header:"ID"
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+  },
+  {
+    accessorKey: "contactNumber",
+    header: "Contact Number",
+  },
+  {
+    accessorKey: "airlineName",
+    header: "Airline Name",
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => {
+      const { axios } = useAxiosClient();
+      const client = useQueryClient();
+      const [handlingRequest, setHandlingRequest] = useState(false);
+      const handleReview = (id: string, status: boolean) => {
+        sonnerToast.promise(
+          new Promise((resolve, reject) => {
+            if(handlingRequest)return;
+            axios(`airlines/accounts/review/${id}?approved=${status}`,{
+              method:"PUT",
+            })
+              .then((resp: any) => {
+                resolve(resp.data);
+                setHandlingRequest(false);
+                client.invalidateQueries({
+                  queryKey: ["airline", "account", "request"],
+                });
+              })
+              .catch((err:any) => {
+                setHandlingRequest(false);
+                reject(err);
+              });
+          }),
+          {
+            loading:status?"Trying to create airline account...":"Deleting request...",
+            success:status?"Request accepted successfully!":"Request deleted successfully!",
+            error:(error)=> {
+              return (
+                <div className="flex flex-col space-y-2 text-black">
+                  <div className="flex items-center">
+                    <CiWarning className="w-5 h-5 shrink"/> <p className="font-semibold text-[0.8275rem]">Error</p>
+                  </div>
+                  <p>{error.response.data.message}</p>
+                </div>
+              )
+            },
+          }
+        );
+      };
+      return (
+        <div>
+          <Popover>
+            <PopoverTrigger disabled={handlingRequest} className="">
+              <BsThreeDots />
+            </PopoverTrigger>
+            <PopoverContent
+              className="bg-white  rounded-md px-0 py-0 w-40 divide-y-2 divide-y-neutral-100"
+              side="left"
+            >
+              <ConfirmationDialog title="Are you sure you want to reject it?" onClick={()=>{handleReview(row.original["id"],false)}}>
+                <div
+                  role="button"
+              
+                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                >
+                  <Trash className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <p className="text-[0.8275rem] group-hover:font-semibold">
+                    Reject Request
+                  </p>
+                </div>
+              </ConfirmationDialog>
+              <ConfirmationDialog title="Are you sure you want to accept it?" onClick={()=>{handleReview(row.original["id"],true)}}>
+                <div
+                  role="button"
+                  
+                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                >
+                  <CheckCheck className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <p className="text-[0.8275rem] group-hover:font-semibold">
+                    Accept Request
+                  </p>
+                </div>
+              </ConfirmationDialog>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
+  },
+];
+
+export const AccountRequestsTable = ({ data }: { data: accountRequest[] }) => {
+  const table = useReactTable({
+    data,
+    columns: accountRequestTableColumnDef,
+    getCoreRowModel: getCoreRowModel(),
+  });
+  return (
+    <div className="rounded-md border bg-white shadow-md  relative ">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow
+              className="hover:bg-neutral-100 dark:hover:bg-neutral-100"
+              key={headerGroup.id}
+            >
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+                className="hover:bg-neutral-100 dark:hover:bg-neutral-100"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={accountRequestTableColumnDef.length}
+                className="h-24 text-center"
+              >
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
+export const ConfirmationDialog = ({
+  children,
+  onClick,
+  title
+}: {
+  children: React.ReactElement;
+  onClick:()=>void;
+  title?:string
+}) => {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title||"Are you absolutely sure?"}</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete your
+            account and remove your data from our servers.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={()=>onClick()}>Continue</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
+ type filterContextProviderType={
+  currentFilters:ColumnFilter[],
+  setCurrentFilters:React.Dispatch<React.SetStateAction<ColumnFilter[]>>
+ }
+ const FilterContext=createContext<filterContextProviderType>({
+  currentFilters:[],
+  setCurrentFilters:()=>{}
+})
+export function GenericDataTable<TData, TValue>({columns,data,hasAssignment=false,isDraft=false}:DataTableProps<TData, TValue>){
+  
+  const [currentFilters,setCurrentFilters]=useState<ColumnFilter[]>([])
+  const table=useReactTable(
+    {
+      data,
+      columns,
+      getCoreRowModel:getCoreRowModel(),
+      getFilteredRowModel:getFilteredRowModel(),
+      state:{
+        columnFilters:currentFilters
+      }
+    },
+    
+  )
+  
+ return(
+  <FilterContext.Provider value={{currentFilters,setCurrentFilters}}>
+  <Table>
+  <TableHeader>
+    {table.getHeaderGroups().map((headerGroup) => (
+      <TableRow key={headerGroup.id}>
+        {headerGroup.headers.map((header) => {
+          return (
+            <TableHead className="text-center" key={header.id}>
+              {header.isPlaceholder
+                ? null
+                : flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                  )}
+            </TableHead>
+          )
+        })}
+      </TableRow>
+    ))}
+  </TableHeader>
+  <TableBody>
+    {table.getRowModel().rows?.length ? (
+      table.getRowModel().rows.map((row) => (
+        <TableRow
+          key={row.id}
+          data-state={row.getIsSelected() && "selected"}
+        >
+          {row.getVisibleCells().map((cell) => (
+            <TableCell className="text-center" key={cell.id}>
+              {flexRender(
+                cell.column.columnDef.cell,
+                cell.getContext()
+              )}
+            </TableCell>
+          ))}
+        </TableRow>
+      ))
+    ) : (
+      <TableRow>
+        <TableCell
+          colSpan={columns.length}
+          className="h-24 text-center"
+        >
+          No results.
+        </TableCell>
+      </TableRow>
+    )}
+  </TableBody>
+</Table>
+</FilterContext.Provider>
+ )
+}
+
+type airlineReportsTableEntry ={
+  airline:string,
+  numberOfComplaints:string,
+  numberOfResolvedComplaints:string,
+  resolutionRating:string,
+}
+
+const airlineReportsTableColumnDef:ColumnDef<airlineReportsTableEntry>[]=[
+  {
+    accessorKey:"airline",
+    header:"Airline",
+    
+  },{
+    accessorKey:"numberOfComplaints",
+    header:"Number Of Complaints"
+  },
+  {
+    accessorKey:"numberOfResolvedComplaints",
+    header:"Number of Resolved Complaints"
+  },
+  {
+    accessorKey:"resolutionRating",
+    header:({header})=>{
+      return (
+        <div>
+        <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <p className="text-sm cursor-pointer">Resolution Rating</p>
+          </TooltipTrigger>
+          <TooltipContent className=" dark:bg-white bg-white text-black w-60 p-1 cursor-pointer">
+            <p className="text-[0.75rem] text-neutral-600">
+              Dervied from dividing the account's total number of complaints/ the account's number of resolved complaints.
+            </p>
+          </TooltipContent>
+         </Tooltip>
+        </TooltipProvider>
+        </div>
+      )
+    }
+  }
+]
+
+export const AirlineReportsDataTable:React.FC<{
+  data:airlineReportsTableEntry[]
+}>=({data})=>{
+  return(
+    <div>
+<GenericDataTable hasAssignment={false} isDraft={false}  data={data.sort((a,b)=>parseFloat(b.resolutionRating)-parseFloat(a.resolutionRating))} columns={airlineReportsTableColumnDef}/>
+    </div>
+  )
+}
