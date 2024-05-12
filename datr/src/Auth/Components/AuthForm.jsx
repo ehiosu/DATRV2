@@ -19,7 +19,8 @@ import { useAuth } from "../../api/useAuth";
 import axios from "axios";
 // import { useAxiosClient } from "../../api/useAxiosClient";
 export const AuthForm = () => {
-  const { generalUpdate, access } = useAuth();
+  const { generalUpdate, access, refresh } = useAuth();
+  console.log(access);
   // const { axios } = useAxiosClient();
   const { toast } = useToast();
   const Navigate = useNavigate();
@@ -91,9 +92,8 @@ export const AuthForm = () => {
       <div className="mx-auto">
         <p className="lg:text-2xl text-3xl">Welcome Back</p>
       </div>
-      <div className="flex md:gap-4 gap-8  flex-1 h-full md:flex-row flex-col mt-2   justify-center">
-        <div className="flex-1  flex flex-col  justify-center p-2 md:gap-4 gap-12">
-          <p className=" font-[25px] ">Staff Only</p>
+      <div className="flex md:gap-4 gap-8  flex-1 h-full md:flex-row flex-col    justify-center ">
+        <div className="flex-1  flex flex-col  justify-center p-2 ">
           <button
             className="lg:w-[80%] w-full mx-auto bg-[#FF007C] h-12 text-white rounded-md  flex justify-center gap-2 items-center shadow-md lg:p-0"
             onClick={() => {
@@ -110,11 +110,21 @@ export const AuthForm = () => {
           <span className="leading-10 text-xl lg:w-auto w-[50px]">OR</span>
           <span className="line lg:h-[48%]  w-[40%] bg-black lg:w-[2px] opacity-25 h-[2px]"></span>
         </div>
-        <div className="flex-1  w-full">
-          <div className="lg:w-[80%] w-full  flex flex-col lg:justify-start lg:items-start gap-2 justify-center items-start lg:mx-0 mx-auto">
+        <div className="flex-1  w-full flex flex-col  justify-center p-2 mt-4">
+          {refresh ? (
+            <button
+              className="lg:w-[90%] mx-auto w-full h-12 flex items-center justify-center bg-lightPink rounded-lg text-white my-2"
+              onClick={() => {
+                Navigate("/CPD/Dashboard");
+              }}
+            >
+              {" "}
+              Go To Dashboard{" "}
+            </button>
+          ) : (
             <Form {...form}>
               <form
-                className="w-full text-start space-y-4"
+                className="w-[90%] mx-auto text-start space-y-4"
                 onSubmit={form.handleSubmit(tryLogin)}
               >
                 <FormField
@@ -165,15 +175,15 @@ export const AuthForm = () => {
                 </button>
               </form>
             </Form>
-            <p
-              onClick={() => {
-                Navigate("/forgot-password");
-              }}
-              className="text-[0.75rem] text-darkBlue font-semibold mx-auto my-4 cursor-pointer"
-            >
-              Forgot password
-            </p>
-          </div>
+          )}
+          <p
+            onClick={() => {
+              Navigate("/forgot-password");
+            }}
+            className="text-[0.75rem] text-darkBlue font-semibold mx-auto  cursor-pointer mt-2 text-sm"
+          >
+            Forgot password
+          </p>
         </div>
       </div>
     </section>
