@@ -67,11 +67,12 @@ export type GeneralGroup={
 
 export type GeneralTerminal={
   id:string,
-  name:string
+  name:string,
+  abbreviation?:string
 }
 
 export type DelayedFlight={
-  id:string,
+  airline:string,
   numberOfFlights:string,
   delays:string,
   delayL1:string,
@@ -86,11 +87,13 @@ export type cancelledFlight={
 export type Report = {
   fltNo: string;
   route: string;
-  sta: string;
-  ata: string;
-  delay: string;
-  isDelayed: boolean;
-  isOnTime: boolean;
-  isCancelled: boolean;
-  type: 'in' | 'out'; // Assuming 'in' and 'out' are the possible values for the 'type' property
+  stipulatedTimeArrived?: string;
+  stipulatedTimeDeparted?: string;
+  actualTimeArrived?: string;
+  actualTimeDeparted?: string;
+  delayedDifferenceInHour?: string;
+  delayed: boolean;
+  onTime: boolean;
+  cancelled: boolean;
+  reportType: 'ARRIVAL' | 'DEPARTURE'; // Assuming 'in' and 'out' are the possible values for the 'type' property
 };
