@@ -10,13 +10,18 @@ export const CpdConfigurationLayout = () => {
       <SearchPage heading={"Configuration"}>
         <>
           <div className="w-max px-3 border-b-2 border-neutral-200 flex items-center gap-3">
-            <NavItem name={"General"} to={"/CPD/Configuration/General"} />
+            {/* <NavItem name={"General"} to={"/CPD/Configuration/General"} /> */}
             <NavItem name={"Sla"} to={"/CPD/Configuration/Sla"} />
             <NavItem name={"Tickets"} to={"/CPD/Configuration/Tickets"} />
             <NavItem name={"User Groups"} to={"/CPD/Configuration/Groups"} />
-            <NavItem
+            {/* <NavItem
               name={"Conversations"}
               to={"/CPD/Configuration/Conversations"}
+            /> */}
+
+            <NavItem
+              name={"Account Requests"}
+              to={"/CPD/Configuration/Accounts"}
             />
           </div>
           <Outlet />
