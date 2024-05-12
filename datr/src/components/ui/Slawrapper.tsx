@@ -38,7 +38,7 @@ export const SingleSlaWrapper = ({
                   <div className="flex items-center space-x-2 my-2">
                     <RadioGroupItem
                       
-                      checked={active===entry.value && active!==""}
+                      defaultChecked={active===entry.value }
                       className="dark:border-neutral-500 border-neutral-500 dark:text-blue-300 text-blue-300"
                       value={entry.value}
                       id={entry.title}
