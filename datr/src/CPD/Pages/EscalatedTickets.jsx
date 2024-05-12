@@ -11,15 +11,24 @@ import { AiOutlineArrowDown } from "react-icons/ai";
 import { EscalatedTicketsTable } from "../Components/DataTable";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { useQuery } from "@tanstack/react-query";
+import { NewTicketBtn } from "../../components/NewTicketBtn";
+import { useAuth } from "../../api/useAuth";
 
 export const EscalatedTickets = () => {
   const { axios } = useAxiosClient();
+  const { user } = useAuth();
+  const isAirline = user.roles.includes("AIRLINE");
   const ticketsQuery = useQuery({
     queryKey: ["tickets", "escalated"],
     queryFn: () =>
-      axios("tickets/status?value=ESCALATED", {
-        method: "GET",
-      })
+      axios(
+        isAirline
+          ? "tickets/airline/status?value=UNASSIGNED&page=0&size=10"
+          : "tickets/status?value=ESCALATED",
+        {
+          method: "GET",
+        }
+      )
         .then((resp) => resp.data)
         .catch((err) => err),
   });
@@ -29,9 +38,7 @@ export const EscalatedTickets = () => {
         <div className="w-full  flex-wrap   flex">
           <div className="flex    gap-4   items-center">
             <ViewChangeBtn />
-            <button className="w-44 bg-darkBlue rounded-md  text-white  h-10">
-              New Application
-            </button>
+            <NewTicketBtn />
           </div>
           <div className="ml-auto flex    gap-3 md:my-0 my-2 flex-wrap">
             <FilterButton />
