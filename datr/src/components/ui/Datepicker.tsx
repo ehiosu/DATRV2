@@ -6,8 +6,10 @@ import { format } from "date-fns"
 import { Calendar } from "./calendar"
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { CalendarIcon } from "lucide-react"
+import { DayPickerMultipleProps, DayPickerRangeProps, DayPickerSingleProps } from "react-day-picker"
 
-export function DatePickerDemo({className}:{className?:string}) {
+
+export function DatePickerDemo({className,mode}:{className?:string,mode:DayPickerMultipleProps.mode | DayPickerRangeProps.mode | DayPickerSingleProps.mode}) {
     const [date, setDate] = React.useState<Date>()
    
     return (
@@ -27,7 +29,7 @@ export function DatePickerDemo({className}:{className?:string}) {
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">
           <Calendar
-            mode="single"
+            mode={mode}
             selected={date}
             onSelect={setDate}
             initialFocus
