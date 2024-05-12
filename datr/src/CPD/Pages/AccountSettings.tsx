@@ -11,7 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { GoPencil } from "react-icons/go";
-import { MdClose } from "react-icons/md";
+import { MdClose, MdError } from "react-icons/md";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,12 +28,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { Cloudinary } from "@cloudinary/url-gen";
+import { AiOutlineClose } from "react-icons/ai";
 
 export const AccountSettings = () => {
   return (
-    <section className="flex flex-row space-x-3  bg-[#FAFAFA]">
+    <section className="flex flex-row space-x-3  mx bg-[#FAFAFA] md:h-screen justify-center">
       <Sidebar />
-      <div className="flex flex-col p-4 flex-1 w-full h-full  my-4">
+      <div className="flex flex-col p-4  w-[80%]  ml-auto  h-full  ">
         <p className="text-[1.2rem] font-semibold text-neutral-600">
           Account settings
         </p>
@@ -139,7 +140,7 @@ const MyProfile = () => {
   return (
     <section className="flex flex-col gap3 w-full md:w-[80%] mx-auto">
       <p className="font-semibold text-[1.3rem]">My Profile</p>
-      <div className="flex flex-row p-3 my-4 border-2 border-neutral-100 rounded-xl flex-1">
+      <div className="flex flex-row p-3 my-4 border-2 border-neutral-100 rounded-xl flex-1 flex-wrap">
         <img
           className="h-24 aspect-square rounded-full object-cover "
           src={
@@ -156,24 +157,14 @@ const MyProfile = () => {
             {user.roles[0]}
           </p>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger className="ml-auto w-max px-4 py-[0.3rem] h-max my-auto flex items-center justify-center border-2 border-neutral-100 rounded-full space-x-2">
-            <p>Edit</p>
-            <GoPencil />
-          </AlertDialogTrigger>
-          <UpdateUserImageComponent id={user.id} />
-        </AlertDialog>
+       
+          <UploadUserImageComponent id={user.id}/>
+     
       </div>
       <div className="border-2 rounded-xl border-neutral-100 p-4 whitespace-nowrap">
         <div className="flex items-center justify-between">
           <p className="font-semibold text-[1.1rem]">Personal Information</p>
-          <AlertDialog>
-            <AlertDialogTrigger className="ml-auto w-max px-4 py-[0.3rem] h-max my-auto flex items-center justify-center border-2 border-neutral-100 rounded-full space-x-2">
-              <p>Edit</p>
-              <GoPencil />
-            </AlertDialogTrigger>
-            <AlertDialogContent></AlertDialogContent>
-          </AlertDialog>
+         
         </div>
         <div className="flex flex-row items-center flex-wrap w-1/2 my-3 space-y-3 gap-4 ">
           <div className="w-[45%] flex flex-col space-y-3 text-start">
@@ -200,14 +191,7 @@ const MyProfile = () => {
               {user.email}
             </p>
           </div>
-          <div className="w-[45%]  flex flex-col space-y-3 text-start">
-            <p className="font-semibold text-[0.8275rem] text-neutral-800">
-              Phone
-            </p>
-            <p className="text-[0.8rem] font-semibold text-neutral-500">
-              {" -"}
-            </p>
-          </div>
+         
         </div>
       </div>
       <AlertDialog>
@@ -408,3 +392,50 @@ const UpdateUserImageComponent = ({ id }: { id: string }) => {
     </AlertDialogContent>
   );
 };
+
+import { UploadButton } from "@bytescale/upload-widget-react";
+import {toast as sonnerToast} from "sonner"
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
+
+const UploadUserImageComponent=({id}:{id:string})=>{
+  const {axios}=useAxiosClient();
+  const [imageUrl,setImageUrl]=useState("")
+  const options = {
+    apiKey: "public_FW25c3KEBus52eeNnRvxetrJqURB", // This is your API key.
+    maxFileCount: 1,
+  };
+  const tryUploadImage=(url:string)=>{
+    sonnerToast.promise(new Promise((resolve,reject)=>
+      axios(`users/${id}`, {
+        method: "PATCH",
+        data: [{ op: "replace", path: "/imageUrl", value: `${url}` }],
+      }).then((resp:any)=>resolve(resp)).catch((err:Error)=>reject(err))
+    ),{
+      loading:"Trying to Update Image...",
+      success:"Image Updated Successfully!",
+      error: (error) => {
+        console.log(error.response.data.message);
+        return (
+          <div className="text-black flex flex-col">
+            <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+              <MdError /> Error
+            </p>
+            <p>{error.response.data.message || error.response.data.detail}</p>
+          </div>
+        );
+      }
+    })
+  }
+  return(
+
+    <UploadButton options={options} onComplete={(files)=>{
+      const url=files[0].fileUrl
+      setImageUrl(url)
+      tryUploadImage(url)
+    }}>
+      {({onClick})=><Button className="w-max px-3 py-2 ml-auto bg-lightPink my-2  space-x-2 flex flex-row items-center justify-center" onClick={onClick}>Edit <Pencil className="h-4 w-4 shrink ml-2"/></Button>}
+    </UploadButton>
+
+  )
+}
