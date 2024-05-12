@@ -6,6 +6,7 @@ import { ReportTickets } from "../Components/ReportTickets";
 import { ResolutionTime } from "../Components/ResolutionTime";
 import { Conversations } from "../Components/Conversations";
 import useWindowSize from "../Sidebar/Hooks/useWindowSize";
+import { AirlineResolutionTable } from "./AirlineResolutionGraph";
 
 export const ReportsPage = () => {
   const tabRefs = useRef([]);
@@ -60,6 +61,14 @@ export const ReportsPage = () => {
             >
               Conversations
             </TabsTrigger>
+            <TabsTrigger
+              ref={(el) => tabRefs.current.push(el)}
+              onClick={() => handleReposition(4)}
+              value="airlines"
+              className="inline p-1 text-[0.8275rem]"
+            >
+              Airline Customer Complaints Performance
+            </TabsTrigger>
 
             <span
               className="h-1 bg-blue-300/70 w-40 absolute bottom-2 transition-all"
@@ -78,6 +87,9 @@ export const ReportsPage = () => {
           </TabsContent>
           <TabsContent value="conversations">
             <Conversations />
+          </TabsContent>
+          <TabsContent value="airlines">
+            <AirlineResolutionTable />
           </TabsContent>
         </Tabs>
       </SearchPage>
