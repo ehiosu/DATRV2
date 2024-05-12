@@ -15,6 +15,7 @@ import {
 } from "../Components/DataTable";
 import { redirect, useNavigate, useParams } from "react-router";
 import { useQuery } from "../Sidebar/Hooks/useQuery";
+import { NewTicketBtn } from "../../components/NewTicketBtn";
 
 export const AllMessages = () => {
   const query = useQuery();
@@ -60,10 +61,7 @@ export const AllMessages = () => {
       <SearchPage heading={"All Messages"}>
         <div className="w-full  flex-wrap   flex">
           <div className="flex    gap-4   items-center">
-            <ViewChangeBtn />
-            <button className="w-44 bg-darkBlue rounded-md  text-white  h-10">
-              New Application
-            </button>
+            <NewTicketBtn />
           </div>
           <div className="ml-auto flex    gap-3 md:my-0 my-2 flex-wrap">
             <FilterButton />
