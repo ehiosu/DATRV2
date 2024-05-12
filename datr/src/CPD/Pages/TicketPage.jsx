@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { redirect, useParams } from "react-router";
+import { redirect, useNavigate, useParams } from "react-router";
 import { SearchPage } from "../../Reusable/SearchPage";
 import {
   Popover,
@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from "../../components/ui/popover";
 import { Textarea } from "../../components/ui/textarea";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, CheckCircle, Trash } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { DatePickerDemo } from "../../components/ui/Datepicker";
 import {
@@ -25,19 +25,18 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
   AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
 } from "../../components/ui/alert-dialog";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-} from "../../components/ui/command";
+import { Input } from "../../components/ui/input";
 
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "../../components/ui/form";
 import useWindowSize from "../Sidebar/Hooks/useWindowSize";
@@ -64,8 +63,9 @@ export const TicketPage = () => {
     OPENED: "bg-[#FF585821] border-2 border-[#FF5858]",
     ESCALATED: "bg-[#D016DD21] border-2 border-[#D116DD]",
     UNASSIGNED: "",
+    CLOSED: "bg-red-200 border-2 border-red-500",
+    NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
   };
-
   const ticketQuery = useQuery({
     queryKey: ["tickets", `${id}`],
     queryFn: () =>
@@ -138,9 +138,12 @@ export const TicketPage = () => {
                   {ticketQuery.data.complainantType}
                 </p>
                 <span
-                  className={`block w-max px-3 text-[0.7275rem] rounded-md ${btnStyles.Pending}`}
+                  className={`block w-max px-3 text-[0.7275rem] rounded-md ${
+                    btnStyles[ticketQuery.data.ticketStatus]
+                  }`}
                 >
-                  Pending
+                  {ticketQuery.isSuccess &&
+                    ticketQuery.data.ticketStatus.toLowerCase()}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[0.8275rem]">
@@ -278,7 +281,7 @@ const AddNotePopover = () => {
   const addNoteMutation = useMutation({
     mutationKey: ["note"],
     mutationFn: (content) =>
-      axios("/comments/add", {
+      axios("comments/add", {
         method: "POST",
         data: {
           commentType: "COMMENT",
@@ -446,6 +449,54 @@ const AddCommentDialog = () => {
 
 const EscalatePopover = () => {
   const { screenSize } = useWindowSize();
+  const { id } = useParams();
+  const { axios } = useAxiosClient();
+  const client = useQueryClient();
+  const escalateTicketMutation = useMutation({
+    mutationKey: ["ticket", `${id}`, "escalate"],
+    mutationFn: (values) =>
+      new Promise((resolve, reject) => {
+        return axios(`tickets/escalate/${id}`, {
+          method: "PUT",
+          data: {
+            agentEmail: values.agentEmail,
+            reason: values.reasonForEscalation,
+          },
+        })
+          .then((resp) => resolve(resp.data))
+          .catch((err) => reject(err));
+      }),
+  });
+  const tryEscalate = (values) => {
+    sonnerToast.promise(
+      new Promise((resolve, reject) => {
+        escalateTicketMutation.mutate(values, {
+          onSuccess: (data) => {
+            client.invalidateQueries({
+              queryKey: ["tickets", `${id}`],
+            });
+            resolve(data);
+          },
+          onError: (err) => reject(err),
+        });
+      }),
+      {
+        loading: "Trying to escalate ticket...",
+        success: "Ticket Escalated successfully..",
+        error: (error) => {
+          console.log(error.response.data.message);
+          return (
+            <div className="text-black flex flex-col">
+              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                <BiError /> Error
+              </p>
+              <p>{error.response.data.message || error.response.data.detail}</p>
+            </div>
+          );
+        },
+      }
+    );
+  };
   return (
     <Popover>
       <PopoverTrigger className="text-xs text-center w-full hover:cursor-pointer hover:text-blue-400 h-6 my-2">
@@ -456,35 +507,130 @@ const EscalatePopover = () => {
         className="px-2 py-1 w-[20rem]"
       >
         <p className="text-xl text-blue-400">Escalate Ticket</p>
-        <p className="text-[0.8275rem] text-darkBlue my-2">Escalate Issue To</p>
-        <Command>
-          <CommandInput
-            className="border-none ring-0 focus:border-none focus:ring-0 h-8 text-[0.8275rem] text-neutral-700"
-            placeholder="Search for Agent"
-          ></CommandInput>
-          <CommandEmpty>Agent doesn't exist</CommandEmpty>
-          <CommandGroup></CommandGroup>
-        </Command>
-        <p className="text-[0.8275rem] text-darkBlue my-2">
-          Reason For Escalation
-        </p>
-        <Select>
-          <SelectTrigger className="w-full my-2 ring-0 focus:ring-0 ">
-            <SelectValue placeholder="Reason for escalation..." />{" "}
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="usd">Issue Out of Control</SelectItem>
-            <SelectItem value="none">None</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant={"outline"} className="w-full my-2">
-          Submit
-        </Button>
+        <EscalateTicketForm onSubmitForm={tryEscalate} />
       </PopoverContent>
     </Popover>
   );
 };
-
+import logo from "/NCAALogo.png";
+const SeekApprovalPopover = () => {
+  const { screenSize } = useWindowSize();
+  // const { axios } = useAxiosClient();
+  // const client = useQueryClient();
+  const { id } = useParams();
+  const [approvalRemark, SetApprovalRemark] = useState("");
+  const [HasFocused, SetHasFocused] = useState(false);
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger className="text-xs text-center w-full hover:cursor-pointer hover:text-blue-400 h-6 my-2">
+        Submit For Approval
+      </AlertDialogTrigger>
+      <AlertDialogContent className="space-y-1 overflow-hidden max-h-screen overflow-y-auto">
+        <AlertDialogCancel className="w-7 h-7 p-0 ml-auto bg-opacity-0 bg-transparent dark:bg-transparent border-0 hover:bg-lightPink hover:text-white">
+          <AiOutlineClose />
+        </AlertDialogCancel>
+        <AlertDialogHeader className="font-semibold text-[1.2rem]">
+          Approval Request
+        </AlertDialogHeader>
+        <div className="flex flex-row space-x-1">
+          <p className="font-semibold">Ticket ID </p> <p> {`${id}`}</p>
+        </div>
+        <Textarea
+          onFocus={(e) => {
+            if (approvalRemark.length > 0 && !HasFocused) {
+              SetHasFocused(true);
+            }
+          }}
+          placeholder="Add Closing Remark.."
+          onChange={(e) => {
+            if (approvalRemark.length > 0) {
+              SetHasFocused(() => true);
+            }
+            SetApprovalRemark(() => e.target.value);
+          }}
+          className="dark:focus-visible:ring-transparent placeholder:text-[0.75rem] dark:ring-offset-transparent focus-visible:ring-transparent max-h-[300px]"
+        />
+        {HasFocused && approvalRemark.length == 0 ? (
+          <p className="text-sm text-red-400">Ensure to type in a remark</p>
+        ) : (
+          <></>
+        )}
+        <Button
+          variant={"ghost"}
+          disabled={approvalRemark.length == 0}
+          className="hover:bg-lightPink dark:hover:bg-lightPink transition hover:text-white dark:hover:text-white"
+        >
+          Submit
+        </Button>
+        <img
+          src={logo}
+          className="absolute z-[-1] opacity-30 w-1/2   -translate-y-1/2 -left-20"
+          alt=""
+        />
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
+const EscalateTicketForm = ({ onSubmitForm }) => {
+  const formSchema = z.object({
+    agentEmail: z.string().email(),
+    reasonForEscalation: z.string(),
+  });
+  const form = useForm({
+    mode: "onChange",
+    resolver: zodResolver(formSchema),
+  });
+  const trySubmit = (values) => {
+    onSubmitForm(values);
+  };
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(trySubmit)}>
+        <FormField
+          name="agentEmail"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="my-2">
+              <FormLabel className="text-sm text-neutral-500 font-[400]">
+                Agent Email
+              </FormLabel>
+              <FormControl>
+                <Input
+                  className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                  type="text"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        ></FormField>
+        <FormField
+          name="reasonForEscalation"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="my-2">
+              <FormLabel className="text-sm text-neutral-500 font-[400]">
+                Reason For Escalation
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                  type="text"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        ></FormField>
+        <Button type="submit" variant={"outline"} className="w-full my-2">
+          Submit
+        </Button>
+      </form>
+    </Form>
+  );
+};
 const ActionsComponent = () => {
   return (
     <Popover>
@@ -494,9 +640,9 @@ const ActionsComponent = () => {
       <PopoverContent side="bottom" className="w-44">
         <AddNotePopover />
         <AddReminderPopover />
-        {/* <AddWorkLogPopover /> */}
-        {/* <AddCommentDialog /> */}
         <EscalatePopover />
+        <SeekApprovalPopover />
+        <DeleteAction />
       </PopoverContent>
     </Popover>
   );
@@ -511,6 +657,7 @@ const ExtraActions = () => {
       </Button>
       <DetailsSubAction />
       <HistorySubAction />
+      <ApprovalSubAction />
     </div>
   );
 };
@@ -518,7 +665,7 @@ const ExtraActions = () => {
 const LeftPanel = () => {
   return (
     <div className="flex-[1] border-t-2 border-neutral-200 md:block hidden">
-      <TimerComponent />
+      <TimerComponentManager />
       <ExtraActions />
     </div>
   );
@@ -556,11 +703,12 @@ const TimerComponent = () => {
   );
 };
 import { CgClose, CgDetailsMore } from "react-icons/cg";
-import { MdHistory } from "react-icons/md";
+import { MdError, MdHistory } from "react-icons/md";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { differenceInHours, differenceInMinutes, format } from "date-fns";
 import { toast } from "../../components/ui/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { SignleTicketMessage } from "../Components/SingleMessage";
 import { useForm } from "react-hook-form";
 const DetailsSubAction = () => {
@@ -580,7 +728,7 @@ const DetailsSubAction = () => {
     Attachments: ticketData.attachment.attachmentUrl.length,
     Responded_Date: format(new Date(ticketData.dateTimeModified), "dd/MM/yyyy"),
     Due_By: format(new Date(ticketData.dateTimeTicketExpired), "dd/MM/yyyy"),
-    Working_Timer: "4h:30M:20S",
+    Airline: ticketData.airlinea,
     Assigner: ticketData.assigneeName,
   };
 
@@ -684,7 +832,62 @@ const DetailCellManager = ({ cellKey, value }) => {
   );
 };
 
+const ApprovalSubAction = () => {
+  const { id } = useParams();
+  return (
+    <Popover>
+      <PopoverTrigger>
+        <Button className="w-full h-12 focus:text-blue-400 focus-within:text-blue-400 dark:bg-white bg-white flex items-center justify-start gap-2">
+          <CheckCircle className="w-3 h-3 shrink" />
+          Approval
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="left"
+        className="md:w-[35vw] min-w-[420px] w-[70vw] h-[60vh] px-4 flex flex-col overflow-y-auto scroll-smooth relative"
+      >
+        <div className="h-12 p-1 border-b-2 border-b-neutral-300/60">
+          <p className="text-xl font-semibold ">Approvals</p>
+        </div>
+        <p className="font-semibold text-[0.9rem] my-2">CPO Remark</p>
+        <p className="text-sm text-neutral-500">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequatur
+          molestias eos deleniti ad. Magni, obcaecati at ad necessitatibus
+          ducimus numquam itaque exercitationem non, quae et nostrum quia animi
+          optio minus?
+        </p>
+        <div className="flex mt-3 items-center flex-wrap space-x-2">
+          <ConfirmationDialog>
+            <button className="w-28  h-9 bg-blue-400 text-white rounded-md">
+              Approve
+            </button>
+          </ConfirmationDialog>
+          <button className="w-28 bg-lightPink  h-9 rounded-lg text-white">
+            Return
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
 const HistorySubAction = () => {
+  const { id } = useParams();
+  const { axios } = useAxiosClient();
+  const [historyFilter, setHistoryFilter] = useState("");
+  const [key, setKey] = useState(new Date());
+  const GetTicketHistoryQuery = useQuery({
+    queryKey: ["ticket", `${id}`, "history"],
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 5000,
+    queryFn: () =>
+      axios(`histories/ticket/${id}`)
+        .then((resp) => resp.data)
+        .catch((err) => {
+          throw err;
+        }),
+  });
   return (
     <Popover>
       <PopoverTrigger>
@@ -693,20 +896,271 @@ const HistorySubAction = () => {
           History
         </Button>
       </PopoverTrigger>
-      <PopoverContent side="left" className="w-[35vw] h-[60vh] px-4">
+      <PopoverContent
+        side="left"
+        className="md:w-[35vw] min-w-[420px] w-[70vw] h-[60vh] px-4 flex flex-col overflow-y-auto scroll-smooth"
+      >
         <p className="text-[1.3rem] font-semibold ">History</p>
         <div className="flex items-center gap-3">
           <p className="text-[0.675rem] text-neutral-400 font-semibold ">
             Filter By
           </p>
-          <Select>
+          <Select
+            key={key}
+            value={historyFilter}
+            onValueChange={(value) => setHistoryFilter(value)}
+          >
             <SelectTrigger className="w-60 h-8 py-0 focus:ring-transparent text-[0.6275rem]">
               <SelectValue placeholder="Select A Value" />
             </SelectTrigger>
-            <SelectContent></SelectContent>
+            <SelectContent>
+              <SelectItem value="UPDATE">Update</SelectItem>
+              <SelectItem value="COMMENT">Comment</SelectItem>
+              <Button
+                onClick={() => {
+                  setHistoryFilter("");
+                  setKey(new Date());
+                }}
+                variant={"ghost"}
+                className="w-full rounded-none text-start font-normal flex justify-start pl-8 pr-2 h-7 py-1.5"
+              >
+                None
+              </Button>
+            </SelectContent>
           </Select>
+        </div>
+        <div className="flex flex-col flex-1">
+          {GetTicketHistoryQuery.isError ? (
+            <div className="flex flex-1 items-center justify-center flex-col">
+              <span className="flex flex-row items-center text-sm font-[400]">
+                <MdError /> Error Fetching Data
+              </span>
+              <Button
+                onClick={() => {
+                  GetTicketHistoryQuery.refetch();
+                }}
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : GetTicketHistoryQuery.isSuccess ? (
+            <TicketHistoryList
+              filter={historyFilter}
+              data={GetTicketHistoryQuery.data}
+            />
+          ) : (
+            <TicketHistoryLoading />
+          )}
         </div>
       </PopoverContent>
     </Popover>
+  );
+};
+
+import { Skeleton } from "../../components/ui/skeleton";
+import { BiError } from "react-icons/bi";
+import { ConfirmationDialog } from "../Components/DataTable";
+import { AiOutlineClose } from "react-icons/ai";
+const TicketHistoryLoading = () => {
+  return (
+    <div>
+      <Skeleton />
+      <Skeleton />
+      <Skeleton />
+      <Skeleton />
+    </div>
+  );
+};
+
+const TicketHistoryList = ({ data = [], filter = "" }) => {
+  return (
+    <div className="flex flex-col flex-1 ">
+      {data.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <p>No History To Display</p>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col mt-2 space-y-2">
+          <div className="flex items-center md:h-8 ">
+            <div className="flex-1 text-sm pl-4 py-2">
+              <p>Date</p>
+            </div>
+            <div className="flex-1 text-sm pl-4 py-2">
+              <p>Time</p>
+            </div>
+            <div className="flex-1 text-sm pl-4 py-2">
+              <p>Operation</p>
+            </div>
+            <div className="flex-[2] text-sm pl-4 py-2">
+              <p>Description</p>
+            </div>
+          </div>
+          {data
+            .filter((entry) => entry.operation.startsWith(filter))
+            .map((histroyEntry, index) => (
+              <div
+                className={`flex items-start md:min-h-10  text-neutral-600 ${
+                  index % 2 === 1 &&
+                  index !== data.length - 1 &&
+                  "pb-8 border-b-2 border-b-neutral-100"
+                }`}
+                key={histroyEntry.id}
+              >
+                <div className="flex-1 text-[14px] pl-4 py-2">
+                  <p>
+                    {format(
+                      new Date(histroyEntry.dateTimeCreated),
+                      "dd-MM-yyyy"
+                    )}
+                  </p>
+                </div>
+                <div className="flex-1 text-[14px]  pl-4 py-2 ">
+                  <p> {format(new Date(histroyEntry.dateTimeCreated), "pp")}</p>
+                </div>
+                <div className="flex-1 text-[14px]  pl-4 py-2 flex items-start">
+                  <p>{histroyEntry.operation}</p>
+                </div>
+                <div className="flex-[2] text-[14px]  pl-4 py-2 flex  flex-col space-y-2">
+                  <p>{histroyEntry.remark}</p>
+                  <p className="text-[0.75rem]">
+                    Handled By{" "}
+                    <span className="text-blue-400 font-semibold">
+                      {histroyEntry.userFullName}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+};
+const TimerComponentManager = () => {
+  const { id } = useParams();
+  const client = useQueryClient();
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+  const isPaused = ticketData.dateTimeTicketReaderPaused !== null;
+  const expired = ticketData.expired;
+  const deleted = ticketData.deleted;
+  const isResting = ticketData.slaMode === "RESTING";
+  console.log({ isPaused, expired, deleted, isResting });
+  if (deleted)
+    return (
+      <DeletedTicketTimer dateTimeModified={ticketData.dateTimeModified} />
+    );
+  if (isResting)
+    return <PausedTicketTimer dateTimeModified={ticketData.dateTimeModified} />;
+  if (!expired && !isPaused && !deleted && !isResting)
+    return <TimerComponent />;
+};
+
+const PausedTicketTimer = ({ dateTimeModified }) => {
+  return (
+    <div className="w-full lg:w-[80%] m-2 h-20 bg-white border-neutral-200 border-2 rounded-md flex items-center justify-center flex-col ">
+      <p className="font-semibold text-neutral-500">Timer Paused</p>
+      <p className="text-[0.75rem] pt-2">
+        Last Modification :{" "}
+        {dateTimeModified !== null ? (
+          <span className="font-semibold text-neutral-700">
+            {format(new Date(dateTimeModified), "dd / MM / yyyy")}
+          </span>
+        ) : (
+          <span className="font-semibold text-neutral-700">none</span>
+        )}
+      </p>
+    </div>
+  );
+};
+const DeletedTicketTimer = ({ dateTimeModified }) => {
+  return (
+    <div className="w-[80%] m-2 h-20 bg-white border-neutral-200 border-2 rounded-md flex items-center justify-center flex-col ">
+      <p className="font-semibold text-neutral-500">Ticket Deleted</p>
+      <p className="text-[0.75rem] pt-2">
+        Last Modification :{" "}
+        {dateTimeModified !== null ? (
+          <span className="font-semibold text-neutral-700">
+            {format(new Date(dateTimeModified), "dd / MM / yyyy")}
+          </span>
+        ) : (
+          <span className="font-semibold text-neutral-700">none</span>
+        )}
+      </p>
+    </div>
+  );
+};
+
+const DeleteAction = () => {
+  const { axios } = useAxiosClient();
+  const { id } = useParams();
+  const nav = useNavigate();
+
+  const deleteMutation = useMutation({
+    mutationKey: ["ticket", `${id}`, "delete"],
+    mutationFn: () =>
+      new Promise((resolve, reject) =>
+        axios(`tickets/remove/${id}`, {
+          method: "DELETE",
+        })
+          .then((resp) => resolve(resp.data))
+          .catch((err) => reject(err))
+      ),
+  });
+
+  const tryDelete = () => {
+    console.log("deleting");
+    sonnerToast.promise(
+      new Promise((resolve, reject) =>
+        deleteMutation.mutate(
+          {},
+          {
+            onSuccess: (res) => {
+              resolve(res);
+              setTimeout(() => {
+                nav("/CPD/Dashboard");
+              }, 1500);
+            },
+            onError: (err) => reject(err),
+          }
+        )
+      ),
+      {
+        loading: "Trying to delete ticket...",
+        success: "Ticket Deleted Succesfully.",
+        error: "Error deleting ticket.",
+      }
+    );
+  };
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger disabled={deleteMutation.isPending} asChild>
+        <div
+          className="flex items-center gap-2 justify-center h-8 group hover:bg-neutral-50 hover:rounded-md transition hover:font-semibold"
+          role="button"
+        >
+          <Trash className="h-4 w-4 opacity-0 group-hover:opacity-100 transition  shrink rounded-md " />
+          <p className="text-xs">Delete Ticket</p>
+        </div>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete your
+            account and remove your data from our servers.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              tryDelete();
+            }}
+          >
+            Continue
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
