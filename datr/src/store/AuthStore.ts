@@ -11,7 +11,8 @@ type user = {
   email: string;
   firstName: string;
   roles: string[];
-  imageUrl:string
+  imageUrl:string,
+  airline?:string | null
 };
 type tokenUpdatePayload = {
   access_token: string;
@@ -40,6 +41,7 @@ export const useAuthStore = create(persist<state & actions> (
       firstName: "",
       roles: [],
       imageUrl:"",
+      airline:null
     },
     verified:false,
     updateTokens: (data) =>{
