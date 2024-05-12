@@ -114,19 +114,19 @@ export const SlaEdit = () => {
 
   const editSlaForm = useForm<z.infer<typeof newSlaSchema>>({
     mode: "all",
-    defaultValues:useMemo(()=>{
+    defaultValues: useMemo(() => {
       return {
-        slaName:getSlaQuery.data?.slaName,
+        slaName: getSlaQuery.data?.slaName,
         resolutionTime: `${getSlaQuery.data?.resolutionHour} ${getSlaQuery.data?.resolutionMinute}`,
         responseTime: `${getSlaQuery.data?.responseHour} ${getSlaQuery.data?.responseMinute}`,
-        resolutionDay:getSlaQuery.data?.resolutionDay,
-        responseDay:getSlaQuery.data?.responseDay,
-        slaPauseCondition:getSlaQuery.data?.slaPauseCondition,
-        slaStartCondition:getSlaQuery.data?.slaStartCondition,
-        slaResetCondition:getSlaQuery.data?.slaResetCondition
+        resolutionDay: getSlaQuery.data?.resolutionDay,
+        responseDay: getSlaQuery.data?.responseDay,
+        slaPauseCondition: getSlaQuery.data?.slaPauseCondition,
+        slaStartCondition: getSlaQuery.data?.slaStartCondition,
+        slaResetCondition: getSlaQuery.data?.slaResetCondition
 
       }
-    },[getSlaQuery.isSuccess]),
+    }, [getSlaQuery.isSuccess]),
     resolver: zodResolver(newSlaSchema),
   });
   type requestEntry = {
@@ -190,7 +190,7 @@ export const SlaEdit = () => {
           onSuccess: (res) => {
             resolve(res);
             setTimeout(() => {
-              nav("CPD/Configuration/Sla");
+              nav("/cCPD/Configuration/Sla");
             }, 1000);
           },
           onError: (err) => {
@@ -213,27 +213,27 @@ export const SlaEdit = () => {
   };
 
   useEffect(() => {
-    
-     if(getSlaQuery.isSuccess && !editSlaForm.formState.isDirty){
-        const {
-            slaName,
-            responseDay,
-            resolutionDay,
-            slaPauseCondition,
-            slaStartCondition,
-            slaResetCondition,
-          } = getSlaQuery.data;
-          editSlaForm.reset({
-            slaName,
-            responseDay:  `${responseDay}`,
-            resolutionDay:`${resolutionDay}`,
-            slaPauseCondition,
-            slaResetCondition,
-            slaStartCondition,
-            resolutionTime: `${getSlaQuery.data.resolutionHour} ${getSlaQuery.data.resolutionMinute}`,
-            responseTime: `${getSlaQuery.data.responseHour} ${getSlaQuery.data.responseMinute}`,
-          });
-       
+
+    if (getSlaQuery.isSuccess && !editSlaForm.formState.isDirty) {
+      const {
+        slaName,
+        responseDay,
+        resolutionDay,
+        slaPauseCondition,
+        slaStartCondition,
+        slaResetCondition,
+      } = getSlaQuery.data;
+      editSlaForm.reset({
+        slaName,
+        responseDay: `${responseDay}`,
+        resolutionDay: `${resolutionDay}`,
+        slaPauseCondition,
+        slaResetCondition,
+        slaStartCondition,
+        resolutionTime: `${getSlaQuery.data.resolutionHour} ${getSlaQuery.data.resolutionMinute}`,
+        responseTime: `${getSlaQuery.data.responseHour} ${getSlaQuery.data.responseMinute}`,
+      });
+
     }
   }, [getSlaQuery.isSuccess]);
   return (
@@ -249,7 +249,7 @@ export const SlaEdit = () => {
                 name="slaName"
                 control={editSlaForm.control}
                 render={({ field }) => {
-                    // console.log(field.value)
+                  // console.log(field.value)
                   // field.defaultValue=
                   return (
                     <FormItem>
@@ -259,7 +259,7 @@ export const SlaEdit = () => {
                           <Input
                             defaultValue={getSlaQuery.data.slaName}
                             {...field}
-                            
+
                             className="w-56 border-neutral-200 border-2 outline-none dark:border-neutral-200 dark:bg-white bg-white text-neutral-500 h-8 px-3"
                           />
                         </div>
