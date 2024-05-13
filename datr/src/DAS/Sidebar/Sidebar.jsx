@@ -185,7 +185,7 @@ const SearchItem = ({ open }) => {
       } rounded-lg mt-2 bg-neutral-100`}
       onClick={() => dialogFunctions.setOpen(true)}
     >
-      <Search className="w-5 h-5 opacity-0 group-hover:opacity-100 transition duration-500 ease-out rounded-md shrink group-hover:bg-neutral-200 p-1" />
+      <Search className="w-5 h-5 opacity-20 group-hover:opacity-100 transition duration-500 ease-out rounded-md shrink group-hover:bg-neutral-200 p-1" />
       {open && <p className="text-sm text-neutral-500">Search</p>}
     </div>
   );
