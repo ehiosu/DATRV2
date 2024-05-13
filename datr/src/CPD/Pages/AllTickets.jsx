@@ -481,8 +481,8 @@ const RangeSelectButton = ({ setCurrentPage }) => {
   const from = useLocalQuery().get("from");
   const to = useLocalQuery().get("to");
   const [date, setDate] = useState({
-    from: new Date(),
-    to: null,
+    from: from ? new Date(from) : new Date(), // Parse the 'from' query parameter
+    to: to ? new Date(to) : null,
   });
   return (
     <DateRangePicker
