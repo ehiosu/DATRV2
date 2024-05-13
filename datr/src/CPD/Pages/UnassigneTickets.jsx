@@ -23,8 +23,8 @@ export const UnassignedTickets = () => {
     queryFn: () =>
       axios(
         isAirline
-          ? "tickets/airline/status?value=NEW&page=0&size=10"
-          : "tickets/status?value=NEW",
+          ? "tickets/airline/status?value=UNASSIGNED&page=0&size=10"
+          : "tickets/status?value=UNASSIGNEDs",
         {
           method: "GET",
         }
@@ -39,7 +39,7 @@ export const UnassignedTickets = () => {
           </div>
           <div className="ml-auto flex    gap-3 md:my-0 my-2 flex-wrap">
             <FilterButton />
-            <RangeSelectButton />
+            {/* <RangeSelectButton />r */}
           </div>
         </div>
         <div className="w-full    max-h-[75vh]  mt-4 overflow-y-auto ">

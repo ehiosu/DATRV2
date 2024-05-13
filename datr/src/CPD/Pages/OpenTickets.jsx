@@ -39,7 +39,7 @@ export const OpenTickets = () => {
           </div>
           <div className="ml-auto flex    gap-3 flex-wrap md:my-0 my-2">
             <FilterButton />
-            <RangeSelectButton />
+            {/* <RangeSelectButton /> */}
           </div>
         </div>
         <div className="w-full  flex-1   max-h-[75vh]  mt-4 overflow-y-auto">
