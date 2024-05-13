@@ -45,6 +45,8 @@ import { CreateBaseAccount } from "./CPD/Pages/CreateBaseAccount.tsx";
 import { SlaEdit } from "./CPD/Pages/SlaEdit.tsx";
 import NotFound from "./CPD/Pages/NotFound.jsx";
 import { AccountRequests } from "./CPD/Pages/AccountRequests.tsx";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
 const queryClient = new QueryClient();
 function App() {
   const { user } = useAuth();
