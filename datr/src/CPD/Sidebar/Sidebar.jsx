@@ -38,36 +38,53 @@ export const Sidebar = () => {
     </section>
   );
 };
+import { motion } from "framer-motion";
 const MidSizedSidebar = ({ content }) => {
   const [open, setOpen] = useState(false);
   const nav = useNavigate();
   return (
     <aside
       className={`md:block hidden max-h-[97vh] h-[97vh] fixed  overflow-y-auto left-0 z-[10]  top-[1.5vh] ${
-        open ? "md:w-[26vw] lg:w-[12vw]" : "w-12"
+        open ? "md:w-[26vw] lg:w-[12vw]" : "w-12 max-h-screen overflow-y-hidden"
       } transition-all mx-2 my-2 bg-white rounded-md shadow-md`}
     >
       {!open && (
-        <div className="flex flex-col items-center p-3">
-          <RxHamburgerMenu
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 100 }}
+          transition={{ ease: "easeInOut", duration: 0.7 }}
+          className=" items-center p-3"
+        >
+          <button
             onClick={() => {
               setOpen(true);
             }}
-          />
+            className="w-8 rounded-md flex items-center justify-center transition-colors duration-500  h-8 text-black bg-neutral-100 hover:bg-neutral-200"
+          >
+            <RxHamburgerMenu />
+          </button>
 
           {content.map((item) => (
             <SidebarItem {...item} nav={nav} open={open} />
           ))}
-        </div>
+        </motion.div>
       )}
 
       {open && (
-        <div className="flex flex-col justify-center p-3 max-h-full overflow-y-auto">
-          <AiOutlineClose
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 100 }}
+          transition={{ ease: "easeInOut", duration: 0.3 }}
+          className=" justify-center p-3 max-h-full overflow-y-auto"
+        >
+          <button
             onClick={() => {
               setOpen(close);
             }}
-          />
+            className="w-8 rounded-md flex items-center justify-center transition-colors duration-500  h-8 text-black bg-neutral-100 hover:bg-neutral-200"
+          >
+            <AiOutlineClose className="text-black w-3 h-3 shrink" size={12} />
+          </button>
           <div
             role="button"
             onClick={() => {
@@ -79,7 +96,7 @@ const MidSizedSidebar = ({ content }) => {
           {content.map((item) => (
             <SidebarItem {...item} nav={nav} open={open} />
           ))}
-        </div>
+        </motion.div>
       )}
     </aside>
   );
@@ -105,11 +122,13 @@ import {
   CollapsibleContent,
 } from "../../components/ui/collapsible";
 import { ArrowDown } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { FaHamburger } from "react-icons/fa";
 const SidebarItem = ({ Name, Icon, SubMenu, open, to, nav }) => {
   const [isCollapsibleOpen, setCollapsibleOpen] = useState(false);
   return (
     <div
-      className={`flex items-center gap-2 my-3 ${
+      className={` my-3 w-full  ${open && "flex items-center gap-2"} ${
         open &&
         window.location.pathname !== to &&
         "hover:ring-2 hover:ring-blue-500/40 rounded-md hover:bg-neutral-100 hover:cursor-pointer hover:shadow-md"
@@ -118,7 +137,7 @@ const SidebarItem = ({ Name, Icon, SubMenu, open, to, nav }) => {
         window.location.pathname === to &&
         SubMenu.length === 0 &&
         "border-b-4 border-b-purple-300/40 rounded-md bg-neutral-100 border-r-2 shadow-md hover:cursor-pointer border-r-blue-300"
-      } relative`}
+      } relative ${!open && "aspect-square grid place-items-center my-5 "}`}
       onClick={() => {
         nav(to);
       }}
@@ -133,11 +152,16 @@ const SidebarItem = ({ Name, Icon, SubMenu, open, to, nav }) => {
                     ? "bg-neutral-100 text-blue-600 ring-2"
                     : "hover:ring-blue-400 hover:ring-2 hover:text-blue-600 "
                   : ""
-              }  rounded-md p-2 transition-colors hover:cursor-pointer`}
+              }  rounded-md transition-colors hover:cursor-pointer ${
+                !open && "p-1"
+              }`}
             >
               {Icon}
             </TooltipTrigger>
-            <TooltipContent className="shadow-md" side="right">
+            <TooltipContent
+              className="shadow-md dark:bg-lightPink bg-lightPink text-white outline-none dark:outline-none border-none"
+              side="right"
+            >
               <p className="text-xs ">{Name}</p>
             </TooltipContent>
           </Tooltip>
@@ -152,7 +176,12 @@ const SidebarItem = ({ Name, Icon, SubMenu, open, to, nav }) => {
         >
           {SubMenu.length > 0 ? (
             <Collapsible onOpenChange={setCollapsibleOpen}>
-              <CollapsibleTrigger className={`flex items-center w-full group `}>
+              <CollapsibleTrigger
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                className={`flex items-center w-full group `}
+              >
                 {Icon}
                 <div
                   className="flex flex-col text-black ml-1 hover:text-blue-400"
