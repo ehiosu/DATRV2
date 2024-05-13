@@ -24,6 +24,8 @@ import { useAuth } from "../../api/useAuth";
 import { NewTicketBtn } from "../../components/NewTicketBtn";
 export const AllTickets = () => {
   const cpo = useLocalQuery().get("cpo");
+  const from = useLocalQuery().get("from");
+  const to = useLocalQuery().get("to");
   const status = useLocalQuery().get("status");
   const assignee = useLocalQuery().get("assignee");
   const { axios } = useAxiosClient();
@@ -37,6 +39,14 @@ export const AllTickets = () => {
     retry: false,
     staleTime: Infinity,
     queryFn: () => {
+      if (to && from) {
+        return axios(
+          `tickets/date-range?start=${from}&end=${to}&page=${currentPage}&size=15`
+        ).then((resp) => {
+          setMaxPages(() => resp.data.totalPages);
+          return resp.data;
+        });
+      }
       if (!cpo && !status && !assignee) {
         return axios(
           isAirline
@@ -107,7 +117,7 @@ export const AllTickets = () => {
   useEffect(() => {
     console.log({ cpo, status, assignee });
     ticketsQuery.refetch();
-  }, [cpo, assignee, status]);
+  }, [cpo, assignee, status, from, to]);
   return (
     <section className="w-full">
       <SearchPage heading={"All Tickets"}>
@@ -117,7 +127,7 @@ export const AllTickets = () => {
           </div>
           <div className="md:ml-auto flex    gap-3  flex-wrap md:my-0 my-2">
             <FilterButton assignee={assignee} cpo={cpo} status={status} />
-            <RangeSelectButton />
+            <RangeSelectButton setCurrentPage={setCurrentPage} />
           </div>
         </div>
         <div className="flex items-center md:justify-end flex-wrap md:space-x-4">
@@ -465,13 +475,27 @@ const FilterButton = ({
     </Popover>
   );
 };
-const RangeSelectButton = () => {
+import { DateRangePicker } from "../../components/ui/Datepicker";
+import { differenceInDays, parse } from "date-fns";
+const RangeSelectButton = ({ setCurrentPage }) => {
+  const from = useLocalQuery().get("from");
+  const to = useLocalQuery().get("to");
+  const [date, setDate] = useState({
+    from: new Date(),
+    to: null,
+  });
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="border-darkBlue    border-2 flex justify-center items-center  w-60 md:w-56   text-[0.8275rem]  outline-none h-10    rounded-md  shadow-md  gap-3   font-semibold   ">
-        Showing Last 90 days of Data <AiOutlineArrowDown />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className=" bg-white w-28   rounded-md     z-50 my-2"></DropdownMenuContent>
-    </DropdownMenu>
+    <DateRangePicker
+      className="bg-white dark:bg-white hover:bg-slate-200 dark:hover:bg-slate-200 hover:text-black dark:hover:text-black outline-none "
+      date={date}
+      setDate={setDate}
+      mode={"range"}
+      setCurrentPage={setCurrentPage}
+      displayDate={(value) => {
+        return value
+          ? `showing data from ${differenceInDays(value.from, value.to)}`
+          : "Select a Date Range";
+      }}
+    />
   );
 };
