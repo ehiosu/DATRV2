@@ -23,6 +23,8 @@ import axios from "axios";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {toast as SonnerToast} from "sonner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { airlines as ActiveAirlines } from "@/data.ts";
 type airlineRegisterFrom = UseFormReturn<
   {
     email: string;
@@ -110,7 +112,7 @@ const UserAccountForm: React.FC<{
   return (
     <section className="w-full min-h-screen bg-neutral-100 grid place-items-center relative overflow-hidden ">
       <img
-        src={logo}
+        src={"https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"}
         alt=""
         className="absolute  opacity-30 left-0 -translate-x-1/3 w-[440px] top-0 -translate-y-1/4 "
       />
@@ -221,7 +223,7 @@ const UserAccountForm: React.FC<{
         </Form>
       </div>
       <img
-        src={logo}
+        src={"https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"}
         alt=""
         className="absolute w-[320px] right-0 translate-x-1/2 bottom-0  opacity-30"
       />
@@ -310,12 +312,12 @@ const CreateAirlineAccount: React.FC = () => {
   return (
     <section className="w-full h-screen relative flex items-center justify-center overflow-hidden">
       <img
-        src={logo}
+        src={"https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"}
         alt=""
         className="absolute   opacity-30 left-0 -translate-x-1/3 w-[440px] top-0 -translate-y-1/4 "
       />
       <img
-        src={logo}
+        src={"https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"}
         alt="logo"
         className="absolute w-[320px] right-0 translate-x-1/2 bottom-0  opacity-30"
       />
@@ -632,11 +634,18 @@ const AirlineAccountInformation = ({ form }: { form: airlineRegisterFrom }) => {
                       Airline Name
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
-                        placeholder="Doe"
-                        {...field}
-                      />
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="bg-white dark:bg-white outline-none focus:outline-none focus-within:ring-transparent dark:focus:ring-transparent dark:ring-offset-blue-400 ring-offset-blue-400">
+                          <SelectValue placeholder="Select An Airline"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {
+                            ActiveAirlines.map((airline,index)=>(
+                              <SelectItem value={airline} key={`${airline}-${index}`}>{airline}</SelectItem>
+                            ))
+                          }
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
