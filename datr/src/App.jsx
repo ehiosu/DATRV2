@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Landing } from "./Landing.tsx";
 import { AdminDashboardLogin } from "./Auth/AdminDashboardLogin";
 import { CreateAccount } from "./Auth/CreateAccount";
 import { Home } from "./Home/Home";
@@ -45,7 +46,10 @@ import { CreateBaseAccount } from "./CPD/Pages/CreateBaseAccount.tsx";
 import { SlaEdit } from "./CPD/Pages/SlaEdit.tsx";
 import NotFound from "./CPD/Pages/NotFound.jsx";
 import { AccountRequests } from "./CPD/Pages/AccountRequests.tsx";
+import { FDReports } from "./DAS/Pages/FDReports.tsx";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { FDR } from "./CPD/Pages/FDR.tsx";
+import { DelayReports } from "./DAS/Pages/DelayReports.tsx";
 
 const queryClient = new QueryClient();
 function App() {
@@ -56,7 +60,8 @@ function App() {
         <ViewType.Provider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<AdminDashboardLogin />} />
+              <Route path="/" element={<Landing />}></Route>
+              <Route path="/Auth" element={<AdminDashboardLogin />} />
               <Route path="*" element={<NotFound />} />
               <Route path="/Create-Account" element={<CreateBaseAccount />} />
               <Route path="/Home" element={<Home />} />
@@ -65,6 +70,7 @@ function App() {
               <Route path="/Account-Settings" element={<AccountSettings />} />
               <Route path="/Verify" element={<Verify />} />
               <Route element={<CPDLayout />}>
+                <Route path="/CPD/New-FDR" element={<FDR />}></Route>
                 <Route path="/CPD/Dashboard" element={<Dashboard />} />
                 {user.roles.includes("ADMIN") && (
                   <Route
@@ -151,17 +157,16 @@ function App() {
                 <Route path="/CPD/DAS" element={<DataAndStatisticsHome />} />
               </Route>
               <Route element={<DASLayout />}>
+                <Route path="/Das/Dashboard" element={<DASDashboard />} />
+                <Route path="/Das/Delays" element={<Delays />} />
+                <Route path="/Das/Cancelled" element={<CancelledFlights />} />
+                <Route path="/Das/New" element={<CreateEntry />} />
+                <Route path="/Das/Report/:id" element={<Reports />} />
+                <Route path="/Das/FDR-Reports" element={<FDReports />} />
                 <Route
-                  path="/Das/:Location/Dashboard"
-                  element={<DASDashboard />}
+                  path="/Das/Delays/Reports/:airline"
+                  element={<DelayReports />}
                 />
-                <Route path="/Das/:Location/Delays" element={<Delays />} />
-                <Route
-                  path="/Das/:Location/Cancelled"
-                  element={<CancelledFlights />}
-                />
-                <Route path="/Das/:Location/Report/:id" element={<Reports />} />
-                <Route path="/Das/:Location/New" element={<CreateEntry />} />
               </Route>
             </Routes>
           </BrowserRouter>
