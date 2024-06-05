@@ -1,6 +1,6 @@
 import { Button } from "../../components/ui/button";
 import { useNavigate } from "react-router";
-import { useAxiosClient } from "../../api/useAxiosClient.jsx";
+
 import { useState } from "react";
 import { toast } from "../../components/ui/use-toast";
 import {
@@ -15,9 +15,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { Input } from "../../components/ui/input";
+import axios from "axios";
+import { NcaaLogo } from "../../components/ui/NcaaLogo";
+import { ArrowBigLeft } from "lucide-react";
 const ForgotPassword = () => {
   const nav = useNavigate();
-  const { axios } = useAxiosClient();
+
   const [formState, setFormState] = useState({
     email: "",
     canResetPassword: false,
@@ -34,10 +37,13 @@ const ForgotPassword = () => {
         variant: "destructive",
       });
     }
-    await axios("/password/forgot-password-attempt", {
-      method: "POST",
-      data: { email: formState.email },
-    })
+    await axios(
+      "http://176.58.117.18:8080/api/password/forgot-password-attempt",
+      {
+        method: "POST",
+        data: { email: formState.email },
+      }
+    )
       .then((resp) => {
         console.log(resp.data);
         toast({
@@ -60,12 +66,25 @@ const ForgotPassword = () => {
   };
   return (
     <main className="w-full h-screen grid place-items-center relative overflow-hidden">
+      <div
+        onClick={() => {
+          nav("/");
+        }}
+        className="absolute left-4 top-4 w-12 hover:scale-105 transition-all hover:cursor-pointer aspect-square bg-white rounded-bl-xl rounded-tr-xl grid place-items-center"
+      >
+        <ArrowBigLeft />
+      </div>
       <div className="lg:w-[35%] xl:w-[30%] md:w-[45%] w-[80%]  rounded-lg border-2 border-darkBlue shadow-md relative flex flex-col justify-center text-center p-2 pb-12 bg-white">
-        <img
-          src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1706868253/private/NCAA-removebg-preview_onmbl2.png"
-          className="w-[70%]  bg-white absolute -top-16  left-1/2 -translate-x-1/2  object-contain  "
+        <div
+          className="w-[70%]  bg-white absolute -top-8 left-1/2 -translate-x-1/2  object-contain flex items-center  "
           alt=""
-        />
+        >
+          <NcaaLogo
+            imageClassName={"w-16"}
+            ContainerClassName={"p-2 w-full flex items-center"}
+            textClassName={"font-semibold text-ncBlue"}
+          />
+        </div>
         <div className="flex flex-col justify-center text-center w-[80%] mx-auto mt-20 gap-2">
           {formState.canResetPassword ? (
             <CompleteResetComponent email={formState.email} />
@@ -79,12 +98,12 @@ const ForgotPassword = () => {
         </div>
       </div>
       <img
-        src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1706869558/private/NCAALogo_l7hkhg.png"
+        src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"
         className="absolute bottom-0 w-[420px] aspect-square translate-y-1/2 right-0 translate-x-1/3 z-[-1]"
         alt=""
       />
       <img
-        src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1706869558/private/NCAALogo_l7hkhg.png"
+        src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"
         className="absolute top-0 w-[420px] aspect-square -translate-y-1/2 left-0 -translate-x-1/3 z-[-1]"
         alt=""
       />
@@ -149,7 +168,7 @@ const CompleteResetComponent = ({ email }) => {
   const containsSpecialCharacter = (input) => {
     return /[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]/.test(input);
   };
-  const { axios } = useAxiosClient();
+
   const resetPasswordSchema = z
     .object({
       password: z
@@ -185,15 +204,18 @@ const CompleteResetComponent = ({ email }) => {
   });
 
   const tryResetPassword = async (values) => {
-    await axios("/password/effect-forgot-password", {
-      method: "PUT",
-      data: {
-        email,
-        otp: values.otp,
-        newPassword: values.password,
-        confirmPassword: values.rePassword,
-      },
-    })
+    await axios(
+      "http://176.58.117.18:8080/api/password/effect-forgot-password",
+      {
+        method: "PUT",
+        data: {
+          email,
+          otp: values.otp,
+          newPassword: values.password,
+          confirmPassword: values.rePassword,
+        },
+      }
+    )
       .then((resp) => {
         toast({
           title: "Success!",
