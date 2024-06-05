@@ -23,8 +23,8 @@ export const UnassignedTickets = () => {
     queryFn: () =>
       axios(
         isAirline
-          ? "tickets/airline/status?value=UNASSIGNED&page=0&size=10"
-          : "tickets/status?value=UNASSIGNEDs",
+          ? "tickets/airline/status?value=NEW&page=0&size=10"
+          : "tickets/status?value=NEW",
         {
           method: "GET",
         }
