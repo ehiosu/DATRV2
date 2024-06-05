@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { CiClock1, CiWarning } from "react-icons/ci";
 import { BsThreeDots } from "react-icons/bs";
-import { MdAssignmentInd } from "react-icons/md";
+import { MdAssignmentInd, MdClose } from "react-icons/md";
 import { IoMdArrowDown } from "react-icons/io";
 import { FaRegEdit } from "react-icons/fa";
 import {
@@ -12,7 +12,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { CiCircleCheck } from "react-icons/ci";
-import { IoMdClose } from "react-icons/io";
+import { IoMdClose  } from "react-icons/io";
 
 import {
   Cell,
@@ -124,8 +124,8 @@ const columnDefinition: ExtendedColumnDef<recieptData>[] = [
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  hasAssignment: boolean;
-  isDraft: boolean;
+  hasAssignment?: boolean;
+  isDraft?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -209,16 +209,16 @@ export const RecentTicketsTable = ({ data }: { data: recieptData[] }) => {
 
 const generalTicketColumnDefiniton: ExtendedColumnDef<GeneralTicket>[] = [
   {
+    accesorKey: "id",
+    header: "ID",
+  },
+  {
     accesorKey: "complainantName",
     header: "Complainant",
   },
   {
     accesorKey: "complainantType",
     header: "Complainant Type",
-  },
-  {
-    accesorKey: "id",
-    header: "ID",
   },
   {
     accesorKey: "group",
@@ -658,7 +658,7 @@ ${_messages}
           {table.getHeaderGroups().map((headerGroup: any) => (
             <TableRow
               key={headerGroup.id}
-              className="dark:hover:bg-neutral-100 hover:bg-neutral-100"
+              className=" dark:hover:bg-neutral-50 hover:bg-neutral-100 "
             >
               {headerGroup.headers.map((header: any, headerIndex: number) => {
                 return (
@@ -678,7 +678,14 @@ ${_messages}
                   </TableHead>
                 );
               })}
-              {user.roles.includes("ADMIN") &&
+              {user.roles.includes("ADMIN")  &&
+                hasAssignment &&
+                data.length > 0 && (
+                  <TableHead className="text-center">
+                    <span className="t">Assign To </span>
+                  </TableHead>
+                )}
+                 {user.roles.includes("TERMINAL_SUPERVISOR")  &&
                 hasAssignment &&
                 data.length > 0 && (
                   <TableHead className="text-center">
@@ -693,7 +700,7 @@ ${_messages}
             table.getRowModel().rows.map((row: any, index: number) => {
               return (
                 <TableRow
-                  className="dark:hover:bg-neutral-50 hover:bg-neutral-100"
+                  className="dark:hover:bg-neutral-50 hover:bg-neutral-100 "
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   onClick={() => {
@@ -717,7 +724,106 @@ ${_messages}
                         />
                       )
                     )}
-                  {user.roles.includes("ADMIN") &&
+                  {user.roles.includes("ADMIN")  &&
+                    hasAssignment &&
+                    data.length > 0 && (
+                      <TableCell className="grid place-items-center bg-transparent ">
+                        <Popover>
+                          <PopoverTrigger
+                            disabled={isAssigning}
+                            className="w-8 aspect-square rounded-full bg-darkBlue grid place-items-center disabled:bg-neutral-600 disabled:hover:cursor-wait  text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            {" "}
+                            <MdAssignmentInd />
+                          </PopoverTrigger>
+                          {cposQuery.isSuccess && (
+                            <PopoverContent
+                              side="left"
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-2 py-1 w-[14rem] md:w-[20rem] z-[5] "
+                            >
+                              <Command className="p-0 m-0 min-h-52 md:min-h-60">
+                                <p className="text-[1.3rem] text-blue-300 mb-2">
+                                  Assign Ticket
+                                </p>
+                                <div className="px-1">
+                                  <Select
+                                    onValueChange={(value) => {
+                                      tryAssignTicket(row.original.id, value);
+                                    }}
+                                    defaultValue=""
+                                    onOpenChange={(open) => {
+                                      if (!open) setSearchedCpo("");
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select a CPO" />
+                                    </SelectTrigger>
+                                    <SelectContent className="p-1">
+                                      <Input
+                                        className="my-3 w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                                        onChange={(e) =>
+                                          setSearchedCpo(e.target.value)
+                                        }
+                                      />
+                                      <SelectGroup>
+                                        {cposQuery.data
+                                          .filter((_cpo: any) =>
+                                            _cpo.ncaaUserEmail.startsWith(
+                                              searchedCpo
+                                            )
+                                          )
+                                          .map((_cpo: any) => {
+                                            return (
+                                              <SelectItem
+                                                value={_cpo.ncaaUserEmail}
+                                              >
+                                                {_cpo.ncaaUserEmail}
+                                              </SelectItem>
+                                            );
+                                          })}
+                                        {cposQuery.data.filter((_cpo: any) =>
+                                          _cpo.ncaaUserEmail.startsWith(
+                                            searchedCpo
+                                          )
+                                        ).length === 0 && (
+                                          <p className="text-neutral-400 text-[0.8275rem] text-center m-auto">
+                                            User Doesn't exist
+                                          </p>
+                                        )}
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="p-1 mt-auto">
+                                  <Select>
+                                    <SelectTrigger className="w-full my-2 ring-0 focus:ring-0  mt-auto">
+                                      <SelectValue placeholder="Filter By Group..." />{" "}
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectGroup>
+                                        <SelectLabel>User Groups</SelectLabel>
+                                        <SelectItem value="usd">
+                                          User Supervisory Department
+                                        </SelectItem>
+                                        <SelectItem value="none">
+                                          None
+                                        </SelectItem>
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </Command>
+                            </PopoverContent>
+                          )}
+                        </Popover>
+                      </TableCell>
+                    )}
+                     {user.roles.includes("TERMINAL_SUPERVISOR")  &&
                     hasAssignment &&
                     data.length > 0 && (
                       <TableCell className="grid place-items-center bg-transparent ">
@@ -817,7 +923,7 @@ ${_messages}
                       </TableCell>
                     )}
 
-                  <TableCell>
+                  <TableCell className="peer-hover:bg-neutral-200">
                     <Popover>
                       <PopoverTrigger
                         className="hover:bg-neutral-100/40 rounded-md p-1"
@@ -3136,7 +3242,7 @@ export const cancelledFlightColumnDef: ColumnDef<cancelledFlight>[] = [
     header: "Airline",
   },
   {
-    accessorKey: "cancelledFlights",
+    accessorKey: "cancelledFlight",
     header: "Cancelled Flights",
   },
   {
@@ -3270,7 +3376,7 @@ const reportsColumnDef: ExtendedColumnDef<Report>[] = [
   },
   {
     accessorKey: "isCancelled",
-    header: "isCancelled",
+    header: "is Cancelled",
     cell:({row})=>{
       return (
         <div className="w-full flex flex-row items-center justify-center">
@@ -3373,7 +3479,7 @@ export function ReportsDataTable<TData, TValue>({
                         {row.original[cell.column.columnDef.accesorKey] ? (
                           <CiCircleCheck className="text-green-600" />
                         ) : (
-                          <IoMdClose className="text-red-600" />
+                          <IoMdClose className="text-red-500 " className="text-red-600" />
                         )}
                       </TableCell>
                     ) : (
@@ -3723,7 +3829,7 @@ const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
               className="bg-white  rounded-md px-0 py-0 w-40 divide-y-2 divide-y-neutral-100"
               side="left"
             >
-              <ConfirmationDialog title="Are you sure you want to reject it?" onClick={()=>{handleReview(row.original["id"],false)}}>
+              <ConfirmationDialog message="This action cannot be undone.This Account Request will be deleted and the user will have no access to the system." title="Are you sure you want to reject it?" onClick={()=>{handleReview(row.original["id"],false)}}>
                 <div
                   role="button"
               
@@ -3735,7 +3841,7 @@ const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
                   </p>
                 </div>
               </ConfirmationDialog>
-              <ConfirmationDialog title="Are you sure you want to accept it?" onClick={()=>{handleReview(row.original["id"],true)}}>
+              <ConfirmationDialog message="This action cannot be undone.This Account will be created and granted access to the system." title="Are you sure you want to accept it?" onClick={()=>{handleReview(row.original["id"],true)}}>
                 <div
                   role="button"
                   
@@ -3819,11 +3925,13 @@ export const AccountRequestsTable = ({ data }: { data: accountRequest[] }) => {
 export const ConfirmationDialog = ({
   children,
   onClick,
-  title
+  title,
+  message,
 }: {
   children: React.ReactElement;
   onClick:()=>void;
-  title?:string
+  title?:string,
+  message?:string
 }) => {
   return (
     <AlertDialog>
@@ -3832,8 +3940,7 @@ export const ConfirmationDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>{title||"Are you absolutely sure?"}</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
+           {message || " This action cannot be undone. This will permanently delete your account and remove your data from our servers."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -3974,3 +4081,286 @@ export const AirlineReportsDataTable:React.FC<{
     </div>
   )
 }
+
+type backlogTicket={
+  airline:string,
+  activeTickets:string,
+  unresolvedTickets:string, 
+  total:string
+}
+export const ticketBacklogColumnDef:ColumnDef<backlogTicket>[]=[{
+  accessorKey:"airline",
+  header:"Airline"
+},{
+  accessorKey:"activeTickets",
+  header:"Active Tickets"
+},
+{
+  accessorKey:"unresolvedTickets",
+  header:"Unresolved Tickets"
+},
+{
+  id:"Backlog",
+  header:"% Backlog",
+  cell:({row})=> (
+    <div>
+      <p>{`${(parseFloat(row.original.unresolvedTickets)/parseFloat(row.original.activeTickets)*100).toPrecision(3)}%`}</p>
+    </div>
+  ),
+},
+{
+  accessorKey:"total",
+  header:"% Total",
+  cell:({row})=>(
+    <div>
+    <p>{`${(parseFloat(row.original.unresolvedTickets)/parseFloat(row.original.total)*100).toPrecision(3)}%`}</p>
+  </div>
+  )
+}
+]
+
+type OnTimePerformanceEntry={
+  airline:string,
+  totalFlights:string,
+  onTimeFlights:string,
+ 
+}
+
+export const OnTimeTableColumnDef:ColumnDef<OnTimePerformanceEntry>[]=[
+  {
+    accessorKey:"airline",
+    header:"Airline"
+  },
+  {
+    accessorKey:"totalFlights",
+    header:"Total Flights"
+  },
+  {
+    accessorKey:"onTimeFlights",
+    header:"On Time Flights"
+  },
+  {
+    id:"onTimePercentage",
+    header:"% On Time",
+    cell:({row})=>{
+      return(
+        <div>
+          <p>{`${((parseFloat(row.original.onTimeFlights)/parseFloat(row.original.totalFlights)).toPrecision(3)*100)}%`}</p>
+        </div>
+      )
+    }
+  }
+]
+
+type disruptionLeaderEntry={
+  airline:string,
+  totalFlights:string,
+  disruptedFlights:string
+}
+type bestPerformingEntry={
+  airline:string,
+  activeTickets:string,
+  resolvedTickets:string
+}
+
+export const disruptionLeaderColumnDef:ColumnDef<disruptionLeaderEntry>[]=[{
+  accessorKey:"airline",
+  header:"Airline",
+},
+{
+accessorKey:"totalFlights",
+header:"Total Flights"
+},
+{
+  accessorKey:"disruptedFlights",
+  header:"Disrupted Flights"
+},
+{
+  id:"disruptionPercent",
+  header:"% disrupted",
+  cell:({row})=>{
+    return(
+      <div>
+        <p>{`${((parseFloat(row.original.disruptedFlights)/parseFloat(row.original.totalFlights)).toPrecision(3)*100)}%`}</p>
+      </div>
+    )
+  }
+}
+
+]
+export const bestPerformingColumnDef:ColumnDef<bestPerformingEntry>[]=[{
+  accessorKey:"airline",
+  header:"Airline",
+},
+{
+accessorKey:"activeTickets",
+header:"Active Tickets"
+},
+{
+  accessorKey:"resolvedTickets",
+  header:"Resolved Tickets"
+},
+{
+  id:"resolved percent",
+  header:"% resolved",
+  cell:({row})=>{
+    return(
+      <div>
+        <p>{`${((parseFloat(row.original.resolvedTickets)/parseFloat(row.original.activeTickets)).toPrecision(3)*100)}%`}</p>
+      </div>
+    )
+  }
+}
+]
+
+type fdrEntry={
+  airline:string,
+  dateOfIncidence:string,
+  route:string,
+  scheduledTimeDeparture:string,
+  scheduledTimeArrival:string,
+  expectedTimeDeparture:string,
+  expectedTimeArrival:string,
+}
+export const fdrColumnDef:ColumnDef<fdrEntry>[]=[
+  {
+    accessorKey:"airline",
+    header:"Airline"
+  },
+  {
+    accessorKey:"dateOfIncidence",
+    header:"Date of Incidence"
+  },
+  {
+    accessorKey:"route",
+    header:"Route"
+  },
+  {
+    accessorKey:"scheduledTimeArrival",
+    header:"Scheduled Time Of Arrival"
+  },
+  {
+    accessorKey:"scheduledTimeDeparture",
+    header:"Scheduled Time Of Departure"
+  },
+  {
+    accessorKey:"expectedTimeArrival",
+    header:"Expected Time Of Arrival"
+  },
+  {
+    accessorKey:"expectedTimeDeparture",
+    header:"Expected Time Of Departure"
+  },
+  {
+    id:"reasonForDelay",
+    header:"Reason For Delay",
+    cell({row}) {
+      return (
+        <div>
+          <p>{row.original["reasonForDelay"]||"-----"}</p>
+        </div>
+      )
+    },
+  },
+  {
+    id:"reasonForCancellation",
+    header:"Reason For Cabcellation",
+    cell({row}) {
+      return (
+        <div>
+          <p>{row.original["reasonForCancellation"]||"-----"}</p>
+        </div>
+      )
+    },
+  },
+  {
+    id:"reasonForTarmacDelay",
+    header:"Reason For Tarmac Delay",
+    cell({row}) {
+      return (
+        <div>
+          <p>{row.original["reasonForTarmacDelay"]||"-----"}</p>
+        </div>
+      )
+    },
+  },
+  {
+    id:"information",
+    header:"Information Shared",
+    cell:({row})=>{
+      return (
+        <div className="flex items-center justify-center">
+          {
+            row.original["complianceList"][0].isRequired?<><p>{`${row.original["complianceList"][0].numberOfPassengers} passengers communicated with`}</p></>:<MdClose className="text-red-500 "/>
+          }
+        </div>
+      )
+    }
+  },
+  {
+    id:"refreshment",
+    header:"Refreshments Given",
+    cell:({row})=>{
+      return (
+        <div className="flex items-center justify-center">
+          {
+            row.original["complianceList"][1].isRequired?<><p>{`${row.original["complianceList"][1].numberOfPassengers} passengers attended to`}</p></>:<MdClose className="text-red-500 "/>
+          }
+        </div>
+      )
+    }
+  },
+  {
+    id:"refund",
+    header:"Refund processed",
+    cell:({row})=>{
+      return (
+        <div className="flex items-center justify-center">
+          {
+            row.original["complianceList"][2].isRequired?<><p>{`${row.original["complianceList"][2].numberOfPassengers} passengers refunded`}</p></>:<MdClose className="text-red-500 "/>
+          }
+        </div>
+      )
+    }
+  },
+  {
+    id:"REPROTECTION",
+    header:"Reprotection",
+    cell:({row})=>{
+      return (
+        <div className="flex items-center justify-center">
+          {
+            row.original["complianceList"][3].isRequired?<><p>{`${row.original["complianceList"][3].numberOfPassengers} passengers attended to`}</p></>:<MdClose className="text-red-500 "/>
+          }
+        </div>
+      )
+    }
+  },
+  {
+    id:"RESCHEDULE",
+    header:"Flight Rescheduled",
+    cell:({row})=>{
+      return (
+        <div className="flex items-center justify-center">
+          {
+            row.original["complianceList"][3].isRequired?<><p>{`${row.original["complianceList"][3].numberOfPassengers} passengers attended to`}</p></>:<MdClose className="text-red-500 "/>
+          }
+        </div>
+      )
+    }
+  },
+  {
+    id:"compensation",
+    header:"Compensation",
+    cell:({row})=>{
+      return (
+        <div className="flex items-center justify-center">
+          {
+            row.original["complianceList"][3].isRequired?<><p>{`${row.original["complianceList"][3].numberOfPassengers} passengers compensated`}</p></>:<MdClose className="text-red-500 "/>
+          }
+        </div>
+      )
+    }
+  },
+ 
+]
