@@ -66,7 +66,7 @@ export const Reports = () => {
   });
   return (
     <section className="w-full max-h-screen overflow-y-auto p-2">
-      <SearchPage heading={id}>
+      <SearchPage heading={id.replace("_", " ")}>
         <p className="text-[0.8275rem] text-neutral-600 font-semibold">
           Select Range:{" "}
         </p>
