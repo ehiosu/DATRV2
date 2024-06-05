@@ -17,6 +17,8 @@ import {
   FlightDataTable,
 } from "../../CPD/Components/DataTable";
 import { useNavigate, useParams } from "react-router";
+import { useAxiosClient } from "../../api/useAxiosClient";
+import { useQuery } from "@tanstack/react-query";
 export const CancelledFlights = () => {
   const navigate = useNavigate();
   const { Location } = useParams();
@@ -24,10 +26,20 @@ export const CancelledFlights = () => {
     from: new Date(),
     to: null,
   });
-  const navto = (id) => {
-    console.log(id);
-    navigate(`/DAS/${Location}/Report/${id}`);
-  };
+
+  const { axios } = useAxiosClient();
+  // const getCancelledFlightsQuery=useQuery({
+  //   queryKey:[`${Location}`,'flights','cancelled', `from ${date.from.getUTCDate()} to ${date.to?.getUTCDate() || "none"}`,],
+  //   queryFn:()=>  axios(
+  //     `data-entries/delays?terminal=${Location}&date-of-incidence=${format(
+  //       date.from,
+  //       "dd-MM-yyyy"
+  //     )}`,
+  //     {
+  //       method: "GET",
+  //     }
+  //   ).then((resp) => resp.data),
+  // })
   return (
     <section className="w-full max-h-screen overflow-y-auto">
       <SearchPage heading={"Cancelled Flights"}>
@@ -70,7 +82,70 @@ export const CancelledFlights = () => {
             />
           </PopoverContent>
         </Popover>
-        <CancelledFlightsDataTable data={[]} />
+        <CancelledFlightsDataTable
+          data={[
+            {
+              cancelledFlight: 6,
+              airline: "Air Peace",
+              numberOfFlights: 27,
+              reason: "Operational Issues",
+            },
+            {
+              cancelledFlight: 8,
+              airline: "Arik Air",
+              numberOfFlights: 40,
+              reason: "Bad Weather",
+            },
+            {
+              cancelledFlight: 8,
+              airline: "Overland Airways",
+              numberOfFlights: 23,
+              reason: "Technical Difficulties",
+            },
+            {
+              cancelledFlight: 7,
+              airline: "Aero Contractors",
+              numberOfFlights: 55,
+              reason: "Crew Shortage",
+            },
+            {
+              cancelledFlight: 5,
+              airline: "Dana Air",
+              numberOfFlights: 32,
+              reason: "Airspace Restrictions",
+            },
+            {
+              cancelledFlight: 4,
+              airline: "Ibom Air",
+              numberOfFlights: 28,
+              reason: "Unforeseen Circumstances",
+            },
+            {
+              cancelledFlight: 7,
+              airline: "United Nigeria",
+              numberOfFlights: 12,
+              reason: "Maintenance Requirements",
+            },
+            {
+              cancelledFlight: 5,
+              airline: "Green Africa Airways",
+              numberOfFlights: 19,
+              reason: "Pilot Strike",
+            },
+            {
+              cancelledFlight: 7,
+              airline: "Max Air",
+              numberOfFlights: 19,
+              reason: "Low Passenger Numbers",
+            },
+            {
+              cancelledFlight: 4,
+              airline: "Arik Air",
+              numberOfFlights: 22,
+              reason: "Runway Closure",
+            },
+          ].sort((entrya, entryb) => entrya.airline - entryb.airline)}
+        />
       </SearchPage>
     </section>
   );
