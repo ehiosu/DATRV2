@@ -41,6 +41,28 @@ import { Calendar } from "lucide-react";
 
 import { UploadButton, UploadDropzone } from "@bytescale/upload-widget-react";
 
+const complaintSources = [
+  {
+    value: "EMAIL",
+    title: "Email",
+  },
+  {
+    value: "WEBSITE",
+    title: "Website",
+  },
+  {
+    value: "SOCIAL_MEDIA",
+    title: "Social Media",
+  },
+  {
+    value: "WALK_IN",
+    title: "Walk In",
+  },
+  {
+    value: "LETTER",
+    title: "Letter",
+  },
+];
 export const NewTicket = () => {
   const nav = useNavigate();
   const { user } = useAuth();
@@ -48,7 +70,7 @@ export const NewTicket = () => {
   if (!user.roles.includes("CPO") && !user.roles.includes("ADMIN")) {
     return <Navigate to={"/CPD/Dashboard"} />;
   }
-  const [canSubmit, setCanSubmit] = useState(false);
+  const [isTicketUploading, setIsTicketUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const getGroupedData = (data) => {
     let res = {};
@@ -412,11 +434,18 @@ export const NewTicket = () => {
                   </FormLabel>
 
                   <FormControl>
-                    <Input
-                      className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                      {...field}
-                      placeholder="Source..."
-                    />
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
+                        <SelectValue placeholder="Select Complaint Source..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {complaintSources.map((source) => (
+                          <SelectItem value={source.value}>
+                            {source.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage className="text-start text-xs" />
                 </FormItem>
@@ -486,7 +515,7 @@ export const NewTicket = () => {
                   <FormControl>
                     <FileUploadComponent
                       onChange={field.onChange}
-                      setCanSubmit={setCanSubmit}
+                      setCanSubmit={setIsTicketUploading}
                       currentfiles={field.value}
                       setUploadedFiles={setUploadedFiles}
                     />
@@ -671,7 +700,7 @@ export const NewTicket = () => {
               <button
                 className="md:w-52 h-12 text-[#000066] bg-white border-2 border-[#000066] rounded-md  w-1/2"
                 type="submit"
-                disabled={!canSubmit}
+                disabled={isTicketUploading}
               >
                 Submit
               </button>
@@ -714,7 +743,7 @@ const FileUploadComponent = ({
           onChange(res);
         }
         setUploadedFiles((state) => [...state, ...uploaded]);
-        setCanSubmit(true);
+        setCanSubmit(false);
       }}
     >
       {({ onClick }) => (
@@ -722,7 +751,7 @@ const FileUploadComponent = ({
           className="w-40  rounded-xl bg-neutral-200 hover:bg-darkBlue hover:text-white font-semibold transition-all duration-500 p-2"
           onClick={(e) => {
             onClick(e);
-            setCanSubmit(false);
+            setCanSubmit(true);
           }}
         >
           Upload a file...
