@@ -42,7 +42,9 @@ export const SearchPage = ({
           </p>
         ) : (
           <div className="flex flex-col space-y-1 ">
-            <p className="font-semibold text-lg">Welcome, {user.airline} </p>
+            <p className="font-semibold text-lg">
+              Welcome, {user.airline.replace("_", " ")}{" "}
+            </p>
             <p
               className={`text-[1.2rem] ${
                 isRedirect && "hover:cursor-pointer"
