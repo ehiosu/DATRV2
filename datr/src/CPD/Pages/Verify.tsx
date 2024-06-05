@@ -87,8 +87,8 @@ export const Verify = () => {
     <main className="w-full h-screen grid place-items-center relative overflow-hidden">
       <div className="lg:w-[35%] xl:w-[30%] md:w-[45%] w-[80%]  rounded-lg border-2 border-darkBlue shadow-md relative flex flex-col justify-center text-center p-2 pb-12 bg-white">
         <img
-          src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1706868253/private/NCAA-removebg-preview_onmbl2.png"
-          className="w-[70%]  bg-white absolute -top-16  left-1/2 -translate-x-1/2  object-contain  "
+          src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"
+          className="w-[30%]  bg-white absolute -top-16  left-1/2 -translate-x-1/2  object-contain  "
           alt=""
         />
         <div className="flex flex-col justify-center text-center w-[80%] mx-auto mt-20 gap-2">
@@ -111,12 +111,12 @@ export const Verify = () => {
         </div>
     </div>
     <img
-        src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1706869558/private/NCAALogo_l7hkhg.png"
+        src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"
         className="absolute bottom-0 w-[420px] aspect-square translate-y-1/2 right-0 translate-x-1/3 z-[-1]"
         alt=""
       />
       <img
-        src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1706869558/private/NCAALogo_l7hkhg.png"
+        src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"
         className="absolute top-0 w-[420px] aspect-square -translate-y-1/2 left-0 -translate-x-1/3 z-[-1]"
         alt=""
       />
