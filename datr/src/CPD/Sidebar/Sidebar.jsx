@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { RxHamburgerMenu } from "react-icons/rx";
-import { cpoSidebarContent, adminSidebarContent } from "./Content";
+import { cpoSidebarContent, adminSidebarContent, DGContent } from "./Content";
 import { AiOutlineClose } from "react-icons/ai";
 import { useLocation, useNavigate } from "react-router";
 import {
@@ -16,19 +16,13 @@ import {
   SheetContent,
   SheetTrigger,
 } from "../../components/ui/sheet";
-import { Command } from "../../components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../components/ui/popover";
-import { BsThreeDots } from "react-icons/bs";
 import { useAuth } from "../../api/useAuth";
 export const Sidebar = () => {
   const { user } = useAuth();
 
   const getUserSidebarContent = () => {
     if (user.roles.includes("ADMIN")) return adminSidebarContent;
+    if (user.roles.includes("DGO")) return DGContent;
     return cpoSidebarContent;
   };
   return (
@@ -53,13 +47,13 @@ const MidSizedSidebar = ({ content }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 100 }}
           transition={{ ease: "easeInOut", duration: 0.7 }}
-          className=" items-center p-3"
+          className=" items-center "
         >
           <button
             onClick={() => {
               setOpen(true);
             }}
-            className="w-8 rounded-md flex items-center justify-center transition-colors duration-500  h-8 text-black bg-neutral-100 hover:bg-neutral-200"
+            className="w-8 mx-auto mt-2 rounded-md flex items-center justify-center transition-colors duration-500  h-8 text-black bg-neutral-100 hover:bg-neutral-200"
           >
             <RxHamburgerMenu />
           </button>
@@ -91,7 +85,11 @@ const MidSizedSidebar = ({ content }) => {
               nav("/CPD/Dashboard");
             }}
           >
-            <img src="/NCAA.png" alt="NCAA Logo" className="my-2 w-[80%]" />
+            <NcaaLogo
+              ContainerClassName={"w-full my-3"}
+              imageClassName={"h-8 aspect-square"}
+              textClassName={"text-sm text-darkBlue "}
+            />
           </div>
           {content.map((item) => (
             <SidebarItem {...item} nav={nav} open={open} />
@@ -124,6 +122,7 @@ import {
 import { ArrowDown } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { FaHamburger } from "react-icons/fa";
+import { NcaaLogo } from "../../components/ui/NcaaLogo";
 const SidebarItem = ({ Name, Icon, SubMenu, open, to, nav }) => {
   const [isCollapsibleOpen, setCollapsibleOpen] = useState(false);
   return (
