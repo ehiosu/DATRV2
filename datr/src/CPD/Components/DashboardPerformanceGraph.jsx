@@ -1,11 +1,89 @@
 import React from "react";
 import ReactApexChart from "react-apexcharts";
-
-const colors = ["#FF5858", "#00CCF2"];
+import {
+  Chart as ChartJs,
+  BarElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+ChartJs.register(BarElement, Tooltip, Legend, CategoryScale, LinearScale);
+const colors = ["#00CCF2", "#FF007C"];
 export const DashboardPerformanceGraph = () => {
+  const data = {
+    labels: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    datasets: [
+      {
+        label: "Open Tickets",
+        data: [
+          Math.floor(Math.random() * 100),
+          Math.floor(Math.random() * 100),
+          Math.floor(Math.random() * 100),
+          Math.floor(Math.random() * 100),
+          Math.floor(Math.random() * 100),
+        ],
+        backgroundColor: colors[0],
+        borderWidth: 1,
+        barThickness: 28,
+        borderRadius: 40,
+      },
+      {
+        label: "Resolved Tickets",
+        data: [
+          Math.floor(Math.random() * 100),
+          Math.floor(Math.random() * 100),
+          Math.floor(Math.random() * 100),
+          Math.floor(Math.random() * 100),
+          Math.floor(Math.random() * 100),
+        ],
+        backgroundColor: colors[1],
+        borderWidth: 1,
+        barThickness: 28,
+        borderRadius: 40,
+      },
+    ],
+  };
+  const options = {
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            let label = context.dataset.label || "";
+            return label + `: ${context.parsed.y}`;
+          },
+        },
+      },
+    },
+
+    responsive: true,
+    interaction: {
+      intersect: false,
+    },
+    scales: {
+      x: {
+        stacked: false,
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        stacked: false,
+        grid: {
+          display: false,
+        },
+      },
+    },
+  };
   return (
     <div className="w-full h-[50vh] bg-white   p-4 rounded-lg  shadow-md   flex    flex-col">
-      <Graph />
+      <p className="md:text-xl text-lg font-semibold">
+        Key Performance Metrics
+      </p>
+      <div className="h-[90%] flex items-center justify-center">
+        <Bar data={data} options={options} />
+      </div>
     </div>
   );
 };
