@@ -26,20 +26,24 @@ export const Delays = () => {
   const { axios } = useAxiosClient();
 
   const navto = (id) => {
-    navigate(`/DAS/${Location}/Report/${id}`);
+    navigate(`/DAS/Delays/Report/${id}`);
   };
   const getDelayData = useQuery({
     queryKey: [
       `${Location}`,
       "delays",
-      `from ${date.from.getUTCDate()} to ${date.to?.getUTCDate() || "none"}`,
+      `from ${date?.from?.getUTCDate() || "none"} to ${
+        date?.to?.getUTCDate() || "none"
+      }`,
     ],
     queryFn: () =>
       axios(
-        `data-entries/delays?terminal=${Location}&date-of-incidence=${format(
-          date.from,
+        `data-entries/delays?terminal=${Location}&start-date-of-incidence=${format(
+          date.from || new Date(),
           "dd-MM-yyyy"
-        )}`,
+        )}&end-date-of-incidence=${
+          date.to ? format(date.to, "dd-MM-yyyy") : ""
+        }`,
         {
           method: "GET",
         }
