@@ -22,6 +22,22 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../api/useAuth";
 import { NewTicketBtn } from "../../components/NewTicketBtn";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../../components/ui/pagination";
 export const AllTickets = () => {
   const cpo = useLocalQuery().get("cpo");
   const from = useLocalQuery().get("from");
@@ -31,17 +47,18 @@ export const AllTickets = () => {
   const { axios } = useAxiosClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [maxPages, setMaxPages] = useState(1);
+  const [itemCount, setItemCount] = useState(10);
   const nav = useNavigate();
   const { user } = useAuth();
   const isAirline = user.roles.includes("AIRLINE");
   const ticketsQuery = useQuery({
-    queryKey: ["tickets", "all", `${currentPage}`],
+    queryKey: ["tickets", "all", `${currentPage}`, `${itemCount}`],
     retry: false,
     staleTime: Infinity,
     queryFn: () => {
       if (to && from) {
         return axios(
-          `tickets/date-range?start=${from}&end=${to}&page=${currentPage}&size=15`
+          `tickets/date-range?start=${from}&end=${to}&page=${currentPage}&size=${itemCount}`
         ).then((resp) => {
           setMaxPages(() => resp.data.totalPages);
           return resp.data;
@@ -51,7 +68,7 @@ export const AllTickets = () => {
         return axios(
           isAirline
             ? "tickets/airline?page=0&size=10"
-            : "tickets/all?page=0&size=10",
+            : `tickets/all?page=${currentPage}&size=${itemCount}`,
           {
             method: "GET",
           }
@@ -62,7 +79,7 @@ export const AllTickets = () => {
       }
       if (cpo && !status && !assignee) {
         return axios(
-          `/tickets/cpo?email=${cpo}&page=${currentPage - 1}&size=10`
+          `/tickets/cpo?email=${cpo}&page=${currentPage}&size=${itemCount}`
         ).then((resp) => {
           setMaxPages(() => resp.data.totalPages);
           return resp.data;
@@ -70,7 +87,7 @@ export const AllTickets = () => {
       }
       if (!cpo && status && !assignee) {
         return axios(
-          `/tickets/status?value=${status}&page=${currentPage - 1}&size=10`
+          `/tickets/status?value=${status}&page=${currentPage}&size=10`
         ).then((resp) => {
           setMaxPages(() => resp.data.totalPages);
           return resp.data;
@@ -78,7 +95,7 @@ export const AllTickets = () => {
       }
       if (!cpo && !status && assignee) {
         return axios(
-          `/tickets/assignee?email=${assignee}&page=${currentPage - 1}&size=10`
+          `/tickets/assignee?email=${assignee}&page=${currentPage}&size=10`
         ).then((resp) => {
           setMaxPages(() => resp.data.totalPages);
           return resp.data;
@@ -115,7 +132,6 @@ export const AllTickets = () => {
   });
 
   useEffect(() => {
-    console.log({ cpo, status, assignee });
     ticketsQuery.refetch();
   }, [cpo, assignee, status, from, to]);
   return (
@@ -152,7 +168,28 @@ export const AllTickets = () => {
               </span>
             </div>
           )}
-
+          {from && to && (
+            <div className="flex flex-col  bg-white rounded-md py-1 px-3 space-y-0 ">
+              <div className="flex justify-between items-center text-[0.8rem] my-0  space-x-2">
+                <p className="font-semibold">
+                  {" "}
+                  {from} - {to}
+                </p>
+                <Button
+                  className="p-1 w-4 h-4"
+                  onClick={() => {
+                    nav(`/CPD/Tickets/All`);
+                  }}
+                  variant={"ghost"}
+                >
+                  <AiOutlineClose />
+                </Button>
+              </div>
+              <span className="font-semibold text-xs text-neutral-400">
+                Range:
+              </span>
+            </div>
+          )}
           {status && (
             <div className="flex flex-col  bg-white rounded-md py-1 px-3 space-y-0 ">
               <div className="flex justify-between items-center text-[0.8rem] my-0  space-x-2">
@@ -198,11 +235,80 @@ export const AllTickets = () => {
           )}
         </div>
         <div className="w-full  flex-1 ">
+          {ticketsQuery.data && (
+            <div className="flex justify-end my-2">
+              <div className="flex items-center space-x-2 mx-2">
+                <Button
+                  disabled={currentPage === 0}
+                  className="hover:bg-slate-100 h-8 px-2 dark:hover:bg-slate-200"
+                  onClick={() => {
+                    setCurrentPage((state) => state - 1);
+                  }}
+                >
+                  Previous
+                </Button>
+                {currentPage === 0 ? (
+                  <PaginationEllipsis className="mt-1" />
+                ) : (
+                  <>
+                    <Button
+                      className="hover:bg-slate-200 h-8 px-2 dark:hover:bg-slate-200"
+                      onClick={() => {
+                        setCurrentPage(0);
+                      }}
+                    >
+                      1
+                    </Button>
+                    {currentPage + 1 < maxPages && currentPage !== 0 && (
+                      <PaginationEllipsis className="mt-1" />
+                    )}
+                    <Button
+                      className={`${
+                        currentPage + 1 === maxPages
+                          ? "bg-slate-200 dark:bg-slate-300 h-8 px-2"
+                          : "hover:bg-slate-200 h-8 px-2 dark:hover:bg-slate-200"
+                      }  cursor-default`}
+                    >
+                      {currentPage + 1}
+                    </Button>
+                    {/* {currentPage + 1 !== maxPages && (
+                      <PaginationEllipsis className="mt-1" />
+                    )} */}
+                  </>
+                )}
+                <Button
+                  onClick={() => {
+                    setCurrentPage((state) => state + 1);
+                  }}
+                  className="hover:bg-slate-200 h-8 px-2 dark:hover:bg-slate-200"
+                  disabled={currentPage + 1 === maxPages}
+                >
+                  Next
+                </Button>
+              </div>
+              <Select value={itemCount.toString()} onValueChange={setItemCount}>
+                <SelectTrigger className="dark:bg-slate-50 bg-slate-50 hover:bg-neutral-200 transition-all w-32 text-black">
+                  <SelectValue className=" text-black" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="30">30</SelectItem>
+                  <SelectItem value="40">40</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {ticketsQuery.isSuccess && (
-            <GeneralTicketsTable
-              currentPage={currentPage}
-              generalTicketData={ticketsQuery.data.tickets}
-            />
+            <>
+              <GeneralTicketsTable
+                currentPage={currentPage}
+                generalTicketData={ticketsQuery.data.tickets}
+              />
+            </>
+          )}
+          {ticketsQuery.isLoading && (
+            <Skeleton className="w-full h-[60vh] mt-8"></Skeleton>
           )}
           {ticketsQuery.isError && (
             <div className="w-full h-full grid place-items-center  min-h-[60vh]">
@@ -477,13 +583,20 @@ const FilterButton = ({
 };
 import { DateRangePicker } from "../../components/ui/Datepicker";
 import { differenceInDays, parse } from "date-fns";
+import { Skeleton } from "../../components/ui/skeleton";
 const RangeSelectButton = ({ setCurrentPage }) => {
   const from = useLocalQuery().get("from");
   const to = useLocalQuery().get("to");
   const [date, setDate] = useState({
-    from: from ? new Date(from) : new Date(), // Parse the 'from' query parameter
-    to: to ? new Date(to) : null,
+    from: from ? parse(from, "dd-MM-yyyy", new Date()) : new Date(), // Parse the 'from' query parameter
+    to: to ? parse(to, "dd-MM-yyyy", new Date()) : null,
   });
+  useEffect(() => {
+    setDate({
+      from: from ? parse(from, "dd-MM-yyyy", new Date()) : new Date(), // Parse the 'from' query parameter
+      to: to ? parse(to, "dd-MM-yyyy", new Date()) : null,
+    });
+  }, [from, to]);
   return (
     <DateRangePicker
       className="bg-white dark:bg-white hover:bg-slate-200 dark:hover:bg-slate-200 hover:text-black dark:hover:text-black outline-none "
