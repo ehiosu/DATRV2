@@ -55,6 +55,12 @@ export const CreateEntry = () => {
     flightNumber: z.string().min(1, {
       message: "Enter a valid flight number",
     }),
+    inOrOutBoundPassenger:z.string().min(1,{
+      message:"Enter a valid value"
+    }),
+    acType:z.string().min(1,{
+      message:"Enter a valid value"
+    }),
     route: z.string().min(1, {
       message: "Enter a valid Route",
     }),
@@ -63,25 +69,18 @@ export const CreateEntry = () => {
     }),
     actualTimeArrived: z.string().min(1, {
       message: "Input a valid Actual Time of Arrival.",
-    }),
-    isDelayed: z.boolean().optional().default(false).optional(),
-    isOnTime: z.boolean().optional().default(false).optional(),
-    isCancelled: z.boolean().optional().default(false).optional(),
-    entryState:z.string(),
+    }).default("").optional(),
     reportType: z.string().min(1, {
       message: "Select a valid report type",
     }),
-    remark: z.string().min(1, {
-      message: "Select a valid report type",
-    }),
+   
   });
   const nav = useNavigate();
   const form = useForm({
     resolver: zodResolver(newEntryFormSchema),
   });
   const { axios } = useAxiosClient();
-  const checkboxRefs = useRef<HTMLButtonElement[]>([]);
-
+const resetBtn=useRef<HTMLButtonElement|null>(null)
   const getAirlinesQuery = useQuery({
     queryKey: ["airlines", "names"],
     queryFn: () =>
@@ -107,34 +106,16 @@ export const CreateEntry = () => {
   });
 
 
-  const TryAddEntry = (values: z.infer<typeof newEntryFormSchema>) => {
-    console.log(values)
-    switch (values.entryState){
-      case "onTime":
-        values.isOnTime=true;
-        values.isDelayed=false;
-        values.isCancelled=false;
-        break;
-      case "delayed":
-        values.isDelayed=true;
-        values.isOnTime=false;
-        values.isCancelled=false;
-        break;
-      case "cancelled":
-        values.isCancelled=true;
-        values.isDelayed=false;
-        values.isOnTime=false;
-        break;
-    }
-    const {entryState,...rest}=values
+  const TryAddEntry = (values:any) => {
+   
     toast.promise(
       new Promise((resolve, reject) =>
        { 
-        console.log(values)
-        return AddEntryMutation.mutate({...rest,dateOfIncidence:values.dateOfIncidence}, {
+        return AddEntryMutation.mutate({...values,actualTimeArrived:values.actualTimeArrived||null}, {
           onSuccess: (data, variables, context) => {
             resolve(data);
-            
+            form.reset();
+            resetBtn.current?.click()   
           },
           onError: (error, variables, context) => {
             reject(error);
@@ -162,7 +143,8 @@ export const CreateEntry = () => {
       <SearchPage heading={"New Entry"}>
         <Form {...form}>
           <form className="w-[80%] mx-auto flex-col flex" onSubmit={form.handleSubmit(TryAddEntry)}>
-            <div className="flex items-center justify-between">
+          <button ref={resetBtn} type="reset" className="hidden"> </button>
+          <div className="flex items-center flex-wrap w-full gap-3">
               <FormField
                 name="dateOfIncidence"
                 control={form.control}
@@ -211,7 +193,7 @@ export const CreateEntry = () => {
                       <Select onValueChange={field.onChange}>
                         <SelectTrigger
                           disabled={!getAirlinesQuery.isSuccess}
-                          className="w-48 h-7 outline-none my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
+                          className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
                         >
                           <SelectValue
                             placeholder="Airline..."
@@ -278,14 +260,14 @@ export const CreateEntry = () => {
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
-                    <FormLabel>Stipulated Time of Arrival</FormLabel>
+                    <FormLabel>Scheduled Time of Arrival</FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
                       <TimePicker
                         className={
                           "w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"
                         }
-                        value={field.value || "12:00"}
+                        value={field.value}
                         onChange={field.onChange}
                       />
                     </FormControl>
@@ -304,7 +286,7 @@ export const CreateEntry = () => {
                         className={
                           "w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"
                         }
-                        value={field.value || "12:00"}
+                        value={field.value}
                         onChange={field.onChange}
                       />
                     </FormControl>
@@ -312,52 +294,11 @@ export const CreateEntry = () => {
                 )}
               />
             </div>
-            <FormField
-          control={form.control}
-          name="entryState"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <FormLabel>Flight state...</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value||""}
-                  className="flex flex-col space-y-1"
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="onTime" className="w-5 h-5 dark:border-neutral-300 data-[state=checked]:text-blue-400 p-0  text-neutral-200"/>
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                     Is On Time
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem className="w-5 h-5 dark:border-neutral-300 data-[state=checked]:text-blue-400 p-0  text-neutral-200  dark:text-neutral-500" value="delayed" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Is Delayed
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem className="w-5 h-5 dark:border-neutral-300 data-[state=checked]:text-blue-400 p-0  text-neutral-200 dark:text-neutral-200" value="cancelled" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Is Cancelled</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+         
+           
 
-            <p className="text-[0.8275rem] text-center font-semibold text-neutral-500 ">
-              Ensure You Only Tick One of These Boxes.
-            </p>
-
-            <FormField
+            <div className="flex items-center flex-wrap w-full gap-3">
+          <FormField
               name="reportType"
               control={form.control}
               render={({ field }) => (
@@ -366,7 +307,7 @@ export const CreateEntry = () => {
                   <FormControl>
                     {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
                     <Select onValueChange={field.onChange}>
-                      <SelectTrigger className="w-48 h-7 outline-none my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
+                      <SelectTrigger className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
                         <SelectValue
                           placeholder="Report Type"
                           className="text-neutral-500"
@@ -392,21 +333,38 @@ export const CreateEntry = () => {
                 </FormItem>
               )}
             />
-            <FormField
-              name="remark"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="flex w-full flex-col my-2 space-y-3">
-                  <FormLabel>Remark</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+             <FormField
+                name="inOrOutBoundPassenger"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
+                    <FormLabel>Number Of Passengers</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+          </div>
+          <FormField
+                name="acType"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
+                    <FormLabel>Aircraft Type</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
 
             <div className="flex gap-4 items-center my-6">
               <button
