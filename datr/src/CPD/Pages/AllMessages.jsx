@@ -63,7 +63,7 @@ export const AllMessages = () => {
           <div className="flex    gap-4   items-center">
             <NewTicketBtn />
           </div>
-          <div className="ml-auto flex    gap-3 md:my-0 my-2 flex-wrap">
+          <div className="md:ml-auto flex    gap-3 md:my-0 my-2 flex-wrap">
             <FilterButton />
             <RangeSelectButton />
           </div>
@@ -169,7 +169,7 @@ const FilterButton = () => {
 const RangeSelectButton = () => {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="border-darkBlue    border-2 flex justify-center items-center  w-56   text-[0.8275rem]  outline-none h-10    rounded-md  shadow-md  gap-3   font-semibold   ">
+      <DropdownMenuTrigger className="border-darkBlue    border-2 flex justify-center items-center  px-4   text-[0.8275rem]  outline-none h-10    rounded-md  shadow-md  gap-3   font-semibold   ">
         Showing Last 90 days of Data <AiOutlineArrowDown />
       </DropdownMenuTrigger>
       <DropdownMenuContent className=" bg-white w-28   rounded-md     z-50 my-2"></DropdownMenuContent>
