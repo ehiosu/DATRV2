@@ -20,8 +20,8 @@ export const DashboardStats = () => {
       axios(
         isAirline
           ? "tickets/airline/status?value=NEW&page=0&size=10"
-          : "tickets/status?value=NEW"
-      ).then((resp) => resp.data.totalElements),
+          : "tickets/counts/by-status"
+      ).then((resp) => resp.data.totalElements || resp.data),
   });
   const resolvedTickets = useQuery({
     queryKey: ["dashboard", "tickets", "resolved"],
@@ -43,7 +43,40 @@ export const DashboardStats = () => {
   });
   return (
     <div className="flex  gap-4 justify-evenly  my-2  items-center  flex-wrap">
-      {!newTicketQuery.isError && newTicketQuery.isSuccess ? (
+      {!isAirline && newTicketQuery.isSuccess ? (
+        <>
+          <StatCard
+            title={"New Tickets"}
+            figure={newTicketQuery.data.NEW}
+            onClick={() => {
+              nav("/CPD/Tickets/All");
+            }}
+          />
+          <StatCard
+            title={"Resolved Tickets"}
+            figure={newTicketQuery.data.RESOLVED}
+            onClick={() => {
+              nav("/CPD/Tickets/Resolved");
+            }}
+          />
+          <StatCard
+            title={"Open Tickets"}
+            figure={newTicketQuery.data.OPENED}
+            onClick={() => {
+              nav("/CPD/Tickets/Open");
+            }}
+          />
+        </>
+      ) : (
+        !isAirline && (
+          <>
+            <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+            <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+            <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+          </>
+        )
+      )}
+      {isAirline && !newTicketQuery.isError && newTicketQuery.isSuccess ? (
         <StatCard
           title={"New Tickets"}
           figure={newTicketQuery.data}
@@ -51,10 +84,12 @@ export const DashboardStats = () => {
             nav("/CPD/Tickets/All");
           }}
         />
-      ) : (
+      ) : isAirline ? (
         <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+      ) : (
+        <></>
       )}
-      {!resolvedTickets.isError && resolvedTickets.isSuccess ? (
+      {isAirline && !resolvedTickets.isError && resolvedTickets.isSuccess ? (
         <StatCard
           title={"Resolved Tickets"}
           figure={resolvedTickets.data}
@@ -62,10 +97,12 @@ export const DashboardStats = () => {
             nav("/CPD/Tickets/Resolved");
           }}
         />
-      ) : (
+      ) : isAirline ? (
         <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+      ) : (
+        <></>
       )}
-      {!openTickets.isError && openTickets.isSuccess ? (
+      {isAirline && !openTickets.isError && openTickets.isSuccess ? (
         <StatCard
           title={"Open Tickets"}
           figure={openTickets.data}
@@ -73,8 +110,10 @@ export const DashboardStats = () => {
             nav("/CPD/Tickets/Open");
           }}
         />
-      ) : (
+      ) : isAirline ? (
         <Skeleton className="md:w-40 w-32 aspect-square rounded-lg " />
+      ) : (
+        <></>
       )}
     </div>
   );
@@ -165,7 +204,7 @@ export const TicketStatistics = () => {
         // TODO:fix hover tooltip
         // console.log(w.config.colors[seriesIndex]);
         const dataName = w.globals.seriesNames[seriesIndex];
-        return `<div class="w-36 text-center h-8 p-1 aspect-square text-white bg-[\`${w.config.colors[seriesIndex]}\`]" ><p className='w-max h-max'>${dataName}: ${series[seriesIndex][dataPointIndex]}</p></div>`;
+        return `<div class="w-36 text-center h-8 p-1 aspect-square text-white bg-[#8093f1]" ><p className='w-max h-max'>${dataName}: ${series[seriesIndex][dataPointIndex]}</p></div>`;
       },
     },
   };
