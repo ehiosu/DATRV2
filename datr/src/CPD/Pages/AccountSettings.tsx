@@ -180,7 +180,7 @@ const MyProfile = () => {
               Last Name
             </p>
             <p className="text-[0.8rem] font-semibold text-neutral-500">
-              {user.firstName}
+              {user.lastName}
             </p>
           </div>
           <div className="w-[45%] flex flex-col space-y-3 text-start">
