@@ -633,3 +633,40 @@ export const createWordReport = (ticketData: any,comments:any) => {
 
   return document;
 };
+
+const barChartColorOptions = [
+  "#2CA58D",
+  "#0A2342",
+  "#FFFDF7",
+  "#F46197",
+  "#FDECEF",
+  "#9D6381",
+  "#6610F2",
+  "#1A8FE3",
+  "#6CD4FF",
+  "#8B80F9",
+  "#CFBFF7",
+  "#5AA9E6",
+  "#7FC8F8",
+  "#F9F9F9",
+  "#FFE45E",
+  "#FF6392",
+  "#BCF4DE",
+  "#EEC6CA",
+  "#FFB7C3",
+  "#416788",
+  "#7389AE",
+  "#81D2C7",
+  "#B5BAD0",
+  "#B5BAD0",
+  "#2AFC98",
+  "#214F4B",
+  "#16C172",
+  "#2DE1FC",
+  "#F2E3BC",
+];
+export const getRanHex = () => {
+  return barChartColorOptions[
+    Math.floor(Math.random() * barChartColorOptions.length)
+  ];
+};
