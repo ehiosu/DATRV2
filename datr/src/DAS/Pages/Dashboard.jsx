@@ -25,11 +25,43 @@ import { toast } from "sonner";
 import { TbError404 } from "react-icons/tb";
 
 export const DASDashboard = () => {
-  const { Location } = useParams();
+  const { axios } = useAxiosClient();
+  const getTerminalsQuery = useQuery({
+    queryKey: ["terminals", "all"],
+    queryFn: () =>
+      axios("terminals/active", {
+        method: "GET",
+      }).then((resp) => resp.data),
+  });
   const nav = useNavigate();
+  const [currentTerminal, SetCurrentTerminal] = useState("All");
+
   return (
     <section className="w-full max-h-screen overflow-y-auto">
-      <SearchPage heading={Location}>
+      <SearchPage
+        heading={Location}
+        SearchElement={() => {
+          return (
+            <Select value={currentTerminal} onValueChange={SetCurrentTerminal}>
+              <SelectTrigger
+                className="w-48 h-7  mt-2 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
+                disabled={!getTerminalsQuery.isSuccess}
+              >
+                <SelectValue placeholder="Select A terminal" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All</SelectItem>
+                {getTerminalsQuery.isSuccess &&
+                  getTerminalsQuery.data.map((terminal) => (
+                    <SelectItem value={terminal.name}>
+                      {terminal.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          );
+        }}
+      >
         <div
           role="button"
           className="flex justify-center  text-sm items-center rounded-lg shadow-md w-36 hover:w-40 h-10 bg-lightPink text-white gap-2 group transition-all "
@@ -40,7 +72,7 @@ export const DASDashboard = () => {
           Add Entry{" "}
           <AiOutlinePlus className="w-4 h-4 aspect-square bg-white text-lightPink rounded-full shrink group-hover:opacity-100 opacity-0 transition duration-300" />
         </div>
-        <FileUploadComponent />
+        {/* <FileUploadComponent /> */}
         <div className="flex  gap-4 justify-evenly  my-2  items-center  flex-wrap">
           <StatCard
             title={"Total Scheduled Flights"}
@@ -139,8 +171,8 @@ const FileUploadComponent = () => {
   };
   return (
     <Dialog>
-      <DialogTrigger className="w-[9.2rem] text-sm py-2 bg-darkBlue rounded-lg text-white flex flex-row group hover:w-40 items-center transition-all duration-300 justify-center px-2">
-        Upload Reports{" "}
+      <DialogTrigger className="w-[9.8rem] text-sm py-2 bg-darkBlue rounded-lg text-white flex flex-row group hover:w-40 items-center transition-all duration-300 justify-center px-2">
+        Upload Reportssd
         <ArrowUpFromLine className="w-4 h-4 shrink group-hover:opacity-100 opacity-0 transition-opacity duration-500 ml-2" />
       </DialogTrigger>
       <DialogContent>
