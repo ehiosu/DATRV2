@@ -10,6 +10,7 @@ type user = {
   id: string;
   email: string;
   firstName: string;
+  lastName:string,
   roles: string[];
   imageUrl:string,
   airline?:string | null
@@ -39,7 +40,8 @@ export const useAuthStore = create(persist<state & actions> (
       id: "",
       email: "",
       firstName: "",
-      roles: [],
+      lastName:"",
+      roles: [],a
       imageUrl:"",
       airline:null
     },
