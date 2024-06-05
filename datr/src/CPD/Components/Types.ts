@@ -81,6 +81,7 @@ export type DelayedFlight={
 }
 export type cancelledFlight={
   id:string,
+  airline:string,
   cancelledFlights:string,
   numberOfFlights:string
 }
