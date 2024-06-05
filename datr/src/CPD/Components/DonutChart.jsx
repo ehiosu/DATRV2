@@ -1,6 +1,7 @@
 import React from "react";
 import ReactApexChart from "react-apexcharts";
-export const DonutChart = ({ data, labels, title, colors }) => {
+import { cn } from "../../lib/utils";
+export const DonutChart = ({ data, labels, title, colors, className }) => {
   const options = {
     chart: {
       type: "donut",
@@ -26,7 +27,12 @@ export const DonutChart = ({ data, labels, title, colors }) => {
 
   const series = data;
   return (
-    <div className="col-span-1 w-full md:w-[80%] min-h-[35vh] bg-white rounded-lg shadow-md flex flex-col p-3">
+    <div
+      className={cn(
+        "col-span-1 w-full md:w-[80%] min-h-[35vh] bg-white rounded-lg shadow-md flex flex-col p-3",
+        className
+      )}
+    >
       <p className="text-[1.3rem] font-semibold text-neutral-500">{title}</p>
       <ReactApexChart
         height={"90%"}
