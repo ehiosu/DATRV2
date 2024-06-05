@@ -10,7 +10,7 @@ export const Conversations = () => {
         initial={{ scale: 0.1, opacity: 0 }}
         exit={{ scale: 0.1, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-[90%] space-y-8 mx-auto max-h-[80vh] aoverflow-y-auto"
+        className="w-[90%] space-y-8 mx-auto max-h-[80vh] overflow-y-auto"
       >
         <div className="w-full h-[60vh] flex flex-col gap-2 bg-white rounded-md shadow-md p-2">
           <p className="block text-[1.8rem] font-semibold p-2 border-b-2 border-b-neutral-400/40">
