@@ -97,7 +97,9 @@ export const AuthForm = () => {
           <button
             className="lg:w-[80%] w-full mx-auto bg-[#FF007C] h-12 text-white rounded-md  flex justify-center gap-2 items-center shadow-md lg:p-0"
             onClick={() => {
-              Navigate("/Home");
+              if (refresh) {
+                Navigate("/Home");
+              }
             }}
           >
             <span>Company Single Sign-On</span>{" "}
