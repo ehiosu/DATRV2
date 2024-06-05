@@ -563,7 +563,9 @@ const SeekApprovalPopover = () => {
           Submit
         </Button>
         <img
-          src={logo}
+          src={
+            "https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png"
+          }
           className="absolute z-[-1] opacity-30 w-1/2   -translate-y-1/2 -left-20"
           alt=""
         />
@@ -728,7 +730,7 @@ const DetailsSubAction = () => {
     Attachments: ticketData.attachment.attachmentUrl.length,
     Responded_Date: format(new Date(ticketData.dateTimeModified), "dd/MM/yyyy"),
     Due_By: format(new Date(ticketData.dateTimeTicketExpired), "dd/MM/yyyy"),
-    Airline: ticketData.airlinea,
+    Airline: ticketData.airline,
     Assigner: ticketData.assigneeName,
   };
 
@@ -834,9 +836,10 @@ const DetailCellManager = ({ cellKey, value }) => {
 
 const ApprovalSubAction = () => {
   const { id } = useParams();
+  const popoverRef = useRef(null);
   return (
     <Popover>
-      <PopoverTrigger>
+      <PopoverTrigger ref={popoverRef}>
         <Button className="w-full h-12 focus:text-blue-400 focus-within:text-blue-400 dark:bg-white bg-white flex items-center justify-start gap-2">
           <CheckCircle className="w-3 h-3 shrink" />
           Approval
@@ -862,7 +865,12 @@ const ApprovalSubAction = () => {
               Approve
             </button>
           </ConfirmationDialog>
-          <button className="w-28 bg-lightPink  h-9 rounded-lg text-white">
+          <button
+            onClick={() => {
+              popoverRef.current.click();
+            }}
+            className="w-28 bg-lightPink  h-9 rounded-lg text-white"
+          >
             Return
           </button>
         </div>
@@ -1146,8 +1154,8 @@ const DeleteAction = () => {
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
+            This action cannot be undone. This will permanently delete the
+            ticket from the server.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
