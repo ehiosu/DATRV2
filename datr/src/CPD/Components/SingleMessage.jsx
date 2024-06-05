@@ -75,15 +75,31 @@ const ActionsDropdown = () => {
           Actions
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent></DropdownMenuContent>
+      <DropdownMenuContent>
+        <SingleAction
+          name={"Reply"}
+          className={"w-full pl-2 h-7"}
+          Icon={GoReply}
+        />
+        <SingleAction
+          name={"Forward"}
+          className={"w-full pl-2 h-7"}
+          Icon={TbArrowForward}
+        />
+        <SingleAction
+          name={"Add Note"}
+          className={"w-full pl-2 h-7"}
+          Icon={CiStickyNote}
+        />
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 };
 
-const SingleAction = ({ onClick, name, Icon }) => {
+const SingleAction = ({ onClick, name, Icon, className }) => {
   return (
     <div
-      className="flex gap-1 items-center text-neutral-400 hover:text-blue-500/60 text-[1.2rem] font-bold hover:cursor-pointer"
+      className={`${className} flex gap-1 items-center text-neutral-400 hover:text-blue-500/60 text-[1.2rem] font-bold hover:cursor-pointer`}
       onClick={onClick}
     >
       <Icon />
