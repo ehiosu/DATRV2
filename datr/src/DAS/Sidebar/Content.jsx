@@ -10,6 +10,6 @@ export const content = [
     Name: "Terminals",
     Icon: <AiOutlineStock className="text-2xl " />,
     SubMenu: [],
-    to: "/CPD/DAS",
+    to: "/CPD/Dashboard",
   },
 ];
