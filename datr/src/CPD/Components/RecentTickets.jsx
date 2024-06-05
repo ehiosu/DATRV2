@@ -20,7 +20,7 @@ export const RecentTickets = () => {
       ).then((resp) => resp.data.tickets),
   });
   return (
-    <div className="w-full h-full bg-white">
+    <div className="w-full  md:h-[60vh] overflow-y-auto bg-white">
       {ticketsQuery.isSuccess ? (
         <RecentTicketsTable data={ticketsQuery.data} />
       ) : (
