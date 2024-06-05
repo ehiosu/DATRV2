@@ -41,7 +41,7 @@ export const useAuthStore = create(persist<state & actions> (
       email: "",
       firstName: "",
       lastName:"",
-      roles: [],a
+      roles: [],
       imageUrl:"",
       airline:null
     },
