@@ -24,9 +24,10 @@ import {
 } from "../../components/ui/popover";
 import { BsThreeDots } from "react-icons/bs";
 import { MdCancel, MdDashboard } from "react-icons/md";
-import { Search, TimerOff } from "lucide-react";
+import { Clipboard, Search, TimerOff } from "lucide-react";
 import { TbMapPinCancel } from "react-icons/tb";
 import { useAirlineContext } from "../Layout/DASLayout";
+import { NcaaLogo } from "../../components/ui/NcaaLogo";
 
 export const Sidebar = () => {
   return (
@@ -82,6 +83,14 @@ const MidSizedSidebar = () => {
             SubMenu={[]}
             to={`/DAS/${Location}/Cancelled`}
           />
+          <SidebarItem
+            open={open}
+            Name={"Flight Disruption Reports"}
+            nav={nav}
+            Icon={<Clipboard color="black" className="text-black " />}
+            SubMenu={[]}
+            to={`/DAS/${Location}/FDR-Reports`}
+          />
         </div>
       )}
 
@@ -99,10 +108,10 @@ const MidSizedSidebar = () => {
               nav("/CPD/Dashboard");
             }}
           >
-            <img
-              src="/NCAA.png"
-              alt="NCAA Logo test"
-              className="my-2 w-[80%]"
+            <NcaaLogo
+              ContainerClassName={"w-full my-3"}
+              imageClassName={"h-8 aspect-square"}
+              textClassName={"text-sm text-darkBlue "}
             />
           </div>
           <SearchItem open={open} />
@@ -140,6 +149,14 @@ const MidSizedSidebar = () => {
             Icon={<MdCancel color="black" className="text-black " />}
             SubMenu={[]}
             to={`/DAS/${Location}/Cancelled`}
+          />
+          <SidebarItem
+            open={open}
+            Name={"Flight Disruption Reports"}
+            nav={nav}
+            Icon={<Clipboard color="black" className="text-black " />}
+            SubMenu={[]}
+            to={`/DAS/${Location}/FDR-Reports`}
           />
         </div>
       )}
@@ -220,7 +237,10 @@ const SidebarItem = ({ Name, Icon, SubMenu, open, to, nav }) => {
             >
               {Icon}
             </TooltipTrigger>
-            <TooltipContent className="shadow-md" side="right">
+            <TooltipContent
+              className="shadow-md dark:bg-lightPink bg-lightPink outline-none dark:outline-none border-0"
+              side="right"
+            >
               <p className="text-xs ">{Name}</p>
             </TooltipContent>
           </Tooltip>
