@@ -44,7 +44,7 @@ const AirlineBrowseDialog = () => {
   const { Location } = useParams();
   const nav = useNavigate();
   const navToAirlineReports = (airline) => {
-    nav(`/DAS/${Location}/Report/${airline.replace(" ", "_")}`);
+    nav(`/DAS/Report/${airline.replace(" ", "_")}`);
     setOpen(false);
   };
   const GetAirlinesQuery = useQuery({
