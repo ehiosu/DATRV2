@@ -43,17 +43,16 @@ export const FDR = () => {
   const { axios } = useAxiosClient();
   const nav = useNavigate();
   const {user}=useAuth()
+  const [reportType,setReportType]=useState<"Arrival"|"Departure">("Arrival")
   const formSchema = z
     .object({
       dateOfIncidence: z.date(),
       terminalName: z.string(),
-      // flightNumber: z.string(),
+      flightNumber: z.string(),
       route: z.string(),
       reasonForDelay: z.string().default("").optional(),
-      scheduledTimeDeparture: z.string().default(""),
-      expectedTimeDeparture: z.string().default(""),
-      expectedTimeArrival: z.string().default(""),
-      scheduledTimeArrival: z.string().default(""),
+      scheduledTime: z.string().default(""),
+      expectedTime: z.string().default(""),
       reasonForCancellation: z.string().optional().default(""),
       reasonForTarmacDelay: z.string().optional().default(""),
       compliance: z
@@ -95,13 +94,6 @@ export const FDR = () => {
         }),
     })
     .refine(
-      (data) => data.scheduledTimeArrival && data.scheduledTimeDeparture,
-      {
-        message:
-          "Enter a Scheduled Time of Arrival or Scheduled Time of Departure",
-      }
-    )
-    .refine(
       (data) =>
         data.reasonForDelay ||
         data.reasonForCancellation ||
@@ -138,12 +130,12 @@ useEffect(()=>{
     const data={
       "terminalName": values.terminalName,
       "airline": user.airline,
+      "scheduledTimeDeparture":reportType==="Arrival"?"":values.scheduledTime,
+      "expectedTimeDeparture":reportType==="Arrival"?"":values.expectedTime,
+      "scheduledTimeArrival":reportType==="Departure"?"":values.scheduledTime,
+      "expectedTimeArrival":reportType==="Departure"?"":values.expectedTime,
       "dateOfIncidence": format(values.dateOfIncidence,'yyyy-MM-dd'),
       "route": values.route,
-      "scheduledTimeDeparture": values.scheduledTimeDeparture,
-      "expectedTimeDeparture":values.expectedTimeDeparture,
-      "scheduledTimeArrival": values.scheduledTimeArrival,
-      "expectedTimeArrival": values.expectedTimeArrival,
       "reasonForDelay": values.reasonForDelay,
       "reasonForCancellation":values.reasonForCancellation,
       "reasonForTarmacDelay":values.reasonForTarmacDelay,
@@ -180,6 +172,8 @@ useEffect(()=>{
         }
       ]
     }
+
+  
     
    toast.promise(new Promise((resolve,reject)=>
     uploadReportMutation.mutate(data,{
@@ -214,6 +208,30 @@ useEffect(()=>{
             onSubmit={form.handleSubmit(handleSubmit)}
           >
             <div className="flex items-center flex-wrap w-full gap-3 my-2">
+              <div className="flex md:w-[45%] w-full flex-col my-2 space-y-1">
+                <p className="text-[0.8275rem] font-semibold">Report Type</p>
+              <Select
+                        value={reportType}
+                        onValueChange={setReportType}
+                      >
+                        <SelectTrigger
+                          className="w-full h-9  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
+                          
+                        >
+                          <SelectValue placeholder="Select A Report Type" />
+                        </SelectTrigger>
+                        
+                          <SelectContent>
+                           <SelectItem value="Arrival">
+                            Arrival
+                           </SelectItem>
+                           <SelectItem value="Departure">
+                            Departure
+                           </SelectItem>
+                          </SelectContent>
+                        
+                      </Select>
+              </div>
               <FormField
                 name="dateOfIncidence"
                 control={form.control}
@@ -316,6 +334,7 @@ useEffect(()=>{
                   </FormItem>
                 )}
               />
+            
               <FormField
                 name="terminalName"
                 control={form.control}
@@ -364,13 +383,15 @@ useEffect(()=>{
                 )}
               />
               <FormField
-                name="scheduledTimeDeparture"
+                name="scheduledTime"
                 control={form.control}
                 render={({field})=>(
 
                  <FormItem className="flex flex-col space-y-2 md:w-[45%] w-full ">
                   <FormLabel>
-                    Scheduled Time of Departure
+                    {
+                      reportType === "Arrival"?"Scheduled Time of Arrival":"Scheduled Time of Departure"
+                    }
                   </FormLabel>
                   <FormControl>
                   <TimePicker value={field.value} onChange={field.onChange} className={"w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"}/>
@@ -383,13 +404,15 @@ useEffect(()=>{
             <div className="flex items-center flex-wrap w-full gap-3 my-2">
              
               <FormField
-                name="expectedTimeDeparture"
+                name="expectedTime"
                 control={form.control}
                 render={({field})=>(
 
                  <FormItem className="flex flex-col space-y-2 md:w-[45%] w-full ">
                   <FormLabel>
-                    Expected Time of Departure
+                  {
+                      reportType === "Arrival"?"Expected Time of Arrival":"Expected Time of Departure"
+                    }
                   </FormLabel>
                   <FormControl>
                   <TimePicker value={field.value} onChange={field.onChange} className={"w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"}/>
@@ -397,36 +420,17 @@ useEffect(()=>{
                  </FormItem>
                 )}
               />
-              <FormField
-                name="scheduledTimeArrival"
+               <FormField
+                name="flightNumber"
                 control={form.control}
                 render={({field})=>(
 
                  <FormItem className="flex flex-col space-y-2 md:w-[45%] w-full ">
                   <FormLabel>
-                    Scheduled Time of Arrival
+                    Flight Number
                   </FormLabel>
                   <FormControl>
-                  <TimePicker value={field.value} onChange={field.onChange} className={"w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"}/>
-                  </FormControl>
-                 </FormItem>
-                )}
-              />
-             
-              
-            </div>
-            <div className="flex items-center flex-wrap w-full gap-3 my-2">
-            <FormField
-                name="expectedTimeArrival"
-                control={form.control}
-                render={({field})=>(
-
-                 <FormItem className="flex flex-col space-y-2 md:w-[45%] w-full ">
-                  <FormLabel>
-                    Expected Time of Arrival
-                  </FormLabel>
-                  <FormControl>
-                  <TimePicker value={field.value} onChange={field.onChange} className={"w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"}/>
+                  <Input  className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"  {...field}/>
                   </FormControl>
                  </FormItem>
                 )}
@@ -479,7 +483,7 @@ useEffect(()=>{
                 )}
               />
             </div>
-       <p className="text-red-500 text-sm font-semibold">{form.formState.errors[""]?.message}</p>
+       {/* <p className="text-red-500 text-sm font-semibold">{form.formState.errors? form.formState.errors[""].message: ""}</p> */}
 
             <div className="flex gap-4 items-center my-6">
               <button
@@ -542,7 +546,7 @@ const ComplianceElement: React.FC<ComplianceElementProps> = ({
             setElementState((state) => ({ ...state, choice: !state.choice }))
           }
         />
-        <p>Executed</p>
+        <p>Yes?</p>
       </div>
       <div className="flex flex-col space-y-2 w-[40%] ">
         <p className="text-sm text-neutral-500">Number Of Passengers</p>
