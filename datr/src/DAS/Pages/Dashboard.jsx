@@ -10,31 +10,21 @@ import {
   DialogContent,
   DialogTrigger,
 } from "../../components/ui/dialog";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "../../components/ui/select";
+
 import { ArrowUpFromLine } from "lucide-react";
 import Dropzone from "react-dropzone";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { TbError404 } from "react-icons/tb";
+import { useTerminalStore } from "../../store/terminalstore";
+import { TerminalSelector } from "../Components/TerminalSelector";
 
 export const DASDashboard = () => {
   const { axios } = useAxiosClient();
-  const getTerminalsQuery = useQuery({
-    queryKey: ["terminals", "all"],
-    queryFn: () =>
-      axios("terminals/active", {
-        method: "GET",
-      }).then((resp) => resp.data),
-  });
+
   const nav = useNavigate();
-  const [currentTerminal, SetCurrentTerminal] = useState("All");
+  const { terminal, setTerminal } = useTerminalStore();
 
   return (
     <section className="w-full max-h-screen overflow-y-auto">
@@ -42,23 +32,11 @@ export const DASDashboard = () => {
         heading={Location}
         SearchElement={() => {
           return (
-            <Select value={currentTerminal} onValueChange={SetCurrentTerminal}>
-              <SelectTrigger
-                className="w-48 h-7  mt-2 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
-                disabled={!getTerminalsQuery.isSuccess}
-              >
-                <SelectValue placeholder="Select A terminal" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All</SelectItem>
-                {getTerminalsQuery.isSuccess &&
-                  getTerminalsQuery.data.map((terminal) => (
-                    <SelectItem value={terminal.name}>
-                      {terminal.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <TerminalSelector
+              terminal={terminal}
+              axios={axios}
+              setTerminal={setTerminal}
+            />
           );
         }}
       >
@@ -66,7 +44,7 @@ export const DASDashboard = () => {
           role="button"
           className="flex justify-center  text-sm items-center rounded-lg shadow-md w-36 hover:w-40 h-10 bg-lightPink text-white gap-2 group transition-all "
           onClick={() => {
-            nav(`/DAS/${Location}/New`);
+            nav(`/DAS/New`);
           }}
         >
           Add Entry{" "}
