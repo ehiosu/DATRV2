@@ -34,7 +34,7 @@ export const Sidebar = () => {
 };
 import { motion } from "framer-motion";
 const MidSizedSidebar = ({ content }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const nav = useNavigate();
   return (
     <aside
