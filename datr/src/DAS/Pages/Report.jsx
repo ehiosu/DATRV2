@@ -24,36 +24,34 @@ import { expandedReport } from "../../CPD/data/data";
 import { useQuery } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { Skeleton } from "../../components/ui/skeleton";
+import { useTerminalStore } from "../../store/terminalstore";
+import { TerminalSelector } from "../Components/TerminalSelector";
 export const Reports = () => {
-  const { id, Location } = useParams();
-  const [date, setDate] = useState({
-    from: new Date(),
-    to: null,
-  });
+  const { id } = useParams();
+  const { terminal, date, setDate } = useTerminalStore();
+  console.log(typeof date.from, typeof date, date, date.from);
+
   const { axios } = useAxiosClient();
   const [currentPage, setCurrentPage] = useState(1);
   const getReportsQuery = useQuery({
     queryKey: [
-      `${location}`,
+      `${terminal}`,
       `${id}`,
       "reports",
-      `from ${date.from.getUTCDate()} to ${
-        date.to?.getUTCDate() || date.from.getUTCDate()
-      }`,
+      `from ${date.from ? date.from : "none"} to ${date?.to || "none"}`,
     ],
     retry: false,
     queryFn: () =>
       axios(
-        `data-entries/terminal/airline/sort/range?terminal=${Location}&airline=${id.replace(
+        `data-entries/terminal/airline/sort/range?terminal=${terminal}&airline=${id.replace(
           "_",
           "-"
         )}&start-date-of-incidence=${format(
-          new Date(date.from),
+          date.from ? new Date(date.from) : new Date(),
           "dd-MM-yyyy"
-        )}&end-date-of-incidence=${format(
-          new Date(date.to || date.from),
-          "dd-MM-yyyy"
-        )}&page=${currentPage - 1}&size=10`,
+        )}&end-date-of-incidence=${
+          date.to ? format(new Date(date.to), "dd-MM-yyyy") : ""
+        }&page=${currentPage - 1}&size=10`,
         {
           method: "GET",
         }
@@ -66,7 +64,10 @@ export const Reports = () => {
   });
   return (
     <section className="w-full max-h-screen overflow-y-auto p-2">
-      <SearchPage heading={id.replace("_", " ")}>
+      <SearchPage
+        heading={`${id.replace("_", " ")} Reports`}
+        SearchElement={() => <TerminalSelector />}
+      >
         <p className="text-[0.8275rem] text-neutral-600 font-semibold">
           Select Range:{" "}
         </p>
@@ -76,7 +77,7 @@ export const Reports = () => {
               id="date"
               variant={"outline"}
               className={cn(
-                "w-60 justify-start text-left font-normal dark:bg-neutral-100 bg-neutral-100 ",
+                "min-w-60 max-w-80 justify-start text-left font-normal dark:bg-neutral-100 bg-neutral-100",
                 !date && "text-muted-foreground"
               )}
             >
@@ -84,11 +85,11 @@ export const Reports = () => {
               {date?.from ? (
                 date.to ? (
                   <>
-                    {format(date.from, "LLL dd, y")} -{" "}
-                    {format(date.to, "LLL dd, y")}
+                    {format(new Date(date.from), "LLL dd, y")} -{" "}
+                    {format(new Date(date.to), "LLL dd, y")}
                   </>
                 ) : (
-                  format(date.from, "LLL dd, y")
+                  format(new Date(date.from), "LLL dd, y")
                 )
               ) : (
                 <span>Pick a date</span>
@@ -99,7 +100,7 @@ export const Reports = () => {
             <Calendar
               initialFocus
               mode="range"
-              defaultMonth={date?.from}
+              defaultMonth={new Date(date.from)}
               selected={date}
               onSelect={setDate}
               numberOfMonths={1}
@@ -110,18 +111,23 @@ export const Reports = () => {
         <div className="w-full">
           {!getReportsQuery.isError ? (
             getReportsQuery.isSuccess ? (
-              <Accordion type="single" collapsible className="w-full">
-                {Object.keys(getReportsQuery.data).map((date) => {
-                  return (
-                    <AccordionItem className="my-3" value={date}>
-                      <AccordionTrigger>{date}</AccordionTrigger>
-                      <AccordionContent>
-                        <ReportsTable data={getReportsQuery.data[date]} />
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
+              // <Accordion type="single" collapsible className="w-full">
+              //   {Object.keys(getReportsQuery.data).map((date) => {
+              //     return (
+              //       <AccordionItem className="my-3" value={date}>
+              //         <AccordionTrigger>{date}</AccordionTrigger>
+              //         <AccordionContent>
+
+              //         </AccordionContent>
+              //       </AccordionItem>
+              //     );
+              //   })}
+              // </Accordion>
+              <ReportsTable
+                data={
+                  getReportsQuery.data[Object.keys(getReportsQuery.data)[0]]
+                }
+              />
             ) : (
               Array.from({ length: 5 })
                 .fill(null)

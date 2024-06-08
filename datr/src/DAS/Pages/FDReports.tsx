@@ -19,65 +19,63 @@ import { useQuery } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { Skeleton } from "../../components/ui/skeleton";
 import { PaginationEllipsis } from "@/components/ui/pagination";
-
+import { useTerminalStore } from "@/store/terminalstore";
+import {TerminalSelector} from "../Components/TerminalSelector.jsx"
 export const FDReports = () => {
-    const { Location } = useParams();
-    const [date, setDate] = useState({
-      from: new Date(),
-      to: null,
-    });
+    const {terminal,date,setDate}=useTerminalStore()
+    console.log(typeof date.from,typeof new Date())
     const { axios } = useAxiosClient();
     const [currentPage, setCurrentPage] = useState(0);
     const [maxPages, setMaxPages] = useState(1);
     const reportsQuery=useQuery({
-        queryKey:[location,"FDR",`${currentPage}`],
-        queryFn:()=>axios(`flight-disruption-reports/terminal?value=${Location}&page=${currentPage}&size=20`).then((resp:any)=>{
+        queryKey:[terminal,"FDR",`${currentPage}`],
+        queryFn:()=>axios(`flight-disruption-reports/terminal?value=${terminal}&page=${currentPage}&size=20`).then((resp:any)=>{
             setMaxPages(resp.data.totalPages)
             return resp.data.flightDisruptionReportResponses
         })
     })
     return (
       <section className="w-full max-h-screen overflow-y-auto p-2">
-        <SearchPage heading={"Flight Disruption Reports"}>
+        <SearchPage heading={"Flight Disruption Reports"} SearchElement={()=><TerminalSelector/>} >
           <p className="text-[0.8275rem] text-neutral-600 font-semibold">
             Select Range:{" "}
           </p>
           <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                id="date"
-                variant={"outline"}
-                className={cn(
-                  "w-60 justify-start text-left font-normal dark:bg-neutral-100 bg-neutral-100 ",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CiCalendar className="mr-2 h-4 w-4" />
-                {date?.from ? (
-                  date.to ? (
-                    <>
-                      {format(date.from, "LLL dd, y")} -{" "}
-                      {format(date.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(date.from, "LLL dd, y")
-                  )
+          <PopoverTrigger asChild>
+            <Button
+              id="date"
+              variant={"outline"}
+              className={cn(
+                "min-w-60 max-w-80 justify-start text-left font-normal dark:hover:bg-ncBlue hover:bg-ncBlue dark:bg-neutral-100 bg-neutral-100 ",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CiCalendar className=" h-5 w-5 shrink mr-2" />
+              {date?.from ? (
+                date.to ? (
+                  <>
+                    {format(new Date(date.from), "LLL dd, y")} -{" "}
+                    {format(new Date(date.to), "LLL dd, y")}
+                  </>
                 ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={date?.from}
-                selected={date}
-                onSelect={setDate}
-                numberOfMonths={1}
-              />
-            </PopoverContent>
-          </Popover>
+                  format(new Date(date.from), "LLL dd, y")
+                )
+              ) : (
+                <span>Pick a date</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={date.from || new Date()}
+              selected={date}
+              onSelect={setDate}
+              numberOfMonths={1}
+            />
+          </PopoverContent>
+        </Popover>
           {
             reportsQuery.isSuccess&&  <div className="flex items-center space-x-2 mx-2">
             <Button
@@ -131,7 +129,7 @@ export const FDReports = () => {
           }
   
          {
-            reportsQuery.isFetching?<Skeleton className="w-full h-[40vh]"/>:reportsQuery.isSuccess?<div className="w-full h-[50vh] p-2 overflow-y-auto bg-white rounded-md">
+            reportsQuery.isFetching?<Skeleton className="w-full h-[40vh]"/>:reportsQuery.isSuccess?<div className="w-full max-h-[50vh] p-2 overflow-y-auto bg-white rounded-md">
                 <GenericDataTable columns={fdrColumnDef} data={reportsQuery.data}/>
             </div>:<></>
          }
