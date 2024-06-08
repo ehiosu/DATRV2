@@ -50,6 +50,7 @@ import { FDReports } from "./DAS/Pages/FDReports.tsx";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { FDR } from "./CPD/Pages/FDR.tsx";
 import { DelayReports } from "./DAS/Pages/DelayReports.tsx";
+import { CancelledReports } from "./DAS/Pages/CancelledReport.tsx";
 
 const queryClient = new QueryClient();
 function App() {
@@ -166,6 +167,10 @@ function App() {
                 <Route
                   path="/Das/Delays/Reports/:airline"
                   element={<DelayReports />}
+                />
+                <Route
+                  path="/Das/Cancelled/Reports/:airline"
+                  element={<CancelledReports />}
                 />
               </Route>
             </Routes>
