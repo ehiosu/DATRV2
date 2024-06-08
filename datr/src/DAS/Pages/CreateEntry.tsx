@@ -42,13 +42,14 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MdError } from "react-icons/md";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
+import { useTerminalStore } from '@/store/terminalstore';
+import {TerminalSelector} from "../Components/TerminalSelector.jsx"
 export const CreateEntry = () => {
   const [date, setDate] = useState();
-  const {Location} = useParams();
+  const {terminal}=useTerminalStore()
   const newEntryFormSchema = z.object({
     dateOfIncidence: z.date(),
-    terminalName: z.string().default(String(Location)),
+    terminalName: z.string().default(terminal as string),
     airline: z.string().min(1, {
       message: "Select a valid Airline",
     }),
@@ -80,6 +81,7 @@ export const CreateEntry = () => {
     resolver: zodResolver(newEntryFormSchema),
   });
   const { axios } = useAxiosClient();
+  const [reportType,setReportType]=useState<"ARRIVAL"|"DEPARTURE"|"">("ARRIVAL")
 const resetBtn=useRef<HTMLButtonElement|null>(null)
   const getAirlinesQuery = useQuery({
     queryKey: ["airlines", "names"],
@@ -140,7 +142,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
   };
   return (
     <main className="w-full h-full">
-      <SearchPage heading={"New Entry"}>
+      <SearchPage heading={"New Entry"} SearchElement={()=><TerminalSelector/>}>
         <Form {...form}>
           <form className="w-[80%] mx-auto flex-col flex" onSubmit={form.handleSubmit(TryAddEntry)}>
           <button ref={resetBtn} type="reset" className="hidden"> </button>
@@ -190,7 +192,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                     <FormLabel>Airline:</FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                      <Select onValueChange={field.onChange}>
+                      <Select onValueChange={field.onChange} key={field.value}>
                         <SelectTrigger
                           disabled={!getAirlinesQuery.isSuccess}
                           className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
@@ -260,7 +262,10 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
-                    <FormLabel>Scheduled Time of Arrival</FormLabel>
+                    <FormLabel>{reportType==="ARRIVAL"&&"Scheduled Time of Arrival"
+                }
+                {reportType==="DEPARTURE" && "Scheduled Time of Departure"}
+                </FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
                       <TimePicker
@@ -279,7 +284,11 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
-                    <FormLabel>Actual Time of Arrival</FormLabel>
+                    <FormLabel>{reportType==="ARRIVAL"&&"Actual Time of Arrival"
+                }
+                {reportType==="DEPARTURE" && "Actual Time of Departure"}
+                
+                </FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
                       <TimePicker
@@ -306,7 +315,10 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                   <FormLabel>Report Type:</FormLabel>
                   <FormControl>
                     {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                    <Select onValueChange={field.onChange}>
+                    <Select defaultValue={reportType} key={field.value} onValueChange={(value)=>{
+                      setReportType(value as typeof reportType)
+                      field.onChange(value)
+                    }}>
                       <SelectTrigger className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
                         <SelectValue
                           placeholder="Report Type"
