@@ -39,7 +39,7 @@ export const Sidebar = () => {
 };
 
 const MidSizedSidebar = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const nav = useNavigate();
   const { Location } = useParams();
   return (
@@ -65,7 +65,7 @@ const MidSizedSidebar = () => {
             nav={nav}
             Icon={<MdDashboard className="text-black" />}
             SubMenu={[]}
-            to={`/DAS/${Location}/Dashboard`}
+            to={`/DAS/Dashboard`}
           />
           <SidebarItem
             open={open}
@@ -73,7 +73,7 @@ const MidSizedSidebar = () => {
             nav={nav}
             Icon={<TimerOff color="black" className="text-black " />}
             SubMenu={[]}
-            to={`/DAS/${Location}/Delays`}
+            to={`/DAS/Delays`}
           />
           <SidebarItem
             open={open}
@@ -81,7 +81,7 @@ const MidSizedSidebar = () => {
             nav={nav}
             Icon={<MdCancel color="black" className="text-black " />}
             SubMenu={[]}
-            to={`/DAS/${Location}/Cancelled`}
+            to={`/DAS/Cancelled`}
           />
           <SidebarItem
             open={open}
@@ -89,7 +89,7 @@ const MidSizedSidebar = () => {
             nav={nav}
             Icon={<Clipboard color="black" className="text-black " />}
             SubMenu={[]}
-            to={`/DAS/${Location}/FDR-Reports`}
+            to={`/DAS/FDR-Reports`}
           />
         </div>
       )}
@@ -123,24 +123,17 @@ const MidSizedSidebar = () => {
             open={open}
             Name={"Dashboard"}
             nav={nav}
-            Icon={
-              <MdDashboard className="text-black group-hover:text-blue-300" />
-            }
+            Icon={<MdDashboard className="text-black" />}
             SubMenu={[]}
-            to={`/DAS/${Location}/Dashboard`}
+            to={`/DAS/Dashboard`}
           />
           <SidebarItem
             open={open}
             Name={"Delays"}
             nav={nav}
-            Icon={
-              <TimerOff
-                className="text-black  group-hover:text-blue-300"
-                size={12}
-              />
-            }
+            Icon={<TimerOff color="black" className="text-black " />}
             SubMenu={[]}
-            to={`/DAS/${Location}/Delays`}
+            to={`/DAS/Delays`}
           />
           <SidebarItem
             open={open}
@@ -148,7 +141,7 @@ const MidSizedSidebar = () => {
             nav={nav}
             Icon={<MdCancel color="black" className="text-black " />}
             SubMenu={[]}
-            to={`/DAS/${Location}/Cancelled`}
+            to={`/DAS/Cancelled`}
           />
           <SidebarItem
             open={open}
@@ -156,7 +149,7 @@ const MidSizedSidebar = () => {
             nav={nav}
             Icon={<Clipboard color="black" className="text-black " />}
             SubMenu={[]}
-            to={`/DAS/${Location}/FDR-Reports`}
+            to={`/DAS/FDR-Reports`}
           />
         </div>
       )}
