@@ -18,31 +18,20 @@ import {
 } from "../../CPD/Components/DataTable";
 import { useNavigate, useParams } from "react-router";
 import { useAxiosClient } from "../../api/useAxiosClient";
-import { useQuery } from "@tanstack/react-query";
+
+import { useTerminalStore } from "../../store/terminalstore";
+import { TerminalSelector } from "../Components/TerminalSelector";
 export const CancelledFlights = () => {
   const navigate = useNavigate();
-  const { Location } = useParams();
-  const [date, setDate] = useState({
-    from: new Date(),
-    to: null,
-  });
+  const { terminal, date, setDate } = useTerminalStore();
 
   const { axios } = useAxiosClient();
-  // const getCancelledFlightsQuery=useQuery({
-  //   queryKey:[`${Location}`,'flights','cancelled', `from ${date.from.getUTCDate()} to ${date.to?.getUTCDate() || "none"}`,],
-  //   queryFn:()=>  axios(
-  //     `data-entries/delays?terminal=${Location}&date-of-incidence=${format(
-  //       date.from,
-  //       "dd-MM-yyyy"
-  //     )}`,
-  //     {
-  //       method: "GET",
-  //     }
-  //   ).then((resp) => resp.data),
-  // })
   return (
     <section className="w-full max-h-screen overflow-y-auto">
-      <SearchPage heading={"Cancelled Flights"}>
+      <SearchPage
+        heading={"Cancelled Flights"}
+        SearchElement={() => <TerminalSelector />}
+      >
         <p className="text-[0.8275rem] text-neutral-600 font-semibold">
           Select Range:{" "}
         </p>
@@ -52,7 +41,7 @@ export const CancelledFlights = () => {
               id="date"
               variant={"outline"}
               className={cn(
-                "w-60 justify-start text-left font-normal dark:bg-neutral-100 bg-neutral-100 ",
+                "min-w-60 max-w-80 justify-start text-left font-normal dark:bg-neutral-100 bg-neutral-100",
                 !date && "text-muted-foreground"
               )}
             >
@@ -60,11 +49,11 @@ export const CancelledFlights = () => {
               {date?.from ? (
                 date.to ? (
                   <>
-                    {format(date.from, "LLL dd, y")} -{" "}
-                    {format(date.to, "LLL dd, y")}
+                    {format(new Date(date.from), "LLL dd, y")} -{" "}
+                    {format(new Date(date.to), "LLL dd, y")}
                   </>
                 ) : (
-                  format(date.from, "LLL dd, y")
+                  format(new Date(date.from), "LLL dd, y")
                 )
               ) : (
                 <span>Pick a date</span>
@@ -75,8 +64,11 @@ export const CancelledFlights = () => {
             <Calendar
               initialFocus
               mode="range"
-              defaultMonth={date?.from}
-              selected={date}
+              defaultMonth={new Date(date.from)}
+              selected={{
+                from: date.from ? new Date(date.from) : undefined,
+                to: date.to ? new Date(date.to) : undefined,
+              }}
               onSelect={setDate}
               numberOfMonths={1}
             />

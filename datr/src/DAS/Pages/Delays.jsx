@@ -15,14 +15,15 @@ import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { Skeleton } from "../../components/ui/skeleton";
+import { useTerminalStore } from "../../store/terminalstore";
+import { TerminalSelector } from "../Components/TerminalSelector";
+import { Download } from "lucide-react";
 
 export const Delays = () => {
   const navigate = useNavigate();
-  const { Location } = useParams();
-  const [date, setDate] = useState({
-    from: new Date(),
-    to: null,
-  });
+  const { terminal, date, setDate } = useTerminalStore();
+  console.log(date);
+
   const { axios } = useAxiosClient();
 
   const navto = (id) => {
@@ -30,19 +31,17 @@ export const Delays = () => {
   };
   const getDelayData = useQuery({
     queryKey: [
-      `${Location}`,
+      `${terminal}`,
       "delays",
-      `from ${date?.from?.getUTCDate() || "none"} to ${
-        date?.to?.getUTCDate() || "none"
-      }`,
+      `from ${date.from ? date.from : "none"} to ${date?.to || "none"}`,
     ],
     queryFn: () =>
       axios(
-        `data-entries/delays?terminal=${Location}&start-date-of-incidence=${format(
-          date.from || new Date(),
+        `data-entries/delays?terminal=${terminal}&start-date-of-incidence=${format(
+          date.from ? new Date(date.from) : new Date(),
           "dd-MM-yyyy"
         )}&end-date-of-incidence=${
-          date.to ? format(date.to, "dd-MM-yyyy") : ""
+          date.to ? format(new Date(date.to), "dd-MM-yyyy") : ""
         }`,
         {
           method: "GET",
@@ -51,7 +50,7 @@ export const Delays = () => {
   });
   return (
     <section className="w-full max-h-screen overflow-y-auto">
-      <SearchPage heading={"Delays"}>
+      <SearchPage heading={"Delays"} SearchElement={() => <TerminalSelector />}>
         <p className="text-[0.8275rem] text-neutral-600 font-semibold">
           Select Range:{" "}
         </p>
@@ -61,7 +60,7 @@ export const Delays = () => {
               id="date"
               variant={"outline"}
               className={cn(
-                "w-60 justify-start text-left font-normal dark:bg-neutral-100 bg-neutral-100 ",
+                "min-w-60 max-w-80 justify-start text-left font-normal dark:bg-neutral-100 bg-neutral-100 ",
                 !date && "text-muted-foreground"
               )}
             >
@@ -69,11 +68,11 @@ export const Delays = () => {
               {date?.from ? (
                 date.to ? (
                   <>
-                    {format(date.from, "LLL dd, y")} -{" "}
-                    {format(date.to, "LLL dd, y")}
+                    {format(new Date(date.from), "LLL dd, y")} -{" "}
+                    {format(new Date(date.to), "LLL dd, y")}
                   </>
                 ) : (
-                  format(date.from, "LLL dd, y")
+                  format(new Date(date.from), "LLL dd, y")
                 )
               ) : (
                 <span>Pick a date</span>
@@ -84,13 +83,14 @@ export const Delays = () => {
             <Calendar
               initialFocus
               mode="range"
-              defaultMonth={date?.from}
+              defaultMonth={new Date(date.from)}
               selected={date}
               onSelect={setDate}
               numberOfMonths={1}
             />
           </PopoverContent>
         </Popover>
+
         {!getDelayData.isError && getDelayData.isSuccess ? (
           <FlightDataTable
             data={Array.from(
