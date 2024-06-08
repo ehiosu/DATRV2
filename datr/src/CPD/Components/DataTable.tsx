@@ -325,7 +325,7 @@ interface TicketTableProps<TData, Tvalue>
 }
 
 import { toast as sonnerToast } from "sonner";
-import { createWordReport } from "@/lib/utils";
+import { cn, createWordReport } from "@/lib/utils";
 import { Packer } from "docx";
 import { saveAs } from "file-saver";
 import { jsPDF } from "jspdf";
@@ -3179,6 +3179,9 @@ export const TerminalDataTable: React.FC<terminalCompProps> = ({
 
 type flightDataTableProps = {
   data: DelayedFlight[];
+  date?:{
+    from:Date | null,
+  }
 };
 
 const flightsColumnDef:ColumnDef<DelayedFlight>[]=[
@@ -3189,7 +3192,7 @@ const flightsColumnDef:ColumnDef<DelayedFlight>[]=[
       const nav=useNavigate();
       const {Location}=useParams();
       return(
-        <div role="button" className="group-hover:text-blue-500 group-hover:cursor-pointer" onClick={()=>{nav(`/DAS/${Location}/Report/${row.original.airline.replace(" ","_")}`)}}>
+        <div role="button" className="group-hover:text-blue-500 group-hover:cursor-pointer" onClick={()=>{nav(`/DAS/Delays/Reports/${row.original.airline.replace(" ","_")}`)}}>
           <p className="">{row.original["airline"]}</p>
         </div>
       )
@@ -3222,7 +3225,7 @@ export const FlightDataTable: React.FC<flightDataTableProps> = ({
 }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
-    <GenericDataTable data={data} columns={flightsColumnDef}/>
+    <GenericDataTable  isExcelPresentable={false} data={data} columns={flightsColumnDef}/>
     </div>
   );
 };
@@ -3240,6 +3243,14 @@ export const cancelledFlightColumnDef: ColumnDef<cancelledFlight>[] = [
   {
     accessorKey: "airline",
     header: "Airline",
+    cell:({row})=> {
+      const nav =useNavigate()
+      return(
+        <div role="button" onClick={()=>{nav(`/Das/Cancelled/Reports/${row.original.airline.replace(" ","_")}`)}}>
+          <p>{row.original.airline}</p>
+        </div>
+      )
+    },
   },
   {
     accessorKey: "cancelledFlight",
@@ -3310,6 +3321,10 @@ export const cancelledFlightPlaceholderData: cancelledFlight[] = [
 ];
 
 const reportsColumnDef: ExtendedColumnDef<Report>[] = [
+  {
+    accessorKey:"id",
+    header:"ID"
+  },
   {
     accessorKey: "flightNumber",
     header: "Flight Number",
@@ -3479,7 +3494,7 @@ export function ReportsDataTable<TData, TValue>({
                         {row.original[cell.column.columnDef.accesorKey] ? (
                           <CiCircleCheck className="text-green-600" />
                         ) : (
-                          <IoMdClose className="text-red-500 " className="text-red-600" />
+                          <IoMdClose className="text-red-500 "  />
                         )}
                       </TableCell>
                     ) : (
@@ -3518,7 +3533,7 @@ type reportProps = {
 export const ReportsTable: React.FC<reportProps> = ({ data }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
-      <GenericDataTable data={data} columns={reportsColumnDef}/>
+      <GenericDataTable isExcelPresentable={false} data={data} columns={reportsColumnDef}/>
     </div>
   );
 };
@@ -3959,7 +3974,10 @@ export const ConfirmationDialog = ({
   currentFilters:[],
   setCurrentFilters:()=>{}
 })
-export function GenericDataTable<TData, TValue>({columns,data,hasAssignment=false,isDraft=false}:DataTableProps<TData, TValue>){
+interface GenericDataTableProps<TData, TValue> extends DataTableProps<TData, TValue>{
+  isExcelPresentable?:boolean
+}
+export function GenericDataTable<TData, TValue>({columns,data,hasAssignment=false,isDraft=false,isExcelPresentable=false}:GenericDataTableProps<TData, TValue>){
   
   const [currentFilters,setCurrentFilters]=useState<ColumnFilter[]>([])
   const table=useReactTable(
@@ -3983,7 +4001,7 @@ export function GenericDataTable<TData, TValue>({columns,data,hasAssignment=fals
       <TableRow key={headerGroup.id}>
         {headerGroup.headers.map((header) => {
           return (
-            <TableHead className="text-center" key={header.id}>
+            <TableHead className={cn("text-center",isExcelPresentable&&"border-2 border-neutral-200 min-w-4 p-1 h-4 text-black dark:text-black whitespace-nowrap")} key={header.id}>
               {header.isPlaceholder
                 ? null
                 : flexRender(
@@ -4002,9 +4020,10 @@ export function GenericDataTable<TData, TValue>({columns,data,hasAssignment=fals
         <TableRow
           key={row.id}
           data-state={row.getIsSelected() && "selected"}
+          className={cn(isExcelPresentable&&"")}
         >
           {row.getVisibleCells().map((cell) => (
-            <TableCell className="text-center" key={cell.id}>
+            <TableCell className={cn("text-center",isExcelPresentable&&"border-2 border-neutral-200 min-w-4 p-1 h-4  whitespace-nowrap ")} key={cell.id}>
               {flexRender(
                 cell.column.columnDef.cell,
                 cell.getContext()
@@ -4221,6 +4240,10 @@ type fdrEntry={
   scheduledTimeArrival:string,
   expectedTimeDeparture:string,
   expectedTimeArrival:string,
+  complianceList:any[],
+  reasonForDelay?:string,
+  reasonForCancellation?:string,
+  reasonForTarmacDelay?:string,
 }
 export const fdrColumnDef:ColumnDef<fdrEntry>[]=[
   {
@@ -4257,7 +4280,7 @@ export const fdrColumnDef:ColumnDef<fdrEntry>[]=[
     cell({row}) {
       return (
         <div>
-          <p>{row.original["reasonForDelay"]||"-----"}</p>
+          <p>{row.original["reasonForDelay" as keyof typeof row.original]||"-----"}</p>
         </div>
       )
     },
@@ -4343,7 +4366,7 @@ export const fdrColumnDef:ColumnDef<fdrEntry>[]=[
       return (
         <div className="flex items-center justify-center">
           {
-            row.original["complianceList"][3].isRequired?<><p>{`${row.original["complianceList"][3].numberOfPassengers} passengers attended to`}</p></>:<MdClose className="text-red-500 "/>
+            row.original["complianceList"][3].isRequired?<><p>{`${row.original["complianceList"][3].numberOfPassengers as keyof typeof row.original} passengers attended to`}</p></>:<MdClose className="text-red-500 "/>
           }
         </div>
       )
@@ -4364,3 +4387,109 @@ export const fdrColumnDef:ColumnDef<fdrEntry>[]=[
   },
  
 ]
+
+type delayreport = {
+  id:string,
+  flightNumber:string,
+  Route:string,
+  sta:string,
+  ata:string,
+  delayedDifferenceInHour:string,
+  stipulatedTimeArrived?:string,
+  stipulatedTimeDeparted?:string,
+  actualTimeArrived?:string,
+  actualTimeDeparted?:string
+
+}
+
+const delayReportColumnDef:ColumnDef<delayreport>[]=[
+  {
+    accessorKey:"id",
+    header:"ID"
+  },
+  {
+    accessorKey: "flightNumber",
+    header: "Flight Number",
+  },
+  {
+    accessorKey: "route",
+    header: "Route",
+  },
+  {
+    accessorKey: "sta",
+    header: "STA / STD",
+    cell:({row})=> {
+     return( <div>
+        <p className="text-sm">{row.original["stipulatedTimeArrived"] || row.original.stipulatedTimeDeparted}</p>
+      </div>)
+    },
+  },
+  {
+    accessorKey: "ata",
+    header: "ATA / ATD",
+    cell:({row})=> {
+      return( <div>
+         <p className="text-sm">{row.original.actualTimeArrived || row.original.actualTimeDeparted}</p>
+       </div>)
+    }
+  },
+  {
+    accessorKey: "delayedDifferenceInHour",
+    header: "Delay",
+    cell:({row})=> {
+      const hours = Math.floor(parseInt(row.original["delayedDifferenceInHour"]!)/3600)
+      const remainingSeconds =Math.floor(parseInt(row.original["delayedDifferenceInHour"]!)%3600)
+      const minutes = Math.floor(remainingSeconds/60);
+      return( <div>
+         <p className="text-sm">{row.original["delayedDifferenceInHour"]?`${hours} hours , ${minutes} minutes`:'----'}</p>
+       </div>)
+    }
+  }
+]
+const cancelledReportColumnDef:ColumnDef<delayreport>[]=[
+  {
+    accessorKey:"id",
+    header:"ID"
+  },
+  {
+    accessorKey: "flightNumber",
+    header: "Flight Number",
+  },
+  {
+    accessorKey: "route",
+    header: "Route",
+  },
+  {
+    accessorKey: "sta",
+    header: "STA / STD",
+    cell:({row})=> {
+     return( <div>
+        <p className="text-sm">{row.original["stipulatedTimeArrived"] || row.original.stipulatedTimeDeparted}</p>
+      </div>)
+    },
+  },
+  {
+    accessorKey: "ata",
+    header: "ATA / ATD",
+    cell:({row})=> {
+      return( <div>
+         <p className="text-sm">{row.original.actualTimeArrived || row.original.actualTimeDeparted}</p>
+       </div>)
+    }
+  },
+]
+
+export const DelayReportsTable=({data}:{data:any[]})=>{
+  return(
+    <div>
+    <GenericDataTable hasAssignment={false} isDraft={false} data={data}  columns={delayReportColumnDef}/>
+        </div>
+  )
+}
+export const CancelledReportsTable=({data}:{data:any[]})=>{
+  return(
+    <div>
+    <GenericDataTable hasAssignment={false} isDraft={false} data={data}  columns={cancelledReportColumnDef}/>
+        </div>
+  )
+}
