@@ -5,7 +5,7 @@ export const ResolutionLeaders = ({terminals}:{terminals:any[]}) => {
   return (
     <div className='w-full h-full overflow-y-auto'>
     <div className="flex items-center flex-wrap mb-3">
-        <p className='md:text-xl text-lg font-semibold'>Resolution Leaders</p>
+        <p className='md:text-xl text-lg font-semibold'>Complaint Resolution</p>
         <Select  >
       <SelectTrigger
         disabled={!terminals}
@@ -38,7 +38,7 @@ export const ResolutionLeaders = ({terminals}:{terminals:any[]}) => {
     {"airline": "Overland Airways", "activeTickets": "20", "resolvedTickets": "18"},
     {"airline": "United Nigeria Airlines", "activeTickets": "55", "resolvedTickets": "50"},
     {"airline": "Med-View Airline", "activeTickets": "85", "resolvedTickets": "80"},
-].sort((a,b)=>((parseFloat(b.resolvedTickets)/parseFloat(b.activeTickets))*100)-((parseFloat(a.resolvedTickets)/parseFloat(a.activeTickets))*100))} columns={bestPerformingColumnDef}/>
+]} columns={bestPerformingColumnDef}/>
 
 </div>
   )
