@@ -17,7 +17,8 @@ module.exports = {
     },
     extend: {
       fontFamily:{
-        "poppins":"Poppins"
+        "poppins":"Poppins",
+        "nunito-sans":"Nunito Sans"
       },
       keyframes: {
         "accordion-down": {
