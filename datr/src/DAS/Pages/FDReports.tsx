@@ -23,7 +23,7 @@ import { useTerminalStore } from "@/store/terminalstore";
 import {TerminalSelector} from "../Components/TerminalSelector.jsx"
 export const FDReports = () => {
     const {terminal,date,setDate}=useTerminalStore()
-    console.log(typeof date.from,typeof new Date())
+    
     const { axios } = useAxiosClient();
     const [currentPage, setCurrentPage] = useState(0);
     const [maxPages, setMaxPages] = useState(1);
@@ -129,7 +129,7 @@ export const FDReports = () => {
           }
   
          {
-            reportsQuery.isFetching?<Skeleton className="w-full h-[40vh]"/>:reportsQuery.isSuccess?<div className="w-full max-h-[50vh] p-2 overflow-y-auto bg-white rounded-md">
+            reportsQuery.isFetching?<Skeleton className="w-full h-[40vh]"/>:reportsQuery.isSuccess?<div className=" max-h-[50vh] p-2 overflow-y-auto bg-white rounded-md max-w-[50vh]">
                 <GenericDataTable columns={fdrColumnDef} data={reportsQuery.data}/>
             </div>:<></>
          }
