@@ -188,526 +188,520 @@ export const NewTicket = () => {
   };
 
   return (
-    <section className="w-full  p-4 lg:p-2 ">
-      <SearchPage heading={"New Ticket"}>
-        <div className="w-full  ">
-          <ol className="list-reset flex  h-full">
-            <li>
-              <Link to={"/CPD/Dashboard"}>
-                <a
-                  href="#"
-                  classNmae="text-primary font-bold transition duration-150 ease-in-out hover:text-primary-600 focus:text-primary-600 active:text-primary-700 dark:text-primary-400 dark:hover:text-primary-500 dark:focus:text-primary-500 dark:active:text-primary-600"
-                >
-                  Dashboard
-                </a>
-              </Link>
-            </li>
-            <li>
-              <span className="mx-2 text-neutral-500 dark:text-neutral-400">
-                /
-              </span>
-            </li>
-            <li className="text-blue-400/50">New Ticket</li>
-          </ol>
-        </div>
-        <p className="text-2xl font-semibold text-neutral-500 my-2">
-          New Ticket
-        </p>
+    <section className="w-full  p-4 lg:p-2 h-auto ">
+      {/* <div className="w-full  ">
+        <ol className="list-reset flex  h-full">
+          <li>
+            <Link to={"/CPD/Dashboard"}>
+              <a
+                href="#"
+                classNmae="text-primary font-bold transition duration-150 ease-in-out hover:text-primary-600 focus:text-primary-600 active:text-primary-700 dark:text-primary-400 dark:hover:text-primary-500 dark:focus:text-primary-500 dark:active:text-primary-600"
+              >
+                Dashboard
+              </a>
+            </Link>
+          </li>
+          <li>
+            <span className="mx-2 text-neutral-500 dark:text-neutral-400">
+              /
+            </span>
+          </li>
+          <li className="text-blue-400/50">New Ticket</li>
+        </ol>
+      </div> */}
+      <p className="text-2xl font-semibold text-ncBlue my-2">New Ticket</p>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(trySubmitForm)}
-            className="md:grid w-[100%] p-2  lg:w-[80%] mx-auto   flex  flex-col   md:grid-cols-2 md:flex-none   "
-          >
-            <FormField
-              name="complainantName"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    <p className="  text-[#172B4D]">Complainant Name</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(trySubmitForm)}
+          className="md:grid w-[100%] p-2  lg:w-[80%] mx-auto   flex  flex-col   md:grid-cols-2 md:flex-none   "
+        >
+          <FormField
+            name="complainantName"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  <p className="  text-[#172B4D]">Complainant Name</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
 
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      name=""
-                      id=""
-                      className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              name="complainantEmail"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    {" "}
-                    <p className="  text-[#172B4D]">Complainant Email</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="text"
+                    name=""
+                    id=""
+                    className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="complainantEmail"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  {" "}
+                  <p className="  text-[#172B4D]">Complainant Email</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
 
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      name=""
-                      id=""
-                      className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-start text-xs" />
-                </FormItem>
-              )}
-            />
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="text"
+                    name=""
+                    id=""
+                    className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                  />
+                </FormControl>
+                <FormMessage className="text-start text-xs" />
+              </FormItem>
+            )}
+          />
 
-            {/* Row-1-above */}
-            <FormField
-              name="complainantType"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    <p className="  text-[#172B4D]">Complainant Type</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
+          {/* Row-1-above */}
+          <FormField
+            name="complainantType"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  <p className="  text-[#172B4D]">Complainant Type</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
 
-                  <FormControl>
-                    <Select
-                      className="outline-none"
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                      }}
-                      defaultValue={field.value}
+                <FormControl>
+                  <Select
+                    className="outline-none"
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                    }}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger
+                      disabled={getRequestTypesQuery.isLoading}
+                      className="w-full h-8 outline-none bg-white rounded-md dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent"
                     >
-                      <SelectTrigger
-                        disabled={getRequestTypesQuery.isLoading}
-                        className="w-full h-8 outline-none bg-white rounded-md dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent"
-                      >
-                        <SelectValue
-                          placeholder="Complaint"
-                          className="text-neutral-500"
-                        />
-                      </SelectTrigger>
-                      {getRequestTypesQuery.isSuccess && (
-                        <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
-                          {Object.keys(getRequestTypesQuery.data).map(
-                            (requestGroup) => (
-                              <SelectGroup key={requestGroup}>
-                                <SelectLabel className="w-full">
-                                  {requestGroup.replace("_", " ")}
-                                </SelectLabel>
-                                {getRequestTypesQuery.data[requestGroup].map(
-                                  (requestType, index) => (
-                                    <>
-                                      <SelectItem
-                                        key={`${requestType}-${index}`}
-                                        value={requestType}
-                                        className=" text-[0.9rem] text-neutral-400   p-1 hover:cursor-pointer text-center"
-                                      >
-                                        {requestType}
-                                      </SelectItem>
-                                      <Separator />
-                                    </>
-                                  )
-                                )}
-                              </SelectGroup>
-                            )
-                          )}
-                        </SelectContent>
-                      )}
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="complainantPhoneNo"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    {" "}
-                    <p className="  text-[#172B4D]">Complainant Phone</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-
-                  <FormControl>
-                    <Input
-                      onChange={(e) => {
-                        if (e.target.value.length <= 11) {
-                          field.onChange(e.target.value);
-                        } else {
-                          e.target.value = field.value;
-                        }
-                      }}
-                      type="text"
-                      name=""
-                      id=""
-                      className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-start text-xs" />
-                </FormItem>
-              )}
-            />
-
-            {/* Row-2-Above */}
-
-            <FormField
-              name="dateOfIncident"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    {" "}
-                    <p className="  text-[#172B4D]">Date of Incident</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-
-                  <FormControl>
-                    {/* <FormDatePicker field={field} /> */}
-                    <DateTimePicker
-                      maxDate={new Date()}
-                      className={
-                        "border-2 group border-neutral-200   rounded-lg transition w-full   bg-white  focus-within:ring-2 focus-within:ring-slate-300 focus-within:ring-offset-2   "
-                      }
-                      clearIcon={
-                        <AiOutlineClose
-                          className="hover:font-semibold group-hover:opacity-100 opacity-0 transition hover:bg-slate-200 h-full aspect-square w-5 p-1 rounded-md shrink"
-                          size={14}
-                        />
-                      }
-                      calendarIcon={
-                        <Calendar className="hover:font-semibold group-hover:opacity-100 opacity-0 transition hover:bg-slate-200 h-full aspect-square w-6 p-1 rounded-md shrink" />
-                      }
-                      value={field.value || null}
-                      onChange={(value) => field.onChange(value)}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-start text-xs" />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="route"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    {" "}
-                    <p className="  text-[#172B4D]">Route</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-
-                  <FormControl>
-                    <Input
-                      className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                      {...field}
-                      placeholder=""
-                    />
-                  </FormControl>
-                  <FormMessage className="text-start text-xs" />
-                </FormItem>
-              )}
-            />
-
-            {/* row-3-above */}
-            <FormField
-              name="sourceOfComplaint"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    {" "}
-                    <p className="  text-[#172B4D]">Source of Complaint</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
-                        <SelectValue placeholder="Select Complaint Source..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {complaintSources.map((source) => (
-                          <SelectItem value={source.value}>
-                            {source.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage className="text-start text-xs" />
-                </FormItem>
-              )}
-            />
-            {/* row-4-above */}
-
-            <FormField
-              name="complaintDetail"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-2  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    {" "}
-                    <p className="  text-[#172B4D]">Complaint Detail</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-
-                  <FormControl>
-                    <Textarea
-                      className="w-full outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                      {...field}
-                      placeholder=""
-                    />
-                  </FormControl>
-                  <FormMessage className="text-start text-xs" />
-                </FormItem>
-              )}
-            />
-
-            {/* row-5-above */}
-            <FormField
-              name="redressSought"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-2  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    {" "}
-                    <p className="  text-[#172B4D]">Redress Sought</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-
-                  <FormControl>
-                    <Textarea
-                      className="w-full outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                      {...field}
-                      placeholder=""
-                    />
-                  </FormControl>
-                  <FormMessage className="text-start text-xs" />
-                </FormItem>
-              )}
-            />
-
-            {/* row-6-above */}
-            <FormField
-              name="attachmentUrls"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-2  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    {" "}
-                    <p className="  text-[#172B4D]">Attachments</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-
-                  <FormControl>
-                    <FileUploadComponent
-                      onChange={field.onChange}
-                      setCanSubmit={setIsTicketUploading}
-                      currentfiles={field.value}
-                      setUploadedFiles={setUploadedFiles}
-                    />
-                  </FormControl>
-                  {uploadedFiles.map((file) => (
-                    <div className="flex flex-row  items-center space-x-2 bg-white py-2 px-1.5 rounded-md shadow-sm">
-                      <p className="text-sm">{file.fileName}</p>
-                      <AiOutlineClose
-                        className="cursor-pointer"
-                        onClick={() => {
-                          let _uploadedFiles = uploadedFiles.filter(
-                            (_file) => _file.fileName !== file.fileName
-                          );
-                          let _res = _uploadedFiles.map(
-                            (_UploadedFile) => _UploadedFile.url
-                          );
-                          field.onChange(_res);
-                          setUploadedFiles(_uploadedFiles);
-                        }}
+                      <SelectValue
+                        placeholder="Complaint"
+                        className="text-neutral-500"
                       />
-                    </div>
-                  ))}
-                  <FormMessage className="text-start text-xs" />
-                </FormItem>
-              )}
-            />
-
-            {/* row-7-above */}
-            <FormField
-              name="airline"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    <p className="  text-[#172B4D]">Airline</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      className="outline-none"
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className="w-full h-8 outline-none bg-white rounded-md  dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent">
-                        <SelectValue
-                          placeholder="Airline Services"
-                          className="text-neutral-500"
-                        />
-                      </SelectTrigger>
+                    </SelectTrigger>
+                    {getRequestTypesQuery.isSuccess && (
                       <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
-                        {getAirlinesQuery.isSuccess &&
-                        getAirlinesQuery.data.length > 0 ? (
-                          getAirlinesQuery.data.map((airline) => {
-                            return (
-                              airline.airlineName && (
-                                <SelectItem
-                                  value={airline.airlineName}
-                                  className=" text-[0.9rem] text-neutral-400   p-1 hover:cursor-pointer text-center"
-                                >
-                                  {airline.airlineName}
-                                </SelectItem>
-                              )
-                            );
-                          })
-                        ) : (
-                          <p className="text-[0.9rem] font-semibold ">
-                            No Airline Content
-                          </p>
+                        {Object.keys(getRequestTypesQuery.data).map(
+                          (requestGroup) => (
+                            <SelectGroup key={requestGroup}>
+                              <SelectLabel className="w-full">
+                                {requestGroup.replace("_", " ")}
+                              </SelectLabel>
+                              {getRequestTypesQuery.data[requestGroup].map(
+                                (requestType, index) => (
+                                  <>
+                                    <SelectItem
+                                      key={`${requestType}-${index}`}
+                                      value={requestType}
+                                      className=" text-[0.9rem] text-neutral-400   p-1 hover:cursor-pointer text-center"
+                                    >
+                                      {requestType}
+                                    </SelectItem>
+                                    <Separator />
+                                  </>
+                                )
+                              )}
+                            </SelectGroup>
+                          )
                         )}
                       </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    )}
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              name="location"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    <p className="  text-[#172B4D]">Location</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      className="outline-none"
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className="w-full h-8 outline-none bg-white rounded-md   dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent">
-                        <SelectValue
-                          placeholder="Location"
-                          className="text-neutral-500"
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
-                        <SelectItem
-                          value="AS"
-                          className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center"
-                        >
-                          MMA
-                        </SelectItem>
-                        <Separator />
-                        <SelectItem
-                          className=" text-[0.9rem] text-neutral-400 text-center inline p-1 hover:cursor-pointer"
-                          value="Ml"
-                        >
-                          MMA II
-                        </SelectItem>
-                        <Separator />
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            name="complainantPhoneNo"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  {" "}
+                  <p className="  text-[#172B4D]">Complainant Phone</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
 
-            {/* row-8-above */}
-            <FormField
-              name="priority"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                  <FormLabel className="flex flex-row space-x-2 items-center">
-                    <p className="  text-[#172B4D]">Priority</p>
-                    <AiFillStar className="text-red-500" />
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      className="outline-none"
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger
-                        disabled={
-                          getSlasQuery.isError || getSlasQuery.isLoading
-                        }
-                        className="w-full h-8 outline-none bg-white rounded-md  dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent"
-                      >
-                        <SelectValue
-                          placeholder="Select a priority..."
-                          className="text-neutral-500"
-                        />
-                      </SelectTrigger>
-                      {getSlasQuery.isSuccess && (
-                        <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none ">
-                          {getSlasQuery.data.map((sla) => {
-                            return (
-                              <>
-                                <SelectItem
-                                  value={sla.slaName}
-                                  className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center"
-                                >
-                                  {sla.slaName}
-                                </SelectItem>
-                                <Separator />
-                              </>
-                            );
-                          })}
-                        </SelectContent>
+                <FormControl>
+                  <Input
+                    onChange={(e) => {
+                      if (e.target.value.length <= 11) {
+                        field.onChange(e.target.value);
+                      } else {
+                        e.target.value = field.value;
+                      }
+                    }}
+                    type="text"
+                    name=""
+                    id=""
+                    className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                  />
+                </FormControl>
+                <FormMessage className="text-start text-xs" />
+              </FormItem>
+            )}
+          />
+
+          {/* Row-2-Above */}
+
+          <FormField
+            name="dateOfIncident"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  {" "}
+                  <p className="  text-[#172B4D]">Date of Incident</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+
+                <FormControl>
+                  {/* <FormDatePicker field={field} /> */}
+                  <DateTimePicker
+                    maxDate={new Date()}
+                    className={
+                      "border-2 group border-neutral-200   rounded-lg transition w-full   bg-white  focus-within:ring-2 focus-within:ring-slate-300 focus-within:ring-offset-2   "
+                    }
+                    clearIcon={
+                      <AiOutlineClose
+                        className="hover:font-semibold group-hover:opacity-100 opacity-0 transition hover:bg-slate-200 h-full aspect-square w-5 p-1 rounded-md shrink"
+                        size={14}
+                      />
+                    }
+                    calendarIcon={
+                      <Calendar className="hover:font-semibold group-hover:opacity-100 opacity-0 transition hover:bg-slate-200 h-full aspect-square w-6 p-1 rounded-md shrink" />
+                    }
+                    value={field.value || null}
+                    onChange={(value) => field.onChange(value)}
+                  />
+                </FormControl>
+                <FormMessage className="text-start text-xs" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="route"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  {" "}
+                  <p className="  text-[#172B4D]">Route</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+
+                <FormControl>
+                  <Input
+                    className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                    {...field}
+                    placeholder=""
+                  />
+                </FormControl>
+                <FormMessage className="text-start text-xs" />
+              </FormItem>
+            )}
+          />
+
+          {/* row-3-above */}
+          <FormField
+            name="sourceOfComplaint"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  {" "}
+                  <p className="  text-[#172B4D]">Source of Complaint</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+
+                <FormControl>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
+                      <SelectValue placeholder="Select Complaint Source..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {complaintSources.map((source) => (
+                        <SelectItem value={source.value}>
+                          {source.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage className="text-start text-xs" />
+              </FormItem>
+            )}
+          />
+          {/* row-4-above */}
+
+          <FormField
+            name="complaintDetail"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-2  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  {" "}
+                  <p className="  text-[#172B4D]">Complaint Detail</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+
+                <FormControl>
+                  <Textarea
+                    className="w-full outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                    {...field}
+                    placeholder=""
+                  />
+                </FormControl>
+                <FormMessage className="text-start text-xs" />
+              </FormItem>
+            )}
+          />
+
+          {/* row-5-above */}
+          <FormField
+            name="redressSought"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-2  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  {" "}
+                  <p className="  text-[#172B4D]">Redress Sought</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+
+                <FormControl>
+                  <Textarea
+                    className="w-full outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                    {...field}
+                    placeholder=""
+                  />
+                </FormControl>
+                <FormMessage className="text-start text-xs" />
+              </FormItem>
+            )}
+          />
+
+          {/* row-6-above */}
+          <FormField
+            name="attachmentUrls"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-2  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  {" "}
+                  <p className="  text-[#172B4D]">Attachments</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+
+                <FormControl>
+                  <FileUploadComponent
+                    onChange={field.onChange}
+                    setCanSubmit={setIsTicketUploading}
+                    currentfiles={field.value}
+                    setUploadedFiles={setUploadedFiles}
+                  />
+                </FormControl>
+                {uploadedFiles.map((file) => (
+                  <div className="flex flex-row  items-center space-x-2 bg-white py-2 px-1.5 rounded-md shadow-sm">
+                    <p className="text-sm">{file.fileName}</p>
+                    <AiOutlineClose
+                      className="cursor-pointer"
+                      onClick={() => {
+                        let _uploadedFiles = uploadedFiles.filter(
+                          (_file) => _file.fileName !== file.fileName
+                        );
+                        let _res = _uploadedFiles.map(
+                          (_UploadedFile) => _UploadedFile.url
+                        );
+                        field.onChange(_res);
+                        setUploadedFiles(_uploadedFiles);
+                      }}
+                    />
+                  </div>
+                ))}
+                <FormMessage className="text-start text-xs" />
+              </FormItem>
+            )}
+          />
+
+          {/* row-7-above */}
+          <FormField
+            name="airline"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  <p className="  text-[#172B4D]">Airline</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    className="outline-none"
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger className="w-full h-8 outline-none bg-white rounded-md  dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent">
+                      <SelectValue
+                        placeholder="Airline Services"
+                        className="text-neutral-500"
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
+                      {getAirlinesQuery.isSuccess &&
+                      getAirlinesQuery.data.length > 0 ? (
+                        getAirlinesQuery.data.map((airline) => {
+                          return (
+                            airline.airlineName && (
+                              <SelectItem
+                                value={airline.airlineName}
+                                className=" text-[0.9rem] text-neutral-400   p-1 hover:cursor-pointer text-center"
+                              >
+                                {airline.airlineName}
+                              </SelectItem>
+                            )
+                          );
+                        })
+                      ) : (
+                        <p className="text-[0.9rem] font-semibold ">
+                          No Airline Content
+                        </p>
                       )}
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <div className="flex  my-4 ml-6 p-1 md:space-x-6  space-x-2 md:col-span-2  mx-auto w-full md:justify-center ">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                className="md:w-52 h-12 text-white bg-[#000066] rounded-md  w-1/2"
-              >
-                Cancel
-              </button>
-              <button
-                className="md:w-52 h-12 text-[#000066] bg-white border-2 border-[#000066] rounded-md  w-1/2"
-                type="submit"
-                disabled={isTicketUploading}
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </Form>
-      </SearchPage>
+          <FormField
+            name="location"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  <p className="  text-[#172B4D]">Location</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    className="outline-none"
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger className="w-full h-8 outline-none bg-white rounded-md   dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent">
+                      <SelectValue
+                        placeholder="Location"
+                        className="text-neutral-500"
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
+                      <SelectItem
+                        value="AS"
+                        className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center"
+                      >
+                        MMA
+                      </SelectItem>
+                      <Separator />
+                      <SelectItem
+                        className=" text-[0.9rem] text-neutral-400 text-center inline p-1 hover:cursor-pointer"
+                        value="Ml"
+                      >
+                        MMA II
+                      </SelectItem>
+                      <Separator />
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* row-8-above */}
+          <FormField
+            name="priority"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  <p className="  text-[#172B4D]">Priority</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    className="outline-none"
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger
+                      disabled={getSlasQuery.isError || getSlasQuery.isLoading}
+                      className="w-full h-8 outline-none bg-white rounded-md  dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent"
+                    >
+                      <SelectValue
+                        placeholder="Select a priority..."
+                        className="text-neutral-500"
+                      />
+                    </SelectTrigger>
+                    {getSlasQuery.isSuccess && (
+                      <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none ">
+                        {getSlasQuery.data.map((sla) => {
+                          return (
+                            <>
+                              <SelectItem
+                                value={sla.slaName}
+                                className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center"
+                              >
+                                {sla.slaName}
+                              </SelectItem>
+                              <Separator />
+                            </>
+                          );
+                        })}
+                      </SelectContent>
+                    )}
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex  my-4 ml-6 p-1 md:space-x-6  space-x-2 md:col-span-2  mx-auto w-full md:justify-center ">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              className="md:w-52 h-12 text-white bg-[#000066] rounded-md  w-1/2"
+            >
+              Cancel
+            </button>
+            <button
+              className="md:w-52 h-12 text-[#000066] bg-white border-2 border-[#000066] rounded-md  w-1/2"
+              type="submit"
+              disabled={isTicketUploading}
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </Form>
     </section>
   );
 };
