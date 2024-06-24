@@ -44,18 +44,20 @@ import { TipTapEditor } from "../Components/TipTapEditor";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as sanitizeHtml from "sanitize-html";
-
+import { toast as sonnerToast } from "sonner";
 export const TicketPage = () => {
   const { id } = useParams();
   if (!id) return redirect("/CPD/Dashboard");
   const { axios } = useAxiosClient();
   const [messages, setMessages] = useState([]);
   const [newMessageCount, setNewMessageCount] = useState(0);
+  const [isTextAreaFocused, setIsTextAreaFocused] = useState(false);
   const messageEndRef = useRef(null);
   const containerRef = useRef(null);
   const currentMessageCount = useRef(0);
   const scrollArrowRef = useRef(null);
   const [replyingTo, setReplyingTo] = useState("");
+  const textAreaRef = useRef(null);
   const btnStyles = {
     PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
     UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
@@ -66,6 +68,7 @@ export const TicketPage = () => {
     CLOSED: "bg-red-200 border-2 border-red-500",
     NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
   };
+  const [ticketContent, setTicketContent] = useState("");
   const ticketQuery = useQuery({
     queryKey: ["tickets", `${id}`],
     queryFn: () =>
@@ -73,18 +76,33 @@ export const TicketPage = () => {
         method: "Get",
       }).then((resp) => resp.data),
   });
-
+  const sendMessageMutation = useMutation({
+    mutationKey: ["comment", "new"],
+    mutationFn: () =>
+      new Promise((resolve, reject) =>
+        axios("comments/add", {
+          method: "POST",
+          data: {
+            ticketId: ticketQuery.data["id"],
+            content: ticketContent,
+            commentType: "MESSAGE",
+            mentions: [],
+            cc: [],
+            bcc: [],
+          },
+        })
+          .then((resp) => resolve(resp.data))
+          .catch((err) => reject(err))
+      ),
+  });
   useEffect(() => {
     if (
       currentMessageCount.current < messages.length &&
       scrollArrowRef.current
     ) {
-      console.log("new messages");
       scrollArrowRef.current.style.setProperty("opacity", 100);
       setNewMessageCount(messages.length - currentMessageCount.current);
       currentMessageCount.current = messages.length;
-    } else {
-      console.log("equal number of messages");
     }
   }, [messages]);
 
@@ -97,6 +115,7 @@ export const TicketPage = () => {
   };
   const commentsQuery = useQuery({
     queryKey: ["comments", `${id}`],
+    staleTime: Infinity,
     queryFn: () =>
       axios(`comments/ticket-id?value=${id}`, {
         method: "GET",
@@ -108,11 +127,6 @@ export const TicketPage = () => {
         .catch((err) => err),
   });
 
-  const addMessage = (message) => {
-    let _messages = [...messages];
-    _messages.push(message);
-    setMessages([..._messages]);
-  };
   const handleMouseMove = (e) => {
     console.log("mouse move");
     if (containerRef.current) {
@@ -121,16 +135,46 @@ export const TicketPage = () => {
       const isAtBottom =
         Math.abs(scrollHeight - Math.round(scrollTop)) <= clientHeight;
       if (isAtBottom) {
-        console.log("is at bottom");
         scrollArrowRef.current.style.setProperty("opacity", 0);
         currentMessageCount.current = messages.length;
       }
     }
   };
+  const trySendMessage = () => {
+    sonnerToast.promise(
+      new Promise((resolve, reject) =>
+        sendMessageMutation.mutate(undefined, {
+          onSuccess: (data) => {
+            resolve(data);
+            setMessages((state) => [...state, data]);
+            setTicketContent("");
+            commentsQuery.refetch();
+          },
+          onError: (error) => {
+            reject(error);
+          },
+        })
+      ),
+      {
+        loading: "Trying to send message...",
+        success: "Message Sent Successfully!",
+        error: (error) => {
+          return (
+            <div className="text-black flex flex-col">
+              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                <MdError /> Error
+              </p>
+              <p>{error.response.data.message || error.response.data.detail}</p>
+            </div>
+          );
+        },
+      }
+    );
+  };
   return (
-    <section className="w-full max-h-screen overflow-y-auto">
+    <section className="w-full ">
       {ticketQuery.isSuccess && (
-        <SearchPage isRedirect={true} heading={"Back"}>
+        <>
           <div className="flex md:gap-0 gap-3 justify-between items-center flex-wrap flex-1 ">
             <div className="flex flex-col">
               <div className="flex  gap-2 items-center ">
@@ -165,21 +209,10 @@ export const TicketPage = () => {
               <ActionsComponent />
             </div>
           </div>
-          <div className="flex mt-3 ">
-            <div className="flex-[2.5] border-r-2 border-t-2 p-2 h-[70vh] max-w-full relative">
+          <div className="flex mt-3 r">
+            <div className="flex-[2.5] border-r-2 border-t-2 p-2 h-[70vh] max-w-full relative ">
               <div
-                role="button"
-                className="w-6 hover:scale-110 transition hover:font-semibold aspect-square rounded-full shadow-md p-1 absolute bottom-28 text-white   right-12 z-[10] bg-darkBlue flex flex-col items-center justify-center space-y-2"
-                ref={scrollArrowRef}
-                style={{ opacity: 0 }}
-                onClick={() => {
-                  scrollToNewMessages();
-                }}
-              >
-                <ArrowDown size={12} />
-              </div>
-              <div
-                className=" border-neutral-200 flex flex-col px-5 py-2 gap-3  h-[45vh] overflow-y-auto relative"
+                className=" border-neutral-200 flex flex-col px-5 py-2 gap-3  h-[45vh] overflow-y-auto relative "
                 ref={containerRef}
                 onScroll={handleMouseMove}
               >
@@ -236,9 +269,20 @@ export const TicketPage = () => {
                     />
                   ))}
                 <div ref={messageEndRef} />
+                <div
+                  role="button"
+                  className="w-6 hover:scale-110 transition hover:font-semibold aspect-square rounded-full shadow-md p-1 absolute bottom-0 text-white   right-12 z-[10] bg-darkBlue flex flex-col items-center justify-center space-y-2"
+                  ref={scrollArrowRef}
+                  style={{ opacity: 0 }}
+                  onClick={() => {
+                    scrollToNewMessages();
+                  }}
+                >
+                  <ArrowDown size={12} />
+                </div>
               </div>
               {replyingTo && (
-                <div className="text-[0.8275rem] w-[40%] bg-neutral-200 py-1 px-3 rounded-sm shadow-sm flex items-center justify-between group/reply">
+                <div className="text-[0.8275rem] w-max px-1.5 rounded-md  bg-ncBlue text-white py-1  shadow-sm flex items-center justify-between group/reply">
                   <p>{replyingTo}</p>
                   <div className="h-full aspect-square group/reply-btn  group-hover/reply:opacity-100 transition duration-300 group-hover/reply:bg-neutral-300  p-1 rounded-md opacity-0">
                     <CgClose
@@ -251,14 +295,41 @@ export const TicketPage = () => {
                   </div>
                 </div>
               )}
-              <TipTapEditor
+              <div
+                className={cn(
+                  "flex flex-col mt-3  bg-white text-parent shadow-sm rounded-md p-1.5",
+                  isTextAreaFocused && "focused"
+                )}
+              >
+                <Textarea
+                  value={ticketContent}
+                  onChange={(e) => {
+                    setTicketContent(e.target.value);
+                  }}
+                  onFocus={(e) => {
+                    setIsTextAreaFocused(true);
+                  }}
+                  ref={textAreaRef}
+                  className="flex-1 resize-none text-child bg-transparent dark:bg-transparent ring-transparent dark:ring-transparent outline-none dark:outline-none focus:outline-none dark:focus:outline-none focus-within:outline-none dark:focus-within:outline-none border-transparent dark:border-transparent focus-visible:outline-none dark:focus-visible:outline-none focus-visible:ring-transparent dark:focus-visible:ring-transparent dark:focus-visible:border-transparent focus-visible:border-transparent text-sm"
+                ></Textarea>
+                <button
+                  disabled={ticketContent.length === 0}
+                  onClick={() => {
+                    trySendMessage();
+                  }}
+                  className="ml-auto w-max h-max py-1.5 px-5 bg-ncBlue text-white rounded-md"
+                >
+                  Send
+                </button>
+              </div>
+              {/* <TipTapEditor
                 disabled={!commentsQuery.isSuccess}
                 addMessage={addMessage}
-              />
+              /> */}
             </div>
             <LeftPanel />
           </div>
-        </SearchPage>
+        </>
       )}
     </section>
   );
@@ -653,10 +724,6 @@ import { FiMessageCircle } from "react-icons/fi";
 const ExtraActions = () => {
   return (
     <div className="w-full flex flex-col mt-2 px-2 gap-2">
-      <Button className="w-full h-12 focus:text-blue-400 dark:bg-white bg-white flex items-center justify-start gap-2 ">
-        <FiMessageCircle />
-        Conversations
-      </Button>
       <DetailsSubAction />
       <HistorySubAction />
       <ApprovalSubAction />
@@ -710,7 +777,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { differenceInHours, differenceInMinutes, format } from "date-fns";
 import { toast } from "../../components/ui/use-toast";
-import { toast as sonnerToast } from "sonner";
+
 import { SignleTicketMessage } from "../Components/SingleMessage";
 import { useForm } from "react-hook-form";
 const DetailsSubAction = () => {
@@ -737,7 +804,7 @@ const DetailsSubAction = () => {
   return (
     <Popover>
       <PopoverTrigger>
-        <Button className="w-full h-12 focus:text-blue-400 focus-within:text-blue-400 dark:bg-white bg-white flex items-center justify-start gap-2">
+        <Button className="w-full h-12 focus:text-blue-400 focus-within:text-blue-400  bg-ncBlue dark:bg-ncBlue text-white dark:text-white hover:bg-slate-700 dark:hover:bg-slate-700  flex items-center justify-start gap-2">
           <CgDetailsMore />
           Details
         </Button>
@@ -840,7 +907,7 @@ const ApprovalSubAction = () => {
   return (
     <Popover>
       <PopoverTrigger ref={popoverRef}>
-        <Button className="w-full h-12 focus:text-blue-400 focus-within:text-blue-400 dark:bg-white bg-white flex items-center justify-start gap-2">
+        <Button className="w-full h-12 focus:text-blue-400 focus-within:text-blue-400 bg-ncBlue dark:bg-ncBlue text-white dark:text-white hover:bg-slate-700 dark:hover:bg-slate-700 flex items-center justify-start gap-2">
           <CheckCircle className="w-3 h-3 shrink" />
           Approval
         </Button>
@@ -899,7 +966,7 @@ const HistorySubAction = () => {
   return (
     <Popover>
       <PopoverTrigger>
-        <Button className="w-full h-12 focus:text-blue-400 focus-within:text-blue-400 dark:bg-white bg-white flex items-center justify-start gap-2">
+        <Button className="w-full h-12 focus:text-blue-400 focus-within:text-blue-400 bg-ncBlue dark:bg-ncBlue text-white dark:text-white hover:bg-slate-700 dark:hover:bg-slate-700 flex items-center justify-start gap-2">
           <MdHistory />
           History
         </Button>
@@ -969,6 +1036,7 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { BiError } from "react-icons/bi";
 import { ConfirmationDialog } from "../Components/DataTable";
 import { AiOutlineClose } from "react-icons/ai";
+import { cn } from "../../lib/utils";
 const TicketHistoryLoading = () => {
   return (
     <div>
@@ -1065,8 +1133,8 @@ const TimerComponentManager = () => {
 
 const PausedTicketTimer = ({ dateTimeModified }) => {
   return (
-    <div className="w-full lg:w-[80%] m-2 h-20 bg-white border-neutral-200 border-2 rounded-md flex items-center justify-center flex-col ">
-      <p className="font-semibold text-neutral-500">Timer Paused</p>
+    <div className="w-full lg:w-[80%] m-2 h-20 bg-ncBlue text-white border-neutral-200 border-2 rounded-md flex items-center justify-center flex-col ">
+      <p className="font-semibold text-white">Timer Paused</p>
       <p className="text-[0.75rem] pt-2">
         Last Modification :{" "}
         {dateTimeModified !== null ? (
@@ -1074,7 +1142,7 @@ const PausedTicketTimer = ({ dateTimeModified }) => {
             {format(new Date(dateTimeModified), "dd / MM / yyyy")}
           </span>
         ) : (
-          <span className="font-semibold text-neutral-700">none</span>
+          <span className="font-semibold text-white">none</span>
         )}
       </p>
     </div>
@@ -1082,7 +1150,7 @@ const PausedTicketTimer = ({ dateTimeModified }) => {
 };
 const DeletedTicketTimer = ({ dateTimeModified }) => {
   return (
-    <div className="w-[80%] m-2 h-20 bg-white border-neutral-200 border-2 rounded-md flex items-center justify-center flex-col ">
+    <div className="w-[80%] m-2 h-20 bg-ncBlue text-white border-neutral-200 border-2 rounded-md flex items-center justify-center flex-col ">
       <p className="font-semibold text-neutral-500">Ticket Deleted</p>
       <p className="text-[0.75rem] pt-2">
         Last Modification :{" "}
@@ -1143,7 +1211,7 @@ const DeleteAction = () => {
     <AlertDialog>
       <AlertDialogTrigger disabled={deleteMutation.isPending} asChild>
         <div
-          className="flex items-center gap-2 justify-center h-8 group hover:bg-neutral-50 hover:rounded-md transition hover:font-semibold"
+          className="flex items-center gap-2 justify-center h-8 group  hover:bg-neutral-50 hover:rounded-md transition hover:font-semibold"
           role="button"
         >
           <Trash className="h-4 w-4 opacity-0 group-hover:opacity-100 transition  shrink rounded-md " />
