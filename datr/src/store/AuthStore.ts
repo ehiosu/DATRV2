@@ -30,7 +30,8 @@ type actions = {
   updateUser: (data:user)=>void;
   generalUpdate:(data:generalUpdate)=>void;
   updateVerified:(data:boolean)=>void;
-  updateImage:(data:string)=>void
+  updateImage:(data:string)=>void;
+  logout:()=>void
 };
 export const useAuthStore = create(persist<state & actions> (
   (set) => ({
@@ -56,6 +57,7 @@ export const useAuthStore = create(persist<state & actions> (
     generalUpdate:(data:generalUpdate)=>{set(()=>({access:data.access_token,refresh:data.refresh_token,user:data.user,verified:data.verified}))},
     updateVerified:(data)=>set(()=>({verified:data})),
     updateImage:(data)=>set((state)=>({user:{...state.user,imageUrl:data}})) ,
+    logout:()=>set((state)=>({user:{email:"",id:"",firstName:"",lastName:"",roles:[],imageUrl:"",airline:null},access:"",refresh:""}))
   }),{
 name:"auth-store",
 storage:createJSONStorage(()=>sessionStorage)
