@@ -17,9 +17,9 @@ export const TicketsConfiguration = () => {
         initial={{ scale: 0.1, opacity: 0 }}
         exit={{ scale: 0.1, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-[90%]  mx-auto min-h-[80vh]  max-h-[80vh] md:overflow-y-auto flex md:flex-row flex-col p-2 gap-4 "
+        className="w-[90%]  mx-auto  md:overflow-y-auto flex md:flex-row flex-col p-2 gap-4 "
       >
-        <aside className="md:w-48 w-80 max-w-full  p-3   bg-white md:rounded-none rounded-lg md:h-28 py-2 md:flex-col flex-row flex gap-2 md:gap-0">
+        <aside className="md:w-48 w-max max-w-full  p-3   bg-white md:rounded-none rounded-lg md:h-max  py-2 md:flex-col flex-row flex gap-2 md:gap-0">
           <TabItem
             title={"Request Type"}
             index={0}
@@ -28,32 +28,16 @@ export const TicketsConfiguration = () => {
               setActiveIndex(0);
             }}
           />
-          <TabItem
-            title={"Status Types"}
-            index={1}
-            activeIndex={activeIndex}
-            onclick={() => {
-              setActiveIndex(1);
-            }}
-          />
-          <TabItem
-            title={"Alerts"}
-            index={2}
-            activeIndex={activeIndex}
-            onclick={() => {
-              setActiveIndex(2);
-            }}
-          />
         </aside>
         <TabContent activeIndex={activeIndex} index={0}>
           <TicketRequestType />
         </TabContent>
-        <TabContent activeIndex={activeIndex} index={1}>
+        {/* <TabContent activeIndex={activeIndex} index={1}>
           <TicketStatusTypes />
         </TabContent>
         <TabContent activeIndex={activeIndex} index={2}>
           <TicketAlerts />
-        </TabContent>
+        </TabContent> */}
       </motion.section>
     </AnimatePresence>
   );
