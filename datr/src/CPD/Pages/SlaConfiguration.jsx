@@ -11,7 +11,11 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { AiOutlinePlus } from "react-icons/ai";
-import { GeneralSlaDataTable } from "../Components/DataTable";
+import {
+  GeneralSlaDataTable,
+  GenericDataTable,
+  slaGeneralColumnDef,
+} from "../Components/DataTable";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
@@ -29,6 +33,7 @@ import {
 } from "../../components/ui/alert-dialog";
 import { CgClose } from "react-icons/cg";
 import { toast } from "sonner";
+import { Skeleton } from "../../components/ui/skeleton";
 
 export const SlaConfiguration = () => {
   const [selectedSlas, setSelectedSlas] = useState([]);
@@ -72,16 +77,16 @@ export const SlaConfiguration = () => {
     <SelectionContext.Provider value={{ selectedSlas, setSelectedSlas }}>
       <AnimatePresence>
         <motion.section
-          initial={{ scale: 0.1, opacity: 0 }}
+          initial={{ opacity: 0 }}
           exit={{ scale: 0.1, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="w-[90%]  mx-auto max-h-[80vh] md:overflow-y-auto flex flex-col"
+          animate={{ opacity: 1 }}
+          className="w-[90%]  mx-auto mt-4 md:overflow-y-auto flex flex-col"
         >
-          <p className="font-[600] text-[1.1rem] ">Service Level Agreement</p>
+          <p className="font-[600] text-[1.1rem] ">SLA Configuration</p>
 
           <div className="flex items-center gap-2 my-2">
             <button
-              className="w-44 p-2 rounded-md h-10 bg-[#27A7DD] text-white flex justify-between items-center"
+              className="w-36 text-sm p-2 rounded-lg h-9 bg-ncBlue  text-white flex justify-between items-center"
               onClick={() => {
                 nav("/CPD/Configuration/Sla/New");
               }}
@@ -126,7 +131,24 @@ export const SlaConfiguration = () => {
           </div>
 
           <div className="w-full mt-4 shadow-md">
-            {slaQuery.isSuccess && <GeneralSlaDataTable data={slaQuery.data} />}
+            {slaQuery.isLoading ? (
+              <Skeleton className="w-full h-[60vh]" />
+            ) : (
+              slaQuery.isSuccess && (
+                <div className="h-[40vh] overflow-auto border-t-4 border-t-ncBlue bg-white  border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth w-full">
+                  {" "}
+                  <GenericDataTable
+                    tableClassname=""
+                    headerClassname="rounded-lg"
+                    filterHeader="Sla Name"
+                    columns={slaGeneralColumnDef}
+                    data={slaQuery.data || []}
+                    filterColumn="slaName"
+                    hasFilter
+                  />
+                </div>
+              )
+            )}
           </div>
         </motion.section>
       </AnimatePresence>
