@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useAnimation } from "framer-motion";
 import { StatCard } from "../Components/DashboardStats";
 import { cpoViewStats } from "../data/data";
 import { CpoViewGraph } from "../Components/CpoViewGraph";
-import { Navigate, useNavigate, useParams } from "react-router";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
@@ -28,8 +28,7 @@ import { toast } from "../../components/ui/use-toast";
 
 export const CPOView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const group = searchParams.get("group");
-  if (!group) return <Navigate to={"/CPD/Dashboard"} />;
+  const group = new URLSearchParams(useLocation().search).get("group");
   const { agent } = useParams();
   const { axios } = useAxiosClient();
   const updatedGroup = group.replaceAll("_", " ");
@@ -45,48 +44,21 @@ export const CPOView = () => {
   });
   return (
     <section className="w-full">
-      <SearchPage heading={"User Groups"}>
-        <BreadCrumb3
-          data={[
-            {
-              title: "User Groups",
-              index: 0,
-              link: `/CPD/Configuration/Groups`,
-            },
-            {
-              title: updatedGroup,
-              index: 1,
-              link: `/CPD/user_groups?group=${group}`,
-            },
-            { title: "User Preview", index: 2 },
-          ]}
-        />
-        {userQuery.isSuccess && userQuery.data && (
-          <UserCard group={group} id={agent} user={userQuery.data} />
-        )}
-        {/* <div>
-          <AlertDialog>
-            <AlertDialogTrigger>
-              
-            </AlertDialogTrigger>
-          </AlertDialog>
-        </div> */}
-        <div className="flex items-center flex-wrap gap-4 justify-evenly ">
-          {cpoViewStats.map((stat, index) => (
-            <StatCard
-              className="w-[9rem] aspect-square"
-              key={index}
-              {...stat}
-            />
-          ))}
-        </div>
-        <div className="h-[40vh] w-full bg-white rounded-lg border-[2px] border-neutral-200  flex flex-col p-3">
-          <p className="text-[1.4rem] font-semibold w-full p-2 border-b-2 border-b-neutral-200">
-            Tickets
-          </p>
-          <CpoViewGraph />
-        </div>
-      </SearchPage>
+      {userQuery.isSuccess && userQuery.data && (
+        <UserCard group={group} id={agent} user={userQuery.data} />
+      )}
+
+      <div className="flex items-center flex-wrap gap-4 justify-evenly ">
+        {cpoViewStats.map((stat, index) => (
+          <StatCard className="w-[9rem] aspect-square" key={index} {...stat} />
+        ))}
+      </div>
+      <div className="h-[40vh] w-full bg-white rounded-lg border-[2px] border-neutral-200  flex flex-col p-3">
+        <p className="text-[1.4rem] font-semibold w-full p-2 border-b-2 border-b-neutral-200">
+          Tickets
+        </p>
+        <CpoViewGraph />
+      </div>
     </section>
   );
 };
@@ -129,6 +101,7 @@ const UserCard = ({ group, user, id }) => {
   const { axios } = useAxiosClient();
   const client = useQueryClient();
   const [newRole, setNewRole] = useState("");
+  if (!user) return <></>;
   const changeRoleMutation = useMutation({
     mutationKey: ["role"],
     mutationFn: () =>
@@ -161,7 +134,7 @@ const UserCard = ({ group, user, id }) => {
         }),
   });
   return (
-    <div className="flex  my-3 px-2 gap-4 items-center flex-wrap">
+    <div className="flex  my-3 px-2 gap-4 items-center flex-wrap ">
       <div className="w-20 aspect-square rounded-full overflow-hidden ">
         <img
           src={
@@ -182,68 +155,65 @@ const UserCard = ({ group, user, id }) => {
 
       <div className="flex flex-col space-y-1 items-center justify-center">
         <p className="w-max px-6 bg-darkBlue text-white rounded-full py-1 text-xs font-bold">
-          {user.roles[user.roles.length - 1]}
+          {user.roles[user?.roles.length - 1]}
         </p>
-        {user.roles[user.roles.length - 1] === "USER" && (
-          <AlertDialog>
-            <AlertDialogTrigger className="text-xs font-semibold hover:text-blue-300 text-neutral-400">
-              Change Role
-            </AlertDialogTrigger>
-            <AlertDialogContent className="text-center">
-              <p className="text-[1.4rem] font-semibold text-neutral-700">
-                Change User Role
-              </p>
-              <p className="my-2 text-[0.77rem] text-neutral-400">
-                Doing this will revoke access to or grant the user access to
-                certain modules and/ or features of the system.
-              </p>
 
-              <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start">
-                Select a new Role
-              </p>
-              <Select
-                onValueChange={(value) => {
-                  setNewRole(value);
+        <AlertDialog>
+          <AlertDialogTrigger className="text-xs font-semibold hover:text-blue-300 text-neutral-400">
+            Change Role
+          </AlertDialogTrigger>
+          <AlertDialogContent className="text-center">
+            <p className="text-[1.4rem] font-semibold text-neutral-700">
+              Change User Role
+            </p>
+            <p className="my-2 text-[0.77rem] text-neutral-400">
+              Doing this will revoke access to or grant the user access to
+              certain modules and/ or features of the system.
+            </p>
+
+            <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start">
+              Select a new Role
+            </p>
+            <Select
+              onValueChange={(value) => {
+                setNewRole(value);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="New Role..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CPO">Consumer Protection Officer</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="TERMINAL_SUPERVISOR">
+                  Terminal Supervisor
+                </SelectItem>
+                <SelectItem value="SHIFT_SUPERVISOR">
+                  Shift Supervisor
+                </SelectItem>
+                <SelectItem value="DATA_STATISTIC">
+                  Data and Statistics Officer
+                </SelectItem>
+                <SelectItem value="DGO"> Director General</SelectItem>
+                <SelectItem value="CPD_D">CPD Director</SelectItem>
+                <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
+              </SelectContent>
+            </Select>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                className="flex-grow"
+                onClick={() => {
+                  changeRoleMutation.mutate();
                 }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="New Role..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CPO">
-                    Consumer Protection Officer
-                  </SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="TERMINAL_SUPERVISOR">
-                    Terminal Supervisor
-                  </SelectItem>
-                  <SelectItem value="SHIFT_SUPERVISOR">
-                    Shift Supervisor
-                  </SelectItem>
-                  <SelectItem value="DATA_STATISTIC">
-                    Data and Statistics Officer
-                  </SelectItem>
-                  <SelectItem value="DGO"> Director General</SelectItem>
-                  <SelectItem value="CPD_D">CPD Director</SelectItem>
-                  <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
-                </SelectContent>
-              </Select>
-              <AlertDialogFooter>
-                <AlertDialogAction
-                  className="flex-grow"
-                  onClick={() => {
-                    changeRoleMutation.mutate();
-                  }}
-                >
-                  Save
-                </AlertDialogAction>
-                <AlertDialogCancel className="flex-grow">
-                  Cancel
-                </AlertDialogCancel>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+                Save
+              </AlertDialogAction>
+              <AlertDialogCancel className="flex-grow">
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
