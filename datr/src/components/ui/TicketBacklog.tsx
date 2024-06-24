@@ -155,7 +155,14 @@ const BarChart = ({ data }: { data: any[] }) => {
   useEffect(() => {
     const _airlines = data.map((datum: any) => datum.airline);
     // const _data=data.map((datum:any)=>parseInt(datum.unresolvedTickets))
-    let _dataset = [
+    let _dataset:{
+      label:string,
+      data:any[],
+      backgroundColor:string,
+      borderWidth:number,
+      barThickness:number,
+      borderRadius:number
+    }[] = [
       {
         label: "Active Tickets",
         data: [],
@@ -174,7 +181,7 @@ const BarChart = ({ data }: { data: any[] }) => {
       },
     ];
     _airlines.map((airline: any, index: any) => {
-      _dataset[0].data.push(data[index].activeTickets);
+      _dataset[0].data.push(data[index].activeTickets );
       _dataset[1].data.push(data[index].unresolvedTickets);
     });
     setLabels(_airlines);
