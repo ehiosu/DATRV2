@@ -29,7 +29,7 @@ export  type GeneralTicket={
         complainant:string,
         cpo:string,
         group:string,
-        status:"Pending"|"Unresolved"|"Resolved"|"",
+        ticketStatus:"Pending"|"Unresolved"|"Resolved"|"",
         date:string
       }
 
@@ -68,7 +68,8 @@ export type GeneralGroup={
 export type GeneralTerminal={
   id:string,
   name:string,
-  abbreviation?:string
+  abbreviation?:string,
+  active?:boolean
 }
 
 export type DelayedFlight={
@@ -98,3 +99,14 @@ export type Report = {
   cancelled: boolean;
   reportType: 'ARRIVAL' | 'DEPARTURE'; // Assuming 'in' and 'out' are the possible values for the 'type' property
 };
+export type route={
+id:string,
+routeName:string,
+abbreviation:string,
+active:boolean
+}
+export type airlineConfig={
+  id:string,
+  airlineName:string,
+  active:boolean
+}
