@@ -2,15 +2,10 @@ import { TabsContent } from "@radix-ui/react-tabs";
 import { motion, AnimatePresence } from "framer-motion";
 import React from "react";
 import { AiOutlineClose, AiOutlinePlus } from "react-icons/ai";
-import { GeneralGroupTable } from "../Components/DataTable";
 import {
-  AlertDialogTrigger,
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogAction,
-} from "../../components/ui/alert-dialog";
-import { AlertDialogCancel } from "@radix-ui/react-alert-dialog";
+  GenericDataTable,
+  generalGroupColumnDef,
+} from "../Components/DataTable";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import {
@@ -19,9 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import { Textarea } from "../../components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
+import { Skeleton } from "../../components/ui/skeleton";
 
 export const UserGroupConfiguration = () => {
   const { axios } = useAxiosClient();
@@ -44,8 +39,23 @@ export const UserGroupConfiguration = () => {
         className="w-[90%]  mx-auto max-h-[80vh] md:overflow-y-auto flex flex-col p-2"
       >
         <div className="w-full my-5 shadow-md">
-          {getUserGroupQuery.isSuccess && (
-            <GeneralGroupTable data={getUserGroupQuery.data} />
+          {getUserGroupQuery.isLoading ? (
+            <Skeleton className="w-full h-[60vh]" />
+          ) : (
+            getUserGroupQuery.isSuccess && (
+              <div className="h-[60vh] overflow-auto border-t-4 border-t-ncBlue bg-white  border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth w-full">
+                {" "}
+                <GenericDataTable
+                  tableClassname=""
+                  headerClassname="rounded-lg"
+                  filterHeader="Group Name"
+                  columns={generalGroupColumnDef}
+                  data={getUserGroupQuery.data || []}
+                  filterColumn="name"
+                  hasFilter
+                />
+              </div>
+            )
           )}
         </div>
       </motion.section>
