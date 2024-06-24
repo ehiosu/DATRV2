@@ -3,19 +3,18 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from 'zustand/middleware'
 type state={
     terminal:string,
-    date:DateRange
+    date:DateRange|undefined
 }
-type dateRange={from:Date|null,to:Date|null}
 type actions={
     setTerminal:(Terminal:string)=>void,
     setDate:(value:DateRange|undefined)=>void
 }
 const terminalStore = create(persist<state&actions>(
     (set)=>({
-        terminal:"All",
+        terminal:"ALL",
         setTerminal:(terminal:string)=>set((state)=>({terminal:terminal})),
         date:{
-            from:new Date(),
+            from:undefined,
             to:undefined
         },
         setDate:(value:DateRange|undefined)=>set((state)=>({date:value}))
