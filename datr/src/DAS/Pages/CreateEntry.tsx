@@ -44,6 +44,7 @@ import { MdError } from "react-icons/md";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useTerminalStore } from '@/store/terminalstore';
 import {TerminalSelector} from "../Components/TerminalSelector.jsx"
+import { TimeInput } from "@/components/ui/TimeInput.js";
 export const CreateEntry = () => {
   const [date, setDate] = useState();
   const {terminal}=useTerminalStore()
@@ -109,42 +110,48 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
 
 
   const TryAddEntry = (values:any) => {
-   
-    toast.promise(
-      new Promise((resolve, reject) =>
-       { 
-        return AddEntryMutation.mutate({...values,actualTimeArrived:values.actualTimeArrived||null}, {
-          onSuccess: (data, variables, context) => {
-            resolve(data);
-            form.reset();
-            resetBtn.current?.click()   
+   let isSumbitting =false
+    if(!isSumbitting){
+      toast.promise(
+        new Promise((resolve, reject) =>
+         { 
+          isSumbitting=true
+          return AddEntryMutation.mutate({...values,actualTimeArrived:values.actualTimeArrived||null}, {
+            onSuccess: (data, variables, context) => {
+              resolve(data);
+              form.reset({});
+              setReportType("")
+              resetBtn.current?.click()   
+            },
+            onError: (error, variables, context) => {
+              reject(error);
+            },
+          })}
+        ),
+        {
+          loading: "Trying to add entry...",
+          success: "Entry added successfully!",
+          error: (error: any) => {
+            return (
+              <div className="text-black flex flex-col">
+                <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                  <MdError /> Error
+                </p>
+                <p>{error.response.data.message || error.response.data.detail}</p>
+              </div>
+            );
           },
-          onError: (error, variables, context) => {
-            reject(error);
-          },
-        })}
-      ),
-      {
-        loading: "Trying to add entry...",
-        success: "Entry added successfully!",
-        error: (error: any) => {
-          return (
-            <div className="text-black flex flex-col">
-              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
-                <MdError /> Error
-              </p>
-              <p>{error.response.data.message || error.response.data.detail}</p>
-            </div>
-          );
-        },
-      }
-    );
+        }
+      );
+    }
+    isSumbitting=false
   };
   return (
     <main className="w-full h-full">
-      <SearchPage heading={"New Entry"} SearchElement={()=><TerminalSelector/>}>
+     
         <Form {...form}>
           <form className="w-[80%] mx-auto flex-col flex" onSubmit={form.handleSubmit(TryAddEntry)}>
+            
           <button ref={resetBtn} type="reset" className="hidden"> </button>
           <div className="flex items-center flex-wrap w-full gap-3">
               <FormField
@@ -192,7 +199,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                     <FormLabel>Airline:</FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                      <Select onValueChange={field.onChange} key={field.value}>
+                      <Select onValueChange={field.onChange} key={field.value} value={field.value}>
                         <SelectTrigger
                           disabled={!getAirlinesQuery.isSuccess}
                           className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
@@ -204,7 +211,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                         </SelectTrigger>
                         <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
                           {getAirlinesQuery.isSuccess &&
-                            getAirlinesQuery.data.map((airline: string) => (
+                            getAirlinesQuery.data.map((airline: any) => (
                               <>
                                 <SelectItem
                                   value={airline}
@@ -268,13 +275,14 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 </FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                      <TimePicker
+                      {/* <TimePicker
                         className={
                           "w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"
                         }
                         value={field.value}
                         onChange={field.onChange}
-                      />
+                      /> */}
+                      <TimeInput value={field.value}  className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
                     </FormControl>
                   </FormItem>
                 )}
@@ -291,13 +299,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 </FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                      <TimePicker
-                        className={
-                          "w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"
-                        }
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
+                      <TimeInput value={field.value}  className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
                     </FormControl>
                   </FormItem>
                 )}
@@ -315,7 +317,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                   <FormLabel>Report Type:</FormLabel>
                   <FormControl>
                     {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                    <Select defaultValue={reportType} key={field.value} onValueChange={(value)=>{
+                    <Select defaultValue={field.value} key={field.value} onValueChange={(value)=>{
                       setReportType(value as typeof reportType)
                       field.onChange(value)
                     }}>
@@ -397,7 +399,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
             </div>
           </form>
         </Form>
-      </SearchPage>
+     
     </main>
   );
 };
