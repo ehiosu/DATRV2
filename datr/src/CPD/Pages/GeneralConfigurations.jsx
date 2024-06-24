@@ -25,7 +25,7 @@ export const GeneralConfigurations = () => {
         initial={{ scale: 0.1, opacity: 0 }}
         exit={{ scale: 0.1, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-[90%]  p-1  flex flex-col  mx-auto max-h-[80vh] md:overflow-y-auto"
+        className="w-[90%]  p-1  flex flex-col  mx-auto  md:overflow-y-auto"
       >
         <p className="font-semibold text-[1..2rem]">Language</p>
         <LanguageSelector
