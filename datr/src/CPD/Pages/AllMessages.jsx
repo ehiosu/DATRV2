@@ -35,9 +35,9 @@ export const AllMessages = () => {
   });
   const { section } = useParams();
   const nav = useNavigate();
-  if (!section) {
-    redirect("/CPD/Dashboard");
-  }
+  // if (!section) {
+  //   redirect("/CPD/Dashboard");
+  // }
 
   useEffect(() => {
     console.log("re render");
