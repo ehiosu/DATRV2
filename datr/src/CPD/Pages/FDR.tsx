@@ -200,8 +200,10 @@ useEffect(()=>{
   })
   };
   return (
-    <main className="w-full h-full">
-      <SearchPage heading={"Flight Disruption Report"}>
+    <section className="">
+        <p className="text-xl text-ncBlue font-semibold">
+          New Flight Disruption Report
+        </p>
         <Form {...form}>
           <form
             className="w-[80%] mx-auto flex-col flex"
@@ -504,8 +506,8 @@ useEffect(()=>{
             
           </form>
         </Form>
-      </SearchPage>
-    </main>
+  
+    </section>
   );
 };
 
