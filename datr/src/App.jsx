@@ -103,7 +103,7 @@ function App() {
                   path="/CPD/Tickets/Escalated"
                   element={<EscalatedTickets />}
                 />
-                <Route path="/CPD/Messages" element={<AllMessages />} />
+                {/* <Route path="/CPD/Messages" element={<AllMessages />} /> */}
                 <Route
                   path="/CPD/Messages/:section/:id"
                   element={<MessaggeComponent />}
