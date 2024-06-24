@@ -176,7 +176,7 @@ export const TicketRequestType = () => {
     <div className="w-full flex flex-col gap-4">
       <p className="text-[1rem] ml-2 font-semibold ">Request Type</p>
       <AlertDialog>
-        <AlertDialogTrigger className="w-max px-4 flex gap-3 items-center bg-blue-300 rounded-md text-white h-max py-2">
+        <AlertDialogTrigger className="w-max px-4 flex gap-3 items-center bg-ncBlue rounded-md text-white h-max py-2">
           Add New Request
           <AiOutlinePlus className="text-[0.95rem]" />
         </AlertDialogTrigger>
@@ -253,8 +253,8 @@ export const TicketRequestType = () => {
           </Form>
         </AlertDialogContent>
       </AlertDialog>
-      <div className="w-full max-h-[50vh] transition-all overflow-y-auto">
-        <div className="pl-10 pr-3 flex justify-between items-center bg-neutral-300 py-2">
+      <div className="w-full max-h-[50vh] transition-all overflow-y-auto bg-white rounded-lg border-t-4 border-t-ncBlue">
+        <div className="pl-10 pr-3 flex justify-between items-center bg-white py-2">
           <p className="text-[0.8275rem] font-bold">Request Type</p>
         </div>
         {getAllComplaintsQuery.isSuccess && (
@@ -269,7 +269,7 @@ export const TicketRequestType = () => {
         <AlertDialogTrigger asChild>
           <div
             role="button"
-            className="w-[7.2rem] p-1 hover:w-36 transition-all group whitespace-nowrap text-white rounded-md bg-lightPink  flex flex-row items-center justify-center h-9"
+            className="w-[7.2rem] text-sm p-1  hover:w-36 transition-all group whitespace-nowrap text-white rounded-md bg-lightPink  flex flex-row items-center justify-center h-9"
           >
             Save Changes
             <BsSave className="w-4 h-4 shrink mt-1 ml-2 group-hover:opacity-100 opacity-0 transition-opacity duration-500" />
@@ -279,13 +279,16 @@ export const TicketRequestType = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers.
+              This action cannot be undone. This will permanently make this
+              change.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="dark:bg-slate-200 bg-slate-200">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
+              className="dark:bg-ncBlue bg-ncBlue"
               onClick={() => {
                 tryUpdateTicketRequests();
               }}
@@ -330,7 +333,7 @@ const TicketManager = ({ data, setSelectedIds, selectedIds = [] }) => {
               {data[groupName].map((requestType, index) => (
                 <div
                   className={`${
-                    index % 2 === 1 && "bg-neutral-200"
+                    index % 2 === 1 && "bg-[#EAECFA]"
                   } w-full flex h-8 pr-3 pl-10 text-sm items-center justify-between`}
                   key={index}
                 >
