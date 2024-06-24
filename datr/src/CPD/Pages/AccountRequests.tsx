@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { AccountRequestsTable } from '../Components/DataTable'
+import { AccountRequestsTable, GenericDataTable, accountRequestTableColumnDef } from '../Components/DataTable'
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from '@tanstack/react-query';
 import {useAxiosClient} from "@/api/useAxiosClient.jsx"
@@ -20,7 +20,7 @@ export const AccountRequests = () => {
       initial={{ scale: 0.1, opacity: 0 }}
       exit={{ scale: 0.1, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className="w-[90%]  p-1  flex flex-col  mx-auto max-h-[80vh] md:overflow-y-auto"
+      className="w-[90%]  p-1  flex flex-col  mx-auto  md:overflow-y-auto"
     >
       <div className="flex items-center space-x-3 mb-4">
        
@@ -42,7 +42,7 @@ export const AccountRequests = () => {
       </div>
       {
       !requestsQuery.isError && requestsQuery.isSuccess?
-      <AccountRequestsTable data={requestsQuery.data} /> :<Skeleton className='w-full h-[30vh]'/>
+      <div className="w-full h-[60vh] overflow-y-auto border-2 border-neutral-300 border-t-4 rounded-lg py-1 mt-4 scroll-smooth px-1.5 bg-white border-t-ncBlue "> <GenericDataTable columns={accountRequestTableColumnDef} data={requestsQuery.data}/> </div>:<Skeleton className='w-full h-[30vh]'/>
     }
 
         
