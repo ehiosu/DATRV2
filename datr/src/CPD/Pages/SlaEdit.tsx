@@ -24,6 +24,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { SingleSlaWrapper } from "@/components/ui/Slawrapper";
 import { toast } from "sonner";
+import { MdArrowBack } from "react-icons/md";
 type requestbody = {
   slaName: string;
   resolutionDay: number;
@@ -190,7 +191,7 @@ export const SlaEdit = () => {
           onSuccess: (res) => {
             resolve(res);
             setTimeout(() => {
-              nav("/cCPD/Configuration/Sla");
+              nav("/CPD/Configuration/Sla");
             }, 1000);
           },
           onError: (err) => {
@@ -237,8 +238,11 @@ export const SlaEdit = () => {
     }
   }, [getSlaQuery.isSuccess]);
   return (
-    <section className=" w-full  p-4 lg:p-2 max-h-screen overflow-y-auto">
-      <SearchPage heading={`Edit SLA `}>
+    <section className=" w-full  p-4 lg:p-2">
+      <div role="button" onClick={()=>{nav(-1)}} className="w-6 rounded-md h-6 flex items-center justify-center bg-ncBlue text-white">
+        <MdArrowBack className="w-4 h-4 shrink"/>
+      </div>
+       <p className="my-2 text-xl font-semibold text-ncBlue">Edit Sla</p>
         <p className="my-4 text-[0.725rem] font-semibold">
           Time will be measured between Start and Stop conditions below.
         </p>
@@ -339,7 +343,7 @@ export const SlaEdit = () => {
                 Issues will be checked against this list,top to bottom and
                 assigned a time target.
               </p>
-              <div className="flex items-start space-x-2 my-2 flex-wrap">
+              <div className="flex items-start gap-x-2 my-2 flex-wrap">
                 <div className="">
                   <FormField
                     name="resolutionDay"
@@ -534,7 +538,7 @@ export const SlaEdit = () => {
             </form>
           </Form>
         )}
-      </SearchPage>
+ 
     </section>
   );
 };
