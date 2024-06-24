@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { CiLogin } from "react-icons/ci";
 import { useNavigate } from "react-router";
@@ -17,13 +17,23 @@ import { useToast } from "../../components/ui/use-toast";
 import { Input } from "../../components/ui/input";
 import { useAuth } from "../../api/useAuth";
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
+const home_pages = {
+  CPO: "/CPD/Tickets",
+  DGO: "/CPD/Dashboard",
+  SHIFT_SUPERVISOR: "/CPD/Dashboard",
+  TERMINAL_SUPERVISOR: "/CPD/Dashboard",
+  AIRLINE: "/CPD/Tickets",
+  ADMIN: "/CPD/Dashboard",
+};
 // import { useAxiosClient } from "../../api/useAxiosClient";
 export const AuthForm = () => {
-  const { generalUpdate, access, refresh } = useAuth();
+  const { generalUpdate, access, refresh, user } = useAuth();
   console.log(access);
   // const { axios } = useAxiosClient();
   const { toast } = useToast();
   const Navigate = useNavigate();
+  const [visibilityMode, setVisibilityMode] = useState("password");
   const LoginSchema = z.object({
     email: z
       .string()
@@ -68,7 +78,7 @@ export const AuthForm = () => {
           }, 1000);
           return;
         }
-        Navigate("/CPD/Dashboard");
+        Navigate(home_pages[data.roles[data.roles.length - 1]]);
       }
     } catch (err) {
       if ((err.message = "Request failed with status code 401")) {
@@ -117,7 +127,7 @@ export const AuthForm = () => {
             <button
               className="lg:w-[90%] mx-auto w-full h-12 flex items-center justify-center bg-lightPink rounded-lg text-white my-2"
               onClick={() => {
-                Navigate("/CPD/Dashboard");
+                Navigate(home_pages[user.roles[user.roles.length - 1]]);
               }}
             >
               {" "}
@@ -151,16 +161,44 @@ export const AuthForm = () => {
                   control={form.control}
                   name="password"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="relative w-full ">
                       <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Password"
-                          className="dark:bg-white dark:focus:bg-neutral-200 dark:border-2 dark:border-neutral-500 transition-colors"
-                          {...field}
-                        />
-                      </FormControl>
+                      <div className="relative ">
+                        <FormControl>
+                          <Input
+                            type={visibilityMode}
+                            placeholder="Password"
+                            className="dark:bg-white w-full dark:focus:bg-neutral-200 dark:border-2 dark:border-neutral-500 transition-colors"
+                            {...field}
+                          />
+                        </FormControl>
+                        {visibilityMode === "password" ? (
+                          <div
+                            role="button"
+                            onClick={() => {
+                              setVisibilityMode((state) =>
+                                state === "password" ? "text" : "password"
+                              );
+                            }}
+                            className="absolute top-1/2  right-2 -translate-y-1/2"
+                          >
+                            <Eye className="w-5 h-5 shrink " />
+                          </div>
+                        ) : (
+                          <div
+                            role="button"
+                            onClick={() => {
+                              setVisibilityMode((state) =>
+                                state === "password" ? "text" : "password"
+                              );
+                            }}
+                            className="absolute top-1/2  right-2 -translate-y-1/2"
+                          >
+                            <EyeOff className="w-5 h-5 shrink " />
+                          </div>
+                        )}
+                      </div>
+
                       <FormDescription>
                         Ensure to keep your password a secret!
                       </FormDescription>
