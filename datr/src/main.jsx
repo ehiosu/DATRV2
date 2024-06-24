@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
+// import App from "./App.jsx";
+import { app as App } from "./v3/app.tsx";
 import "./index.css";
 import { AxiosClient } from "./api/useAxiosClient.jsx";
 import { Toaster } from "./components/ui/toaster.tsx";
