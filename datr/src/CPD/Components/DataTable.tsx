@@ -1,7 +1,14 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  ReactElement,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { CiClock1, CiWarning } from "react-icons/ci";
 import { BsThreeDots } from "react-icons/bs";
-import { MdAssignmentInd, MdClose } from "react-icons/md";
+import { MdAssignmentInd, MdClose, MdError } from "react-icons/md";
 import { IoMdArrowDown } from "react-icons/io";
 import { FaRegEdit } from "react-icons/fa";
 import {
@@ -12,7 +19,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { CiCircleCheck } from "react-icons/ci";
-import { IoMdClose  } from "react-icons/io";
+import { IoMdClose } from "react-icons/io";
 
 import {
   Cell,
@@ -23,11 +30,14 @@ import {
   useReactTable,
   Filters,
   getFilteredRowModel,
-  ColumnFilter
+  ColumnFilter,
+  SortingState,
+  getSortedRowModel,
+  VisibilityState,
+  ColumnFiltersState,
 } from "@tanstack/react-table";
 
 
-import { Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -46,13 +56,16 @@ import {
   ResolvedTicket,
   SlaGeneral,
   TicketDistribution,
+  airlineConfig,
   cancelledFlight,
   openTicket,
   recieptData,
+  route,
   unassignedTicket,
 } from "./Types";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
@@ -79,13 +92,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectArrow } from "@radix-ui/react-select";
-import { format } from "date-fns";
+import { endOfDay, format } from "date-fns";
 import { useAxiosClient } from "../../api/useAxiosClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/api/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import { Archive, ArrowDownToLine, Check, CheckCheck, Pencil, Trash, X } from "lucide-react";
+import {
+  Archive,
+  ArrowDownToLine,
+  ArrowUpDown,
+  Ban,
+  Check,
+  CheckCheck,
+  Download,
+  Pencil,
+  Trash,
+  User,
+  X,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import SelectionContext from "../context/SelectionContext";
 import {
@@ -103,22 +128,51 @@ type ExtendedColumnDef<TData extends unknown, TValue = unknown> = ColumnDef<
   TData,
   TValue
 > & {
-  accesorKey?: string; // Add your custom property
+  accessorKey?: string; // Add your custom property
 };
 
-const columnDefinition: ExtendedColumnDef<recieptData>[] = [
+export const recentTicketcolumnDefinition: ColumnDef<recieptData>[] = [
   {
-    accesorKey: "complainantName",
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
+    accessorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complainantType",
+    accessorKey: "complainantType",
     header: "Complainant Type",
   },
   {
-    accesorKey: "id",
-    header: "ID",
-  },
+    id:"actions",
+    cell:({row})=>{
+      return(
+        <AuthorizedComponent roles={["ADMIN","SHIFT_HEAD","TERMINAL_HEAD"]}>
+          <Popover>
+            <PopoverTrigger>
+              <BsThreeDots className="w-5 h-5 shrink"/>
+            </PopoverTrigger>
+            <PopoverContent side="left" className="px-2 py-2 bg-ncBlue dark:bg-ncBlue rounded-lg w-max space-y-1">
+              <AlertDialog>
+                <AlertDialogTrigger className="p-1 dark:hover:bg-slate-100/20 flex items-center hover:bg-slate-100/20 text-sm text-start w-full h-8 text-white rounded-t-lg">
+                <User className="w-4 h-4 shrink mr-2"/>
+                  Assign ticket
+                </AlertDialogTrigger>
+              </AlertDialog>
+              <AlertDialog>
+                <AlertDialogTrigger className="dark:hover:bg-slate-100/20 flex items-center hover:bg-slate-100/20 text-sm text-start w-full h-8 text-white rounded-b-lg p-1">
+                <Trash className="w-4 h-4 mr-2 shrink"/>
+                Delete Ticket
+                </AlertDialogTrigger>
+              </AlertDialog>
+            </PopoverContent>
+          </Popover>
+      </AuthorizedComponent>
+      )
+    }
+  }
+ 
 ];
 
 interface DataTableProps<TData, TValue> {
@@ -169,13 +223,13 @@ export function DataTable<TData, TValue>({
                 {row.getVisibleCells().map((cell: any) => (
                   <TableCell key={cell.id} className="text-center">
                     {flexRender(
-                      cell.column.columnDef.accesorKey === "id"
+                      cell.column.columnDef.accessorKey === "id"
                         ? row.original[
-                            cell.column.columnDef.accesorKey
+                            cell.column.columnDef.accessorKey
                           ].toString() // Convert ID to string
-                        : cell.column.columnDef.accesorKey === "Assign"
+                        : cell.column.columnDef.accessorKey === "Assign"
                         ? cell.column.columnDef.cell({ row })
-                        : row.original[cell.column.columnDef.accesorKey],
+                        : row.original[cell.column.columnDef.accessorKey],
                       cell.getContext()
                     )}
                   </TableCell>
@@ -198,7 +252,7 @@ export function DataTable<TData, TValue>({
 export const RecentTicketsTable = ({ data }: { data: recieptData[] }) => {
   return (
     <TicketsDataTable
-      columns={columnDefinition}
+      columns={[]}
       data={data}
       hasAssignment={true}
       isDraft={false}
@@ -207,30 +261,87 @@ export const RecentTicketsTable = ({ data }: { data: recieptData[] }) => {
   );
 };
 
-const generalTicketColumnDefiniton: ExtendedColumnDef<GeneralTicket>[] = [
+export const generalTicketColumnDefiniton: ColumnDef<GeneralTicket>[] = [
   {
-    accesorKey: "id",
+    accessorKey: "id",
     header: "ID",
   },
   {
-    accesorKey: "complainantName",
+    accessorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complainantType",
+    accessorKey: "complainantType",
     header: "Complainant Type",
   },
   {
-    accesorKey: "group",
+    accessorKey: "group",
     header: "Group",
+    cell:({row})=>{
+     return(
+      <div>
+      <p>{row.original.group || "----"}</p>
+    </div>
+     )
+    }
   },
+  
   {
-    accesorKey: "ticketStatus",
+    accessorKey: "ticketStatus",
     header: "Status",
+    cell:({row})=>{
+      const btnStyles: Record<string, string> = {
+        PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+        UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+        NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+        ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+        OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+        UNASSIGNED: "",
+        RESOLVED: "bg-blue-200 border-2 border-blue-400",
+        CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+      }
+      return (
+       <div className="flex items-center justify-center">
+         <div className={cn("w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",btnStyles[row.original["ticketStatus"] as keyof typeof btnStyles])}>
+          <p>{row.original.ticketStatus}</p>
+        </div>
+       </div>
+      )
+    }
+   
   },
   {
-    accesorKey: "dateTimeCreated",
+    accessorKey: "dateTimeCreated",
     header: "Date",
+    cell:({row})=>{
+      return(
+        <div>
+          <p className="">{format(new Date(row.original["dateTimeCreated"] as string),'dd-MM-yyyy')}</p>
+        </div>
+      )
+    }
+  },
+  {
+    id:"actions",
+    cell:({row})=>{
+      const nav =useNavigate()
+      return(
+        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
+            <Popover>
+              <PopoverTrigger>
+                <BsThreeDots/>
+              </PopoverTrigger>
+              <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+                <div onClick={()=>{nav(`/CPD/Ticket/${row.original.id}`)}} role="button" className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">View Ticket Details</div>
+                <AuthorizedComponent roles={["ADMIN"]}>
+                <div role="button" className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">Delete Ticket</div>
+                </AuthorizedComponent>
+
+              </PopoverContent>
+            </Popover>
+        </AuthorizedComponent>
+      )
+    }
   },
 ];
 
@@ -331,7 +442,14 @@ import { saveAs } from "file-saver";
 import { jsPDF } from "jspdf";
 import { removeTags } from "@/lib/utils";
 import { AiOutlineClose } from "react-icons/ai";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { AuthorizedComponent } from "@/v3/CPD/Components/AuthorizedComponent";
 export function TicketsDataTable<TData, TValue>({
   columns,
   data,
@@ -678,14 +796,14 @@ ${_messages}
                   </TableHead>
                 );
               })}
-              {user.roles.includes("ADMIN")  &&
+              {user.roles.includes("ADMIN") &&
                 hasAssignment &&
                 data.length > 0 && (
                   <TableHead className="text-center">
                     <span className="t">Assign To </span>
                   </TableHead>
                 )}
-                 {user.roles.includes("TERMINAL_SUPERVISOR")  &&
+              {user.roles.includes("TERMINAL_SUPERVISOR") &&
                 hasAssignment &&
                 data.length > 0 && (
                   <TableHead className="text-center">
@@ -712,9 +830,9 @@ ${_messages}
                   {row
                     .getVisibleCells()
                     .map((cell: any, colindex: number) =>
-                      cell.column.columnDef.accesorKey === "ticketStatus" ? (
+                      cell.column.columnDef.accessorKey === "ticketStatus" ? (
                         <StatusTableCell cell={cell} row={row} />
-                      ) : cell.column.columnDef.accesorKey === "cpo" ? (
+                      ) : cell.column.columnDef.accessorKey === "cpo" ? (
                         <CpoTableCell cell={cell} row={row} />
                       ) : (
                         <RegularTableCell
@@ -724,7 +842,7 @@ ${_messages}
                         />
                       )
                     )}
-                  {user.roles.includes("ADMIN")  &&
+                  {user.roles.includes("ADMIN") &&
                     hasAssignment &&
                     data.length > 0 && (
                       <TableCell className="grid place-items-center bg-transparent ">
@@ -823,7 +941,7 @@ ${_messages}
                         </Popover>
                       </TableCell>
                     )}
-                     {user.roles.includes("TERMINAL_SUPERVISOR")  &&
+                  {user.roles.includes("TERMINAL_SUPERVISOR") &&
                     hasAssignment &&
                     data.length > 0 && (
                       <TableCell className="grid place-items-center bg-transparent ">
@@ -1084,27 +1202,27 @@ export function FlightsDataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell: any, index: number) =>
-                    cell.column.columnDef.accesorKey === "id" ? (
+                    cell.column.columnDef.accessorKey === "id" ? (
                       <TableCell
                         key={cell.id}
                         className={`text-center ${
-                          cell.column.columnDef.accesorKey === "groupName" &&
+                          cell.column.columnDef.accessorKey === "groupName" &&
                           "font-semibold"
                         } whitespace-nowrap hover:cursor-pointer hover:text-blue-300`}
                         onClick={() => {
                           nav(
-                            row.original[cell.column.columnDef.accesorKey]
+                            row.original[cell.column.columnDef.accessorKey]
                               .toString()
                               .replaceAll(" ", "_")
                           );
                         }}
                       >
                         {flexRender(
-                          cell.column.columnDef.accesorKey === "id"
+                          cell.column.columnDef.accessorKey === "id"
                             ? row.original[
-                                cell.column.columnDef.accesorKey
+                                cell.column.columnDef.accessorKey
                               ].toString() // Convert ID to string
-                            : row.original[cell.column.columnDef.accesorKey],
+                            : row.original[cell.column.columnDef.accessorKey],
                           cell.getContext()
                         )}
                       </TableCell>
@@ -1127,28 +1245,70 @@ export function FlightsDataTable<TData, TValue>({
     </div>
   );
 }
-const openTicketColumnDefinition: ExtendedColumnDef<openTicket>[] = [
+export const openTicketColumnDefinition: ExtendedColumnDef<openTicket>[] = [
   {
-    accesorKey: "id",
+    accessorKey: "id",
     header: "ID",
   },
 
   {
-    accesorKey: "complainantName",
+    accessorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complainantType",
+    accessorKey: "complainantType",
     header: "Complainant Type",
   },
-
+  
   {
-    accesorKey: "ticketStatus",
+    accessorKey: "ticketStatus",
     header: "Status",
+    cell:({row})=>{
+      const btnStyles: Record<string, string> = {
+        PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+        UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+        RESOLVED: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+        OPENED: "bg-[#FF585821] border-2 border-[#FF5858]",
+        ESCALATED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+        UNASSIGNED: "",
+        NEW: "bg-blue-200 border-2 border-blue-400",
+        CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+      }
+      return (
+       <div className="flex items-center justify-center">
+         <div className={cn("w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",btnStyles[row.original["ticketStatus" as any] as keyof typeof btnStyles])}>
+          <p>{row.original.ticketStatus}</p>
+        </div>
+       </div>
+      )
+    }
+   
   },
   {
-    accesorKey: "dateOfIncident",
+    accessorKey: "dateOfIncident",
     header: "Date due",
+  },
+  {
+    id:"actions",
+    cell:({row})=>{
+      const nav =useNavigate()
+      return(
+        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
+            <Popover>
+              <PopoverTrigger>
+                <BsThreeDots/>
+              </PopoverTrigger>
+              <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+                <div onClick={()=>{nav(`/CPD/Ticket/${row.original.id}`)}} role="button" className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">View Ticket Details</div>
+                <AuthorizedComponent roles={["ADMIN"]}>
+                <div role="button" className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">Delete Ticket</div>
+                </AuthorizedComponent>
+
+              </PopoverContent>
+            </Popover>
+        </AuthorizedComponent>
+      )
+    }
   },
 ];
 const openTicketData: openTicket[] = [
@@ -1285,24 +1445,24 @@ const RegularTableCell = ({
     <TableCell
       key={cell.id}
       className={`text-center ${
-        cell.column.columnDef.accesorKey === "groupName" && "font-semibold"
+        cell.column.columnDef.accessorKey === "groupName" && "font-semibold"
       } whitespace-nowrap ${
-        cell.column.columnDef.accesorKey == "complainant" ||
-        cell.column.columnDef.accesorKey == "slaName"
+        cell.column.columnDef.accessorKey == "complainant" ||
+        cell.column.columnDef.accessorKey == "slaName"
           ? "sticky left-0 bg-white md:bg-transparent group-hover:bg-slate-400 peer-hover:bg-slate-400"
           : ""
       }`}
     >
       {flexRender(
-        cell.column.columnDef.accesorKey === "id"
-          ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
-          : row.original[cell.column.columnDef.accesorKey]?.length > 0
-          ? cell.column.columnDef.accesorKey === "dateTimeCreated"
+        cell.column.columnDef.accessorKey === "id"
+          ? row.original[cell.column.columnDef.accessorKey].toString() // Convert ID to string
+          : row.original[cell.column.columnDef.accessorKey]?.length > 0
+          ? cell.column.columnDef.accessorKey === "dateTimeCreated"
             ? format(
-                new Date(row.original[cell.column.columnDef.accesorKey]),
+                new Date(row.original[cell.column.columnDef.accessorKey]),
                 "dd/MM/yyyy"
               )
-            : row.original[cell.column.columnDef.accesorKey]
+            : row.original[cell.column.columnDef.accessorKey]
           : "----",
         cell.getContext()
       )}
@@ -1318,20 +1478,20 @@ const RegularTableCellDAS = ({
   row: any;
   navto: (id: string) => void;
 }) => {
-  return cell.column.columnDef.accesorKey === "name" ? (
+  return cell.column.columnDef.accessorKey === "name" ? (
     <TableCell
       key={cell.id}
       onClick={() => navto(row.original["id"])}
       className={`${
-        cell.column.columnDef.accesorKey === "name"
+        cell.column.columnDef.accessorKey === "name"
           ? "text-start"
           : "text-center"
       } whitespace-nowrap hover:text-blue-300 hover:cursor-pointer`}
     >
       {flexRender(
-        cell.column.columnDef.accesorKey === "id"
-          ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
-          : row.original[cell.column.columnDef.accesorKey],
+        cell.column.columnDef.accessorKey === "id"
+          ? row.original[cell.column.columnDef.accessorKey].toString() // Convert ID to string
+          : row.original[cell.column.columnDef.accessorKey],
         cell.getContext()
       )}
     </TableCell>
@@ -1339,15 +1499,15 @@ const RegularTableCellDAS = ({
     <TableCell
       key={cell.id}
       className={`${
-        cell.column.columnDef.accesorKey === "name"
+        cell.column.columnDef.accessorKey === "name"
           ? "text-start"
           : "text-center"
       } whitespace-nowrap`}
     >
       {flexRender(
-        cell.column.columnDef.accesorKey === "id"
-          ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
-          : row.original[cell.column.columnDef.accesorKey],
+        cell.column.columnDef.accessorKey === "id"
+          ? row.original[cell.column.columnDef.accessorKey].toString() // Convert ID to string
+          : row.original[cell.column.columnDef.accessorKey],
         cell.getContext()
       )}
     </TableCell>
@@ -1360,14 +1520,14 @@ const CpoTableCell = ({ cell, row }: { cell: any; row: any }) => {
       key={cell.id}
       className="flex  justify-center  items-center  gap-2"
     >
-      {row.original[cell.column.columnDef.accesorKey] && (
+      {row.original[cell.column.columnDef.accessorKey] && (
         <span className="block  w-3 rounded-full  bg-green-400  aspect-square  ">
           {" "}
         </span>
       )}
-      {row.original[cell.column.columnDef.accesorKey] ? (
+      {row.original[cell.column.columnDef.accessorKey] ? (
         flexRender(
-          row.original[cell.column.columnDef.accesorKey],
+          row.original[cell.column.columnDef.accessorKey],
           cell.getContext()
         )
       ) : (
@@ -1403,7 +1563,7 @@ const FromTableCell = ({
       )}
       {isDraft && <p className="text-[0.8275rem] text-red-500">Draft</p>}
       {flexRender(
-        row.original[cell.column.columnDef.accesorKey],
+        row.original[cell.column.columnDef.accessorKey],
         cell.getContext()
       )}
     </TableCell>
@@ -1414,13 +1574,13 @@ const StatusTableCell = ({ cell, row }: { cell: any; row: any }) => {
     const btnStyles: Record<string, string> = {
       PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
       UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
-      RESOLVED: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
-      OPENED: "bg-[#FF585821] border-2 border-[#FF5858]",
-      ESCALATED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+      NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+      ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+      OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
       UNASSIGNED: "",
-      NEW: "bg-blue-200 border-2 border-blue-400",
+      RESOLVED: "bg-blue-200 border-2 border-blue-400",
       CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-    };
+    }
 
     return `${btnStyles[status]} inline h-max p-1`;
   };
@@ -1435,13 +1595,13 @@ const StatusTableCell = ({ cell, row }: { cell: any; row: any }) => {
 
         <span
           className={`${resolveStatus(
-            row.original[cell.column.columnDef.accesorKey]
+            row.original[cell.column.columnDef.accessorKey]
           )} rounded-lg my-auto relative z-[2]  ${
             row.original["slaMode"] === "EXPIRED" && "expiredSla"
           }`}
         >
           {flexRender(
-            row.original[cell.column.columnDef.accesorKey],
+            row.original[cell.column.columnDef.accessorKey],
             cell.getContext()
           )}
         </span>
@@ -1456,11 +1616,11 @@ const StatusTableCell = ({ cell, row }: { cell: any; row: any }) => {
     >
       <span
         className={`${resolveStatus(
-          row.original[cell.column.columnDef.accesorKey]
+          row.original[cell.column.columnDef.accessorKey]
         )} rounded-lg`}
       >
         {flexRender(
-          row.original[cell.column.columnDef.accesorKey],
+          row.original[cell.column.columnDef.accessorKey],
           cell.getContext()
         )}
       </span>
@@ -1468,35 +1628,79 @@ const StatusTableCell = ({ cell, row }: { cell: any; row: any }) => {
   );
 };
 
-const ResolvedTicketColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
+export const ResolvedTicketColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
   {
-    accesorKey: "id",
+    accessorKey: "id",
     header: "ID",
   },
 
   {
-    accesorKey: "complainantName",
+    accessorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complainantType",
+    accessorKey: "complainantType",
     header: "Complainant Type",
   },
   {
-    accesorKey: "creatorName",
+    accessorKey: "creatorName",
     header: "CPO",
   },
   {
-    accesorKey: "group",
+    accessorKey: "group",
     header: "Group",
   },
+
+  
   {
-    accesorKey: "ticketStatus",
+    accessorKey: "ticketStatus",
     header: "Status",
+    cell:({row})=>{
+      const btnStyles: Record<string, string> = {
+        PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+        UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+        NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+        ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+        OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+        UNASSIGNED: "",
+        RESOLVED: "bg-blue-200 border-2 border-blue-400",
+        CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+      }
+      return (
+       <div className="flex items-center justify-center">
+         <div className={cn("w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",btnStyles[row.original["ticketStatus" as any] as keyof typeof btnStyles])}>
+          <p>{row.original.ticketStatus}</p>
+        </div>
+       </div>
+      )
+    }
+   
   },
   {
-    accesorKey: "dateOfIncident",
+    accessorKey: "dateOfIncident",
     header: "Date due",
+  },
+  {
+    id:"actions",
+    cell:({row})=>{
+      const nav =useNavigate()
+      return(
+        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
+            <Popover>
+              <PopoverTrigger>
+                <BsThreeDots/>
+              </PopoverTrigger>
+              <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+                <div onClick={()=>{nav(`/CPD/Ticket/${row.original.id}`)}} role="button" className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">View Ticket Details</div>
+                <AuthorizedComponent roles={["ADMIN"]}>
+                <div role="button" className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">Delete Ticket</div>
+                </AuthorizedComponent>
+
+              </PopoverContent>
+            </Popover>
+        </AuthorizedComponent>
+      )
+    }
   },
 ];
 const resolvedTicketPlaceholderData: ResolvedTicket[] = [
@@ -1651,35 +1855,85 @@ export const ResolvedTicketsTable = ({ data }: { data: ResolvedTicket[] }) => {
   );
 };
 
-const UnresolvedTicketsColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
+export const UnresolvedTicketsColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
   {
-    accesorKey: "id",
+    accessorKey: "id",
     header: "ID",
   },
 
   {
-    accesorKey: "complainantName",
+    accessorKey: "complainantName",
     header: "Complainant",
   },
   {
-    accesorKey: "complainantType",
+    accessorKey: "complainantType",
     header: "Complainant Type",
   },
   {
-    accesorKey: "creatorName",
+    accessorKey: "creatorName",
     header: "CPO",
   },
   {
-    accesorKey: "group",
+    accessorKey: "group",
     header: "Group",
+    cell:({row})=>{
+     return(
+      <div>
+      <p>{row.original.group || "----"}</p>
+    </div>
+     )
+    }
   },
+  
   {
-    accesorKey: "ticketStatus",
+    accessorKey: "ticketStatus",
     header: "Status",
+    cell:({row})=>{
+      const btnStyles: Record<string, string> = {
+        PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+        UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+        NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+        ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+        OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+        UNASSIGNED: "",
+        RESOLVED: "bg-blue-200 border-2 border-blue-400",
+        CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+      }
+      return (
+       <div className="flex items-center justify-center">
+         <div className={cn("w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",btnStyles[row.original["ticketStatus" as any] as keyof typeof btnStyles])}>
+          <p>{row.original.ticketStatus}</p>
+        </div>
+       </div>
+      )
+    }
+   
   },
   {
-    accesorKey: "dateOfIncident",
+    accessorKey: "dateOfIncident",
     header: "Date due",
+  },
+  {
+    id:"actions",
+    cell:({row})=>{
+      const nav =useNavigate()
+      return(
+        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
+            <Popover>
+              <PopoverTrigger>
+                <BsThreeDots/>
+              </PopoverTrigger>
+              <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+                <div onClick={()=>{nav(`/CPD/Ticket/${row.original.id}`)}} role="button" className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">View Ticket Details</div>
+                <AuthorizedComponent roles={["ADMIN"]}>
+                <div role="button" className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">Delete Ticket</div>
+                </AuthorizedComponent>
+
+              </PopoverContent>
+            </Popover>
+        </AuthorizedComponent>
+      )
+    }
   },
 ];
 
@@ -1840,31 +2094,31 @@ export const UnresolvedTicketsTable = ({
 const unassignedTicketColumnDefinition: ExtendedColumnDef<unassignedTicket>[] =
   [
     {
-      accesorKey: "id",
+      accessorKey: "id",
       header: "ID",
     },
     {
-      accesorKey: "complainantName",
+      accessorKey: "complainantName",
       header: "Complainant",
     },
     {
-      accesorKey: "complainantType",
+      accessorKey: "complainantType",
       header: "Complainant Type",
     },
     {
-      accesorKey: "creatorName",
+      accessorKey: "creatorName",
       header: "CPO",
     },
     {
-      accesorKey: "group",
+      accessorKey: "group",
       header: "Group",
     },
     {
-      accesorKey: "assignStatus",
+      accessorKey: "assignStatus",
       header: "Status",
     },
     {
-      accesorKey: "dateOfIncident",
+      accessorKey: "dateOfIncident",
       header: "Date due",
     },
   ];
@@ -2166,11 +2420,11 @@ export function MessageDataTable<TData, TValue>({
                 {row
                   .getVisibleCells()
                   .map((cell: any, cellIndex: number) =>
-                    cell.column.columnDef.accesorKey
+                    cell.column.columnDef.accessorKey
                       .toLowerCase()
                       .includes("status") ? (
                       <StatusTableCell cell={cell} row={row} />
-                    ) : cell.column.columnDef.accesorKey === "recipient" ? (
+                    ) : cell.column.columnDef.accessorKey === "recipient" ? (
                       <FromTableCell cell={cell} row={row} isDraft={isDraft} />
                     ) : (
                       <RegularTableCell
@@ -2209,19 +2463,19 @@ export function MessageDataTable<TData, TValue>({
 const InboxMessageColumnDefinition: ExtendedColumnDef<Message>[] = [
   {
     header: "From",
-    accesorKey: "recipient",
+    accessorKey: "recipient",
   },
   {
     header: "Complain Type",
-    accesorKey: "complaint_type",
+    accessorKey: "complaint_type",
   },
   {
     header: "Status",
-    accesorKey: "status",
+    accessorKey: "status",
   },
   {
     header: "time",
-    accesorKey: "time",
+    accessorKey: "time",
   },
 ];
 
@@ -2288,38 +2542,38 @@ export const InboxDataTable = ({ nav }: { nav: () => void }) => {
 const OutboundMessagesColumnDef: ExtendedColumnDef<Message>[] = [
   {
     header: "To",
-    accesorKey: "recipient",
+    accessorKey: "recipient",
   },
   {
     header: "Complain Type",
-    accesorKey: "complaint_type",
+    accessorKey: "complaint_type",
   },
   {
     header: "Status",
-    accesorKey: "status",
+    accessorKey: "status",
   },
   {
     header: "time",
-    accesorKey: "time",
+    accessorKey: "time",
   },
 ];
 
 const DraftMessageColumnDefinition: ExtendedColumnDef<Message>[] = [
   {
     header: "To",
-    accesorKey: "recipient",
+    accessorKey: "recipient",
   },
   {
     header: "Complain Type",
-    accesorKey: "complaint_type",
+    accessorKey: "complaint_type",
   },
   {
     header: "Status",
-    accesorKey: "status",
+    accessorKey: "status",
   },
   {
     header: "time",
-    accesorKey: "time",
+    accessorKey: "time",
   },
 ];
 export const OutboxDataTable = ({ nav }: { nav: () => void }) => {
@@ -2356,31 +2610,31 @@ const reportTicketDistributionColumnDef: ExtendedColumnDef<TicketDistribution>[]
   [
     {
       header: "ID",
-      accesorKey: "id",
+      accessorKey: "id",
     },
     {
       header: "CPO Name",
-      accesorKey: "cpoName",
+      accessorKey: "cpoName",
     },
     {
       header: "Assigned",
-      accesorKey: "assigned",
+      accessorKey: "assigned",
     },
     {
       header: "Active",
-      accesorKey: "active",
+      accessorKey: "active",
     },
     {
       header: "Resolved",
-      accesorKey: "resolved",
+      accessorKey: "resolved",
     },
     {
       header: "Escalated",
-      accesorKey: "escalated",
+      accessorKey: "escalated",
     },
     {
       header: "Stress Level",
-      accesorKey: "stressLevel",
+      accessorKey: "stressLevel",
     },
   ];
 interface TicketsDistributionTableProps<TData, TValue>
@@ -2430,7 +2684,7 @@ export function TicketDistributionDataTable<TData, TValue>({
                 {row
                   .getVisibleCells()
                   .map((cell: any, cellIndex: number) =>
-                    cell.column.columnDef.accesorKey === "stressLevel" ? (
+                    cell.column.columnDef.accessorKey === "stressLevel" ? (
                       <StressLevelCell cell={cell} row={row} />
                     ) : (
                       <RegularTableCell
@@ -2474,11 +2728,11 @@ const StressLevelCell = ({ cell, row }: any) => {
   return (
     <TableCell
       className={`${
-        cellStyle[row.original[cell.column.columnDef.accesorKey]]
+        cellStyle[row.original[cell.column.columnDef.accessorKey]]
       } font-semibold text-center`}
     >
       {flexRender(
-        row.original[cell.column.columnDef.accesorKey],
+        row.original[cell.column.columnDef.accessorKey],
         cell.getContext()
       )}
     </TableCell>
@@ -2638,7 +2892,7 @@ export const TicketDistributionTable = () => {
     </div>
   );
 };
-const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
+export const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
   {
     id: "Select",
     header: ({ table }) => {
@@ -2698,7 +2952,7 @@ const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
     enableHiding: false,
   },
   {
-    accesorKey: "slaName",
+    accessorKey: "slaName",
     header: "SLA Name",
     cell: ({ row }) => {
       return (
@@ -2707,9 +2961,11 @@ const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
         </div>
       );
     },
+   
   },
+  
   {
-    accesorKey: "resolutionHour",
+    accessorKey: "resolutionHour",
     header: "Resolution Time",
     cell: ({ row }) => {
       const resolutionTime = `${row.original["resolutionHour"]} hour(s) ${row.original["resolutionMinute"]} minute(s) `;
@@ -2721,7 +2977,7 @@ const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
     },
   },
   {
-    accesorKey: "responseTime",
+    accessorKey: "responseTime",
     header: "Response Time",
     cell: ({ row }) => {
       const resolutionTime = `${row.original["responseHour"]} hour(s) ${row.original["responseMinute"]} minute(s) `;
@@ -2738,8 +2994,9 @@ const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
     cell: ({ row }) => {
       const nav = useNavigate();
       return (
-        <div
-          className="grid place-items-center group-hover:text-black"
+        <div>
+          <div
+          className="grid w-6 h-6 place-items-center group-hover:text-black hover:bg-slate-100/80 transition-all"
           role="button"
           onClick={() => {
             nav(
@@ -2753,6 +3010,7 @@ const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
             size={14}
             className="hover:scale-115 transition text-neutral-500 hover:text-blue-300 hover:font-semibold"
           />
+        </div>
         </div>
       );
     },
@@ -2941,9 +3199,9 @@ export const GeneralSlaDataTable = ({ data }: { data: SlaGeneral[] }) => {
   );
 };
 
-const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
+export const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
   {
-    accesorKey: "name",
+    accessorKey: "name",
     header: "Group Name",
     cell: ({ row }) => {
       const groupMap = {
@@ -2957,7 +3215,7 @@ const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
         CPD_D: "CPD Director",
         CPD_GM: "CPD General Manager",
         AIRLINE: "Airline",
-        FOU:"Flight Operation Unit"
+        FOU: "Flight Operation Unit",
       };
       const nav = useNavigate();
       return (
@@ -2965,7 +3223,7 @@ const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
           className="w-full flex items-center justify-center hover:text-blue-300 transition"
           role="button"
           onClick={() => {
-            nav(`/CPD/user_groups/?group=${row.original["name"]}`);
+            nav(`/CPD/Configuration/user_groups/?group=${row.original["name"]}`);
           }}
         >
           <p>{groupMap[row.original["name"] as keyof typeof groupMap]}</p>
@@ -2974,7 +3232,7 @@ const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
     },
   },
   {
-    accesorKey: "groupDescription",
+    accessorKey: "groupDescription",
     header: "Group Description",
     cell: ({ row }) => (
       <div className="w-full flex justify-center items-center">
@@ -2983,7 +3241,7 @@ const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
     ),
   },
   {
-    accesorKey: "count",
+    accessorKey: "count",
     header: "Members",
     cell: ({ row }) => (
       <div className="w-full flex justify-center items-center">
@@ -3009,9 +3267,9 @@ export const GeneralGroupTable = ({ data }: { data: GeneralGroup[] }) => {
   );
 };
 
-const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
+export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
   {
-    accesorKey: "id",
+    accessorKey: "id",
     header: "ID",
     cell: ({ row }) => {
       return (
@@ -3022,7 +3280,7 @@ const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
     },
   },
   {
-    accesorKey: "name",
+    accessorKey: "name",
     header: "Name",
     cell: ({ row }) => {
       const nav = useNavigate();
@@ -3042,8 +3300,29 @@ const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
     },
   },
   {
+    id:"active",
+    header:"State",
+    cell:({row})=>{
+      return(
+        <div>
+          <p>{row.original["active"]?"Active":"Inactive"}</p>
+        </div>
+      )
+    }
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
+      const {axios}=useAxiosClient()
+      const client = useQueryClient()
+      const toggleActivenessMutation=useMutation({
+        mutationKey:["terminal",row.original["id"],"activeness"],
+        mutationFn:()=>new Promise((resolve,reject)=>{
+          axios(`terminals/${row.original["id"]}`,{
+            method:"PUT"
+          }).then((resp:any)=>resolve(resp.data)).catch((err:Error)=>reject(err))
+        })
+      })
       return (
         <div className="flex items-center justify-end">
           <Popover>
@@ -3051,7 +3330,7 @@ const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
               <BsThreeDots />
             </PopoverTrigger>
             <PopoverContent side="left" className="p-1">
-              <ConfirmationDialog onClick={()=>{}}>
+              <ConfirmationDialog onClick={() => {}}>
                 <div
                   role="button"
                   className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
@@ -3059,6 +3338,233 @@ const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
                   <Trash className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <p className="text-[0.8275rem] group-hover:font-semibold">
                     Delete Terminal
+                  </p>
+                </div>
+              </ConfirmationDialog>
+              <ConfirmationDialog message="This action will permanently change the state of this terminal." onClick={() => {
+                sonnerToast.promise(new Promise((resolve,reject)=>{
+                  toggleActivenessMutation.mutate(undefined,{
+                    onSuccess:(data, variables, context) =>{
+                      resolve(data)
+                      client.invalidateQueries({
+                        queryKey:["terminals","all"],
+                       
+                      })
+                    },
+                    onError:(error, variables, context)=> {
+                      reject(error)
+                    },
+                  })
+                }),{
+                  loading:"Changing Terminal State...",
+                  success:"State Updated Successfully!",
+                  error:(error)=> {
+                    return (
+                      <div className="text-black flex flex-col">
+                        <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                          <MdError className="w-4 h-4 shrink " /> Error
+                        </p>
+                        <p>{error.response.data.message || error.response.data.detail}</p>
+                      </div>
+                    );
+                  }
+                })
+
+
+              }}>
+                <div
+                  role="button"
+                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                >
+                 {
+                  row.original["active"]?<Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>: <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                 }
+                  <p className="text-[0.8275rem] group-hover:font-semibold">
+                    {row.original["active"]?"Deactivate Terminal":"Activate Terminal"} 
+                  </p>
+                </div>
+              </ConfirmationDialog>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
+  },
+];
+export const airlineColumnDef: ExtendedColumnDef<airlineConfig>[] = [
+  {
+    accessorKey: "id",
+    header: "ID",
+
+  },
+  {
+    accessorKey: "airlineName",
+    header: "Name",
+   
+  },
+  {
+    id:"active",
+    header:"State",
+    cell:({row})=>{
+      return(
+        <div>
+          <p>{row.original.active?"Active":"Inactive"}</p>
+        </div>
+      )
+    }
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const {axios}=useAxiosClient()
+      const client = useQueryClient()
+      const toggleActivenessMutation=useMutation({
+        mutationKey:["airlines",row.original["id"],"activeness"],
+        mutationFn:()=>new Promise((resolve,reject)=>{
+          axios(`airlines/${row.original["id"]}`,{
+            method:"PUT"
+          }).then((resp:any)=>resolve(resp.data)).catch((err:Error)=>reject(err))
+        })
+      })
+      return (
+        <div className="flex items-center justify-end">
+          <Popover>
+            <PopoverTrigger>
+              <BsThreeDots />
+            </PopoverTrigger>
+            <PopoverContent side="left" className="p-1">
+             
+              <ConfirmationDialog message="This action will permanently change the state of this Airline." onClick={() => {
+                sonnerToast.promise(new Promise((resolve,reject)=>{
+                  toggleActivenessMutation.mutate(undefined,{
+                    onSuccess:(data, variables, context) =>{
+                      resolve(data)
+                      client.invalidateQueries({
+                        queryKey:["airlines","all","config"],
+                       
+                      })
+                    },
+                    onError:(error, variables, context)=> {
+                      reject(error)
+                    },
+                  })
+                }),{
+                  loading:"Changing Airline State...",
+                  success:"State Updated Successfully!",
+                  error:(error)=> {
+                    return (
+                      <div className="text-black flex flex-col">
+                        <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                          <MdError className="w-4 h-4 shrink " /> Error
+                        </p>
+                        <p>{error.response.data.message || error.response.data.detail}</p>
+                      </div>
+                    );
+                  }
+                })
+
+
+              }}>
+                <div
+                  role="button"
+                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                >
+                 {
+                  row.original["active"]?<Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>: <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                 }
+                  <p className="text-[0.8275rem] group-hover:font-semibold">
+                    {row.original["active"]?"Deactivate Airline":"Activate Airline"} 
+                  </p>
+                </div>
+              </ConfirmationDialog>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
+  },
+];
+export const routesColumnDef: ExtendedColumnDef<route>[] = [
+  {
+    accessorKey: "id",
+    header: "ID"
+  },
+  {
+    accessorKey: "routeName",
+    header: "Name",
+  },
+  {
+    id:"active",
+    header:"State",
+    cell:({row})=>{
+      return(
+        <div>
+          <p>{row.original["active"]?"Active":"Inactive"}</p>
+        </div>
+      )
+    }
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const {axios}=useAxiosClient()
+      const client = useQueryClient()
+      const toggleActivenessMutation=useMutation({
+        mutationKey:["routes",row.original["id"],"activeness"],
+        mutationFn:()=>new Promise((resolve,reject)=>{
+          axios(`routes/${row.original["id"]}`,{
+            method:"PUT"
+          }).then((resp:any)=>resolve(resp.data)).catch((err:Error)=>reject(err))
+        })
+      })
+      return (
+        <div className="flex items-center justify-end">
+          <Popover>
+            <PopoverTrigger>
+              <BsThreeDots />
+            </PopoverTrigger>
+            <PopoverContent side="left" className="p-1">
+              
+              <ConfirmationDialog message="This action will permanently change the state of this route." onClick={() => {
+                sonnerToast.promise(new Promise((resolve,reject)=>{
+                  toggleActivenessMutation.mutate(undefined,{
+                    onSuccess:(data, variables, context) =>{
+                      resolve(data)
+                      client.invalidateQueries({
+                        queryKey:["routes","all"],
+                       
+                      })
+                    },
+                    onError:(error, variables, context)=> {
+                      reject(error)
+                    },
+                  })
+                }),{
+                  loading:"Changing Terminal State...",
+                  success:"State Updated Successfully!",
+                  error:(error)=> {
+                    return (
+                      <div className="text-black flex flex-col">
+                        <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                          <MdError className="w-4 h-4 shrink " /> Error
+                        </p>
+                        <p>{error.response.data.message || error.response.data.detail}</p>
+                      </div>
+                    );
+                  }
+                })
+
+
+              }}>
+                <div
+                  role="button"
+                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                >
+                 {
+                  row.original["active"]?<Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>: <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                 }
+                  <p className="text-[0.8275rem] group-hover:font-semibold">
+                    {row.original["active"]?"Deactivate Route":"Activate Route"} 
                   </p>
                 </div>
               </ConfirmationDialog>
@@ -3154,7 +3660,7 @@ export const generalTerminalData: GeneralTerminal[] = [
 ];
 type terminalCompProps = {
   data: GeneralTerminal[];
-  navTo: () => {};
+  navTo?: () => {};
 };
 
 export const TerminalDataTable: React.FC<terminalCompProps> = ({
@@ -3174,67 +3680,139 @@ export const TerminalDataTable: React.FC<terminalCompProps> = ({
   );
 };
 
-
-
-
 type flightDataTableProps = {
   data: DelayedFlight[];
-  date?:{
-    from:Date | null,
-  }
+  date?: {
+    from: Date | null;
+  };
 };
 
-const flightsColumnDef:ColumnDef<DelayedFlight>[]=[
+export const flightsColumnDef: ColumnDef<DelayedFlight>[] = [
   {
-    accessorKey:"airline",
-    header:"Airline",
-    cell:({row})=> {
-      const nav=useNavigate();
-      const {Location}=useParams();
-      return(
-        <div role="button" className="group-hover:text-blue-500 group-hover:cursor-pointer" onClick={()=>{nav(`/DAS/Delays/Reports/${row.original.airline.replace(" ","_")}`)}}>
+    accessorKey: "airline",
+    header:({header,column})=>{
+      return (
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Airline <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+      </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      const { Location } = useParams();
+      return (
+        <div
+          role="button"
+          className="group-hover:text-blue-500 group-hover:cursor-pointer"
+          onClick={() => {
+            nav(
+              `/DAS/Delays/Reports/${row.original.airline.replace(" ", "_")}`
+            );
+          }}
+        >
           <p className="">{row.original["airline"]}</p>
         </div>
+      );
+    },
+  },
+  {
+    accessorKey: "numberOfFlight",
+    header:({header,column})=>{
+      return (
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Number Of Flights <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+      </Button>
       )
     },
   },
   {
-    accessorKey:"numberOfFlight",
-    header:"Number Of Flights"
+    accessorKey: "numberOfDelays",
+    header:({header,column})=>{
+      return (
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Number Of Delays <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+      </Button>
+      )
+    },
   },
   {
-    accessorKey:"numberOfDelays",
-    header:"Number Of Delays"
+    accessorKey: "delayLessThanHour",
+    header:({header,column})=>{
+      return (
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        {"Delays < 1 hour"} <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+      </Button>
+      )
+    },
   },
   {
-    accessorKey:"delayLessThanHour",
-    header:"Delay < 1 hour"
+    accessorKey: "delayInBetweenOneAndTwoHour",
+    header:({header,column})=>{
+      return (
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Delays 1-2 hours <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+      </Button>
+      )
+    },
   },
   {
-    accessorKey:"delayInBetweenOneAndTwoHour",
-    header:"Delay 1-2 hours"
+    accessorKey: "delayGreaterThanTwoHour",
+    header:({header,column})=>{
+      return (
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        {"Delays > 2 hours"} <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+      </Button>
+      )
+    },
   },
-  {
-    accessorKey:"delayGreaterThanTwoHour",
-    header:"Delay > 2 hours"
-  },
-  
-]
-export const FlightDataTable: React.FC<flightDataTableProps> = ({
-  data
-}) => {
+];
+export const FlightDataTable: React.FC<flightDataTableProps> = ({ data }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
-    <GenericDataTable  isExcelPresentable={false} data={data} columns={flightsColumnDef}/>
+      <GenericDataTable
+        isExcelPresentable={false}
+        data={data}
+        columns={flightsColumnDef}
+      />
     </div>
   );
 };
 export const CancelledFlightsDataTable: React.FC<flightDataTableProps> = ({
-  data
+  data,
 }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
-    <GenericDataTable data={data} columns={cancelledFlightColumnDef}/>
+      <GenericDataTable data={data} columns={cancelledFlightColumnDef} />
     </div>
   );
 };
@@ -3242,23 +3820,64 @@ export const CancelledFlightsDataTable: React.FC<flightDataTableProps> = ({
 export const cancelledFlightColumnDef: ColumnDef<cancelledFlight>[] = [
   {
     accessorKey: "airline",
-    header: "Airline",
-    cell:({row})=> {
-      const nav =useNavigate()
+    header: ({column})=>{
       return(
-        <div role="button" onClick={()=>{nav(`/Das/Cancelled/Reports/${row.original.airline.replace(" ","_")}`)}}>
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Airline <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      return (
+        <div
+        className="hover:text-blue-400 transition-all"
+          role="button"
+          onClick={() => {
+            nav(
+              `/Das/Cancelled/Reports/${row.original.airline.replace(" ", "_")}`
+            );
+          }}
+        >
           <p>{row.original.airline}</p>
         </div>
+      );
+    },
+  },
+  {
+    accessorKey: "numberOfCancelled",
+    header: ({column})=>{
+      return(
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Cancelled Flights <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
       )
     },
   },
   {
-    accessorKey: "cancelledFlight",
-    header: "Cancelled Flights",
-  },
-  {
-    accessorKey: "numberOfFlights",
-    header: "Number of Flights",
+    accessorKey: "numberOfFlight",
+    header: ({column})=>{
+      return(
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Total Flights <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
+      )
+    },
   },
 ];
 
@@ -3320,10 +3939,25 @@ export const cancelledFlightPlaceholderData: cancelledFlight[] = [
   },
 ];
 
-const reportsColumnDef: ExtendedColumnDef<Report>[] = [
+const statusFilterFn = (row:Row<Report>, id:string, filterValue:string) => {
+  console.log(filterValue,row.original)
+ if(filterValue==="" as any) return true
+ if(filterValue==="Delayed") return row.original["delayed" as keyof Report]
+ if(filterValue==="On Time") return row.original["onTime" as keyof Report]
+ if(filterValue==="Cancelled") return row.original["cancelled" as keyof Report]
+ else{
+  return true
+ }
+};
+
+export const arrivalReportsColumnDef: ColumnDef<Report>[] = [
   {
-    accessorKey:"id",
-    header:"ID"
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
+    accessorKey: "airline",
+    header: "Airline",
   },
   {
     accessorKey: "flightNumber",
@@ -3335,108 +3969,375 @@ const reportsColumnDef: ExtendedColumnDef<Report>[] = [
   },
   {
     accessorKey: "sta",
-    header: "STA / STD",
-    cell:({row})=> {
-     return( <div>
-        <p className="text-sm">{row.original["stipulatedTimeArrived"] || row.original.stipulatedTimeDeparted}</p>
-      </div>)
+    header: "STA",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["stipulatedTimeArrived"] ||
+              row.original.stipulatedTimeDeparted}
+          </p>
+        </div>
+      );
     },
   },
   {
     accessorKey: "ata",
-    header: "ATA / ATD",
-    cell:({row})=> {
-      return( <div>
-         <p className="text-sm">{row.original.actualTimeArrived || row.original.actualTimeDeparted}</p>
-       </div>)
-    }
+    header: "ATA",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original.actualTimeArrived || row.original.actualTimeDeparted}
+          </p>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "delayedDifferenceInHour",
     header: "Delay",
-    cell:({row})=> {
-      const hours = Math.floor(parseInt(row.original["delayedDifferenceInHour"]!)/3600)
-      const remainingSeconds =Math.floor(parseInt(row.original["delayedDifferenceInHour"]!)%3600)
-      const minutes = Math.floor(remainingSeconds/60);
-      return( <div>
-         <p className="text-sm">{row.original["delayedDifferenceInHour"]?`${hours} hours , ${minutes} minutes`:'----'}</p>
-       </div>)
-    }
+    cell: ({ row }) => {
+      const hours = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+      );
+      const remainingSeconds = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+      );
+      const minutes = Math.floor(remainingSeconds / 60);
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["delayedDifferenceInHour"]
+              ? `${hours} hours , ${minutes} minutes`
+              : "----"}
+          </p>
+        </div>
+      );
+    },
   },
+  // {
+  //   accessorKey: "isDelayed",
+  //   header: "Is Delayed",
+  //   cell: ({ row }) => {
+  //     return (
+  //       <div className="w-full flex flex-row items-center justify-center">
+  //         {row.original["delayed"] ? (
+  //           <Check className="w-5 h-5 shrink text-green-600 " />
+  //         ) : (
+  //           <X className="w-5 h-5 shrink text-red-500" />
+  //         )}
+  //       </div>
+  //     );
+  //   },
+  // },
+  // {
+  //   accessorKey: "isOnTime",
+  //   header: "Is On Time",
+  //   cell: ({ row }) => {
+  //     return (
+  //       <div className="w-full flex flex-row items-center justify-center">
+  //         {row.original["onTime"] ? (
+  //           <Check className="w-5 h-5 shrink text-green-600 " />
+  //         ) : (
+  //           <X className="w-5 h-5 shrink text-red-500" />
+  //         )}
+  //       </div>
+  //     );
+  //   },
+  // },
+  // {
+  //   accessorKey: "isCancelled",
+  //   header: "is Cancelled",
+  //   cell: ({ row }) => {
+  //     return (
+  //       <div className="w-full flex flex-row items-center justify-center">
+  //         {row.original["cancelled"] ? (
+  //           <Check className="w-5 h-5 shrink text-green-600 " />
+  //         ) : (
+  //           <X className="w-5 h-5 shrink text-red-500" />
+  //         )}
+  //       </div>
+  //     );
+  //   },
+  // },
   {
-    accessorKey: "isDelayed",
-    header: "Is Delayed",
-    cell:({row})=>{
+    accessorKey:"Status",
+    id:"status",
+    enableColumnFilter:true,
+    filterFn:statusFilterFn as any,
+    header:({column,table})=>{
+      const {setCurrentFilters}=useContext(FilterContext)
+      return(
+        <Select
+          onValueChange={(value) => {
+            setCurrentFilters((state) => [
+              ...state.filter(filter => filter.id !== 'status'),
+              { id: "status", value: value === "ALL" ? "" : value },
+            ]);
+          }}
+        >
+        <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent ">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+        <SelectItem value="ALL">ALL</SelectItem>
+            <SelectItem value="On Time">On Time</SelectItem>
+            <SelectItem value="Delayed">Delayed</SelectItem>
+            <SelectItem value="Cancelled">Cancelled</SelectItem>
+        </SelectContent>
+      </Select>
+      )
+    },
+    cell: ({ row }) => {
+      let status = "On Time";
+      if (row.original.cancelled) {
+        status = "Cancelled";
+      } else if (row.original.delayed) {
+        status = "Delayed";
+      }
       return (
         <div className="w-full flex flex-row items-center justify-center">
-          {
-            row.original["delayed"]?<Check className="w-5 h-5 shrink text-green-600 "/>:<X className="w-5 h-5 shrink text-red-500"/>
-          }
+          <p className="text-sm">{status}</p>
         </div>
-      )
-    }
-  },
-  {
-    accessorKey: "isOnTime",
-    header: "Is On Time",
-    cell:({row})=>{
-      return (
-        <div className="w-full flex flex-row items-center justify-center">
-          {
-            row.original["onTime"]?<Check className="w-5 h-5 shrink text-green-600 "/>:<X className="w-5 h-5 shrink text-red-500"/>
-          }
-        </div>
-      )
-    }
-  },
-  {
-    accessorKey: "isCancelled",
-    header: "is Cancelled",
-    cell:({row})=>{
-      return (
-        <div className="w-full flex flex-row items-center justify-center">
-          {
-            row.original["cancelled"]?<Check className="w-5 h-5 shrink text-green-600 "/>:<X className="w-5 h-5 shrink text-red-500"/>
-          }
-        </div>
-      )
-    }
+      );
+    },
   },
   {
     accessorKey: "reportType",
-    enableColumnFilter:true,
-  header:({table})=> {
-    const {currentFilters,setCurrentFilters}=useContext(FilterContext)
-    return (
-      <Select onValueChange={(value)=>{setCurrentFilters((state)=>([...state,{
-        id:"reportType",
-        value
-      }]))}}>
-        <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent">
-          <SelectValue placeholder="Select A Reprot Type."/>
-        </SelectTrigger>
-        <SelectContent>
-            <SelectItem value="ARRIVAL">
-              Arrival
-            </SelectItem>
-            <SelectItem value="DEPARTURE">
-              Departure
-            </SelectItem>
-        </SelectContent>
-      </Select>
-    )
-  },
-    cell:({row})=>{
+    enableColumnFilter: true,
+    header: ({ table,column, }) => {
+      const { currentFilters, setCurrentFilters } = useContext(FilterContext);
+      return (
+        <Select
+        onValueChange={(value) => {
+          setCurrentFilters((state) => [
+            ...state.filter(filter => filter.id !== 'reportType'),
+            { id: "reportType", value: value === "ALL" ? "" : value },
+          ]);
+        }}
+        >
+          <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent w-40">
+            <SelectValue placeholder="Reprot Type." />
+          </SelectTrigger>
+          <SelectContent>
+          <SelectItem value="ALL">ALL</SelectItem>
+            <SelectItem value="ARRIVAL">Arrival</SelectItem>
+            <SelectItem value="DEPARTURE">Departure</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    },
+    sortingFn:(row:Row<Report>,id:string,value:string)=>{
+      if(value==="ALL")return true
+      else{
+        return row.original["reportType"].includes(value)
+      }
+    },
+    cell: ({ row }) => {
       return (
         <div className="w-full flex flex-row items-center justify-center">
           <p className="text-sm">
-          {
-            row.original["reportType"]==="ARRIVAL"?'Arrival':'Departure'
-          }
+            {row.original["reportType"] === "ARRIVAL" ? "Arrival" : "Departure"}
           </p>
         </div>
+      );
+    },
+  },
+];
+export const departureReportsColumnDef: ColumnDef<Report>[] = [
+  {
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
+    accessorKey: "airline",
+    header: "Airline",
+  },
+  {
+    accessorKey: "flightNumber",
+    header: "Flight Number",
+  },
+  {
+    accessorKey: "route",
+    header: "Route",
+  },
+  {
+    accessorKey: "sta",
+    header: "STD",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["stipulatedTimeArrived"] ||
+              row.original.stipulatedTimeDeparted}
+          </p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "ata",
+    header: "ATD",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original.actualTimeArrived || row.original.actualTimeDeparted}
+          </p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "delayedDifferenceInHour",
+    header: "Delay",
+    cell: ({ row }) => {
+      const hours = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+      );
+      const remainingSeconds = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+      );
+      const minutes = Math.floor(remainingSeconds / 60);
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["delayedDifferenceInHour"]
+              ? `${hours} hours , ${minutes} minutes`
+              : "----"}
+          </p>
+        </div>
+      );
+    },
+  },
+  // {
+  //   accessorKey: "isDelayed",
+  //   header: "Is Delayed",
+  //   cell: ({ row }) => {
+  //     return (
+  //       <div className="w-full flex flex-row items-center justify-center">
+  //         {row.original["delayed"] ? (
+  //           <Check className="w-5 h-5 shrink text-green-600 " />
+  //         ) : (
+  //           <X className="w-5 h-5 shrink text-red-500" />
+  //         )}
+  //       </div>
+  //     );
+  //   },
+  // },
+  // {
+  //   accessorKey: "isOnTime",
+  //   header: "Is On Time",
+  //   cell: ({ row }) => {
+  //     return (
+  //       <div className="w-full flex flex-row items-center justify-center">
+  //         {row.original["onTime"] ? (
+  //           <Check className="w-5 h-5 shrink text-green-600 " />
+  //         ) : (
+  //           <X className="w-5 h-5 shrink text-red-500" />
+  //         )}
+  //       </div>
+  //     );
+  //   },
+  // },
+  // {
+  //   accessorKey: "isCancelled",
+  //   header: "is Cancelled",
+  //   cell: ({ row }) => {
+  //     return (
+  //       <div className="w-full flex flex-row items-center justify-center">
+  //         {row.original["cancelled"] ? (
+  //           <Check className="w-5 h-5 shrink text-green-600 " />
+  //         ) : (
+  //           <X className="w-5 h-5 shrink text-red-500" />
+  //         )}
+  //       </div>
+  //     );
+  //   },
+  // },
+  {
+    accessorKey:"Status",
+    id:"status",
+    enableColumnFilter:true,
+    filterFn:statusFilterFn as any,
+    header:({column,table})=>{
+      const {setCurrentFilters}=useContext(FilterContext)
+      return(
+        <Select
+          onValueChange={(value) => {
+            setCurrentFilters((state) => [
+              ...state.filter(filter => filter.id !== 'status'),
+              { id: "status", value: value === "ALL" ? "" : value },
+            ]);
+          }}
+        >
+        <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent ">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+        <SelectItem value="ALL">ALL</SelectItem>
+            <SelectItem value="On Time">On Time</SelectItem>
+            <SelectItem value="Delayed">Delayed</SelectItem>
+            <SelectItem value="Cancelled">Cancelled</SelectItem>
+        </SelectContent>
+      </Select>
       )
-    }
+    },
+    cell: ({ row }) => {
+      let status = "On Time";
+      if (row.original.cancelled) {
+        status = "Cancelled";
+      } else if (row.original.delayed) {
+        status = "Delayed";
+      }
+      return (
+        <div className="w-full flex flex-row items-center justify-center">
+          <p className="text-sm">{status}</p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "reportType",
+    enableColumnFilter: true,
+    header: ({ table,column, }) => {
+      const { currentFilters, setCurrentFilters } = useContext(FilterContext);
+      return (
+        <Select
+        onValueChange={(value) => {
+          setCurrentFilters((state) => [
+            ...state.filter(filter => filter.id !== 'reportType'),
+            { id: "reportType", value: value === "ALL" ? "" : value },
+          ]);
+        }}
+        >
+          <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent w-40">
+            <SelectValue placeholder="Reprot Type." />
+          </SelectTrigger>
+          <SelectContent>
+          <SelectItem value="ALL">ALL</SelectItem>
+            <SelectItem value="ARRIVAL">Arrival</SelectItem>
+            <SelectItem value="DEPARTURE">Departure</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    },
+    sortingFn:(row:Row<Report>,id:string,value:string)=>{
+      if(value==="ALL")return true
+      else{
+        return row.original["reportType"].includes(value)
+      }
+    },
+    cell: ({ row }) => {
+      return (
+        <div className="w-full flex flex-row items-center justify-center">
+          <p className="text-sm">
+            {row.original["reportType"] === "ARRIVAL" ? "Arrival" : "Departure"}
+          </p>
+        </div>
+      );
+    },
   },
 ];
 
@@ -3481,20 +4382,20 @@ export function ReportsDataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell: any, index: number) =>
-                    cell.column.columnDef.accesorKey === "isOnTime" ||
-                    cell.column.columnDef.accesorKey === "isDelayed" ||
-                    cell.column.columnDef.accesorKey === "isCancelled" ? (
+                    cell.column.columnDef.accessorKey === "isOnTime" ||
+                    cell.column.columnDef.accessorKey === "isDelayed" ||
+                    cell.column.columnDef.accessorKey === "isCancelled" ? (
                       <TableCell
                         key={cell.id}
                         className={`text-center ${
-                          cell.column.columnDef.accesorKey === "groupName" &&
+                          cell.column.columnDef.accessorKey === "groupName" &&
                           "font-semibold"
                         } whitespace-nowrap hover:cursor-pointer hover:text-blue-300`}
                       >
-                        {row.original[cell.column.columnDef.accesorKey] ? (
+                        {row.original[cell.column.columnDef.accessorKey] ? (
                           <CiCircleCheck className="text-green-600" />
                         ) : (
-                          <IoMdClose className="text-red-500 "  />
+                          <IoMdClose className="text-red-500 " />
                         )}
                       </TableCell>
                     ) : (
@@ -3529,11 +4430,16 @@ export function ReportsDataTable<TData, TValue>({
 
 type reportProps = {
   data: any[];
+  reportConfig:any[]
 };
-export const ReportsTable: React.FC<reportProps> = ({ data }) => {
+export const ReportsTable: React.FC<reportProps> = ({ data,reportConfig }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
-      <GenericDataTable isExcelPresentable={false} data={data} columns={reportsColumnDef}/>
+      <GenericDataTable
+        isExcelPresentable={false}
+        data={data}
+        columns={reportsColumnDef}
+      />
     </div>
   );
 };
@@ -3544,55 +4450,63 @@ type cpo = {
   email: string;
 };
 
-type airline={
-  id:string,
-  email:string,
-  firstName:string,
-  lastName:string,
-  airline:string
-}
+type airline = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  airline: string;
+};
 export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
   {
-    accesorKey: "id",
+    accessorKey: "id",
     header: "ID",
   },
   {
-    accesorKey: "email",
+    accessorKey: "email",
     header: "Email",
+    cell:({row})=>{
+      const nav=useNavigate()
+      const group = new URLSearchParams(useLocation().search).get("group")
+      return(
+        <div onClick={()=>{nav(`/CPD/Configuration/User/${row.original["id"]}?group=${group}`)}} role="button" className="hover:text-blue-400 transition-all">
+          <p>{row.original.email}</p>
+          </div>
+      )
+    }
   },
   {
-    accesorKey: "firstName",
+    accessorKey: "firstName",
     header: "First Name",
   },
   {
-    accesorKey: "lastName",
+    accessorKey: "lastName",
     header: "Last Name",
   },
 ];
 
-export const AirlineTableColumnDef:ColumnDef<airline>[]=[
+export const AirlineTableColumnDef: ColumnDef<airline>[] = [
   {
-    accesorKey: "id",
+    accessorKey: "id",
     header: "ID",
   },
   {
-    accesorKey:"airline",
-    header:"Airline"
+    accessorKey: "airline",
+    header: "Airline",
   },
   {
-    accesorKey: "email",
+    accessorKey: "email",
     header: "Email",
   },
   {
-    accesorKey: "firstName",
+    accessorKey: "firstName",
     header: "First Name",
   },
   {
-    accesorKey: "lastName",
+    accessorKey: "lastName",
     header: "Last Name",
   },
-
-]
+];
 export function CpoViewTable<TData, TValue>({
   columns,
   data,
@@ -3728,23 +4642,23 @@ const RegularTableCellCPO = ({
   navto: (id: string) => void;
   group: string;
 }) => {
-  return cell.column.columnDef.accesorKey.toLowerCase().includes("email") ? (
+  return cell.column.columnDef.accessorKey.toLowerCase().includes("email") ? (
     <TableCell
       key={cell.id}
       onClick={() => {
-        if (cell.column.columnDef.accesorKey.toLowerCase().includes("email")) {
+        if (cell.column.columnDef.accessorKey.toLowerCase().includes("email")) {
           navto(`/CPD/Tickets/CPO/${row.original["id"]}?group=${group}`);
         }
       }}
       className={`${
-        cell.column.columnDef.accesorKey.toLowerCase().includes("email") &&
+        cell.column.columnDef.accessorKey.toLowerCase().includes("email") &&
         "text-center whitespace-nowrap hover:text-blue-300 hover:cursor-pointer"
       } text-center`}
     >
       {flexRender(
-        cell.column.columnDef.accesorKey === "id"
-          ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
-          : row.original[cell.column.columnDef.accesorKey],
+        cell.column.columnDef.accessorKey === "id"
+          ? row.original[cell.column.columnDef.accessorKey].toString() // Convert ID to string
+          : row.original[cell.column.columnDef.accessorKey],
         cell.getContext()
       )}
     </TableCell>
@@ -3752,15 +4666,15 @@ const RegularTableCellCPO = ({
     <TableCell
       key={cell.id}
       className={`${
-        cell.column.columnDef.accesorKey === "name"
+        cell.column.columnDef.accessorKey === "name"
           ? "text-start"
           : "text-center"
       } whitespace-nowrap`}
     >
       {flexRender(
-        cell.column.columnDef.accesorKey === "id"
-          ? row.original[cell.column.columnDef.accesorKey].toString() // Convert ID to string
-          : row.original[cell.column.columnDef.accesorKey],
+        cell.column.columnDef.accessorKey === "id"
+          ? row.original[cell.column.columnDef.accessorKey].toString() // Convert ID to string
+          : row.original[cell.column.columnDef.accessorKey],
         cell.getContext()
       )}
     </TableCell>
@@ -3768,17 +4682,17 @@ const RegularTableCellCPO = ({
 };
 
 type accountRequest = {
-  id:string;
+  id: string;
   email: string;
   contactNumber: string;
   contactmail: string;
   airlineName: string;
 };
 
-const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
+export const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
   {
-    accessorKey:"id",
-    header:"ID"
+    accessorKey: "id",
+    header: "ID",
   },
   {
     accessorKey: "email",
@@ -3802,9 +4716,9 @@ const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
       const handleReview = (id: string, status: boolean) => {
         sonnerToast.promise(
           new Promise((resolve, reject) => {
-            if(handlingRequest)return;
-            axios(`airlines/accounts/review/${id}?approved=${status}`,{
-              method:"PUT",
+            if (handlingRequest) return;
+            axios(`airlines/accounts/review/${id}?approved=${status}`, {
+              method: "PUT",
             })
               .then((resp: any) => {
                 resolve(resp.data);
@@ -3813,23 +4727,28 @@ const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
                   queryKey: ["airline", "account", "request"],
                 });
               })
-              .catch((err:any) => {
+              .catch((err: any) => {
                 setHandlingRequest(false);
                 reject(err);
               });
           }),
           {
-            loading:status?"Trying to create airline account...":"Deleting request...",
-            success:status?"Request accepted successfully!":"Request deleted successfully!",
-            error:(error)=> {
+            loading: status
+              ? "Trying to create airline account..."
+              : "Deleting request...",
+            success: status
+              ? "Request accepted successfully!"
+              : "Request deleted successfully!",
+            error: (error) => {
               return (
                 <div className="flex flex-col space-y-2 text-black">
                   <div className="flex items-center">
-                    <CiWarning className="w-5 h-5 shrink"/> <p className="font-semibold text-[0.8275rem]">Error</p>
+                    <CiWarning className="w-5 h-5 shrink" />{" "}
+                    <p className="font-semibold text-[0.8275rem]">Error</p>
                   </div>
                   <p>{error.response.data.message}</p>
                 </div>
-              )
+              );
             },
           }
         );
@@ -3844,10 +4763,15 @@ const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
               className="bg-white  rounded-md px-0 py-0 w-40 divide-y-2 divide-y-neutral-100"
               side="left"
             >
-              <ConfirmationDialog message="This action cannot be undone.This Account Request will be deleted and the user will have no access to the system." title="Are you sure you want to reject it?" onClick={()=>{handleReview(row.original["id"],false)}}>
+              <ConfirmationDialog
+                message="This action cannot be undone.This Account Request will be deleted and the user will have no access to the system."
+                title="Are you sure you want to reject it?"
+                onClick={() => {
+                  handleReview(row.original["id"], false);
+                }}
+              >
                 <div
                   role="button"
-              
                   className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
                 >
                   <Trash className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -3856,10 +4780,15 @@ const accountRequestTableColumnDef: ColumnDef<accountRequest>[] = [
                   </p>
                 </div>
               </ConfirmationDialog>
-              <ConfirmationDialog message="This action cannot be undone.This Account will be created and granted access to the system." title="Are you sure you want to accept it?" onClick={()=>{handleReview(row.original["id"],true)}}>
+              <ConfirmationDialog
+                message="This action cannot be undone.This Account will be created and granted access to the system."
+                title="Are you sure you want to accept it?"
+                onClick={() => {
+                  handleReview(row.original["id"], true);
+                }}
+              >
                 <div
                   role="button"
-                  
                   className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
                 >
                   <CheckCheck className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -3944,468 +4873,838 @@ export const ConfirmationDialog = ({
   message,
 }: {
   children: React.ReactElement;
-  onClick:()=>void;
-  title?:string,
-  message?:string
+  onClick: () => void;
+  title?: string;
+  message?: string;
 }) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title||"Are you absolutely sure?"}</AlertDialogTitle>
+          <AlertDialogTitle>
+            {title || "Are you absolutely sure?"}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-           {message || " This action cannot be undone. This will permanently delete your account and remove your data from our servers."}
+            {message ||
+              " This action cannot be undone. This will permanently delete your account and remove your data from our servers."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={()=>onClick()}>Continue</AlertDialogAction>
+          <AlertDialogAction onClick={() => onClick()}>
+            Continue
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 };
- type filterContextProviderType={
-  currentFilters:ColumnFilter[],
-  setCurrentFilters:React.Dispatch<React.SetStateAction<ColumnFilter[]>>
- }
- const FilterContext=createContext<filterContextProviderType>({
-  currentFilters:[],
-  setCurrentFilters:()=>{}
-})
-interface GenericDataTableProps<TData, TValue> extends DataTableProps<TData, TValue>{
-  isExcelPresentable?:boolean
+type filterContextProviderType = {
+  currentFilters: ColumnFiltersState;
+  setCurrentFilters: React.Dispatch<React.SetStateAction<ColumnFiltersState>>;
+};
+const FilterContext = createContext<filterContextProviderType>({
+  currentFilters: [],
+  setCurrentFilters: () => {},
+});
+interface GenericDataTableProps<TData, TValue>
+  extends DataTableProps<TData, TValue> {
+  isExcelPresentable?: boolean;
+  isHeaderSticky?:boolean;
+  showColumnFilter?:boolean;
+  downloadExcel?:boolean;
+  hasFilter?:boolean;
+  filterColumn?:string;
+  headerClassname?:string;
+  rowClassname?:string;
+  tableClassname?:string;
+  reportConfig?:any[];
+  DownloadComponent?:React.FC<{data:any[]}>,
+  filterHeader?:string
 }
-export function GenericDataTable<TData, TValue>({columns,data,hasAssignment=false,isDraft=false,isExcelPresentable=false}:GenericDataTableProps<TData, TValue>){
-  
-  const [currentFilters,setCurrentFilters]=useState<ColumnFilter[]>([])
-  const table=useReactTable(
+
+export function GenericDataTable<TData, TValue>({
+  columns,
+  data,
+  hasAssignment = false,
+  isDraft = false,
+  isExcelPresentable = false,
+  isHeaderSticky=false,
+  showColumnFilter=false,
+  downloadExcel=false,
+  hasFilter=false,
+  filterColumn="",
+  headerClassname="",
+  rowClassname="",
+  tableClassname="",
+  reportConfig=[],
+  filterHeader="",
+  DownloadComponent
+}: GenericDataTableProps<TData, TValue>) {
+   const [currentFilters, setCurrentFilters] = useState<ColumnFilter[]>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnVisibility,setColumnVisibility]=useState<VisibilityState>({})
+  const [columnFilters,setColumnFilters]=useState<ColumnFiltersState>([])
+  const {user}=useAuth()
+  const table = useReactTable({
+    data,
+    columns,
+
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    onColumnVisibilityChange:setColumnVisibility,
+    onColumnFiltersChange:setColumnFilters,
+    state: {
+      columnFilters: columnFilters,
+      sorting,
+      columnVisibility:columnVisibility
+    },
+  });
+
+
+
+
+  return (
+    <>
+  <div className="flex items-center justify-end gap-x-3 my-2 px-1.5">
     {
-      data,
-      columns,
-      getCoreRowModel:getCoreRowModel(),
-      getFilteredRowModel:getFilteredRowModel(),
-      state:{
-        columnFilters:currentFilters
-      }
-    },
-    
-  )
-  
- return(
-  <FilterContext.Provider value={{currentFilters,setCurrentFilters}}>
-  <Table>
-  <TableHeader>
-    {table.getHeaderGroups().map((headerGroup) => (
-      <TableRow key={headerGroup.id}>
-        {headerGroup.headers.map((header) => {
-          return (
-            <TableHead className={cn("text-center",isExcelPresentable&&"border-2 border-neutral-200 min-w-4 p-1 h-4 text-black dark:text-black whitespace-nowrap")} key={header.id}>
-              {header.isPlaceholder
-                ? null
-                : flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-            </TableHead>
-          )
-        })}
-      </TableRow>
-    ))}
-  </TableHeader>
-  <TableBody>
-    {table.getRowModel().rows?.length ? (
-      table.getRowModel().rows.map((row) => (
-        <TableRow
-          key={row.id}
-          data-state={row.getIsSelected() && "selected"}
-          className={cn(isExcelPresentable&&"")}
-        >
-          {row.getVisibleCells().map((cell) => (
-            <TableCell className={cn("text-center",isExcelPresentable&&"border-2 border-neutral-200 min-w-4 p-1 h-4  whitespace-nowrap ")} key={cell.id}>
-              {flexRender(
-                cell.column.columnDef.cell,
-                cell.getContext()
-              )}
-            </TableCell>
+      hasFilter && <input type="text" value={table.getColumn(filterColumn)?.getFilterValue() as string} onChange={(e)=>{table.getColumn(filterColumn as string)?.setFilterValue(e.target.value)}} name="" className="w-56 h-10 rounded-lg outline-none border-2 border-neutral-300 text-sm" placeholder={`Filter: ${filterHeader}`} id="" />
+    }
+   {
+    downloadExcel && DownloadComponent? <DownloadComponent data={data}/>:<></>
+   }
+  {showColumnFilter&& 
+   <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className=" dark:bg-ncBlue bg-ncBlue text-white dark:text- ">
+              Columns
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {table
+              .getAllColumns()
+              .filter(
+                (column) => column.getCanHide()
+              )
+              .map((column) => {
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible() as boolean}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
+                )
+              })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+         }
+   </div>
+ 
+    <FilterContext.Provider value={{ currentFilters:columnFilters, setCurrentFilters:setColumnFilters }}>
+      <Table className={cn(tableClassname)}>
+        <TableHeader className={cn(isHeaderSticky&&"sticky top-0",headerClassname)}>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className={cn(isHeaderSticky&&"sticky top-0 r",headerClassname)}>
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead
+                    className={cn(
+                      "text-center",
+                      isExcelPresentable &&
+                        "border-2 border-neutral-200 min-w-4 p-1 h-4 text-black dark:text-black whitespace-nowrap",isHeaderSticky && "sticky top-0"
+                    )}
+                    key={header.id}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
           ))}
-        </TableRow>
-      ))
-    ) : (
-      <TableRow>
-        <TableCell
-          colSpan={columns.length}
-          className="h-24 text-center"
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row,index) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+                className={cn(isExcelPresentable && "",rowClassname,index%2===1?"bg-[#F4F5FF]":"bg-white")}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell
+                    className={cn(
+                      "text-center",
+                      isExcelPresentable &&
+                        "border-2 border-neutral-200 min-w-4 p-1 h-4  whitespace-nowrap "
+                    )}
+                    key={cell.id}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </FilterContext.Provider>
+    </>
+  );
+}
+
+type airlineReportsTableEntry = {
+  airline: string;
+  numberOfComplaints: string;
+  numberOfResolvedComplaints: string;
+  resolutionRating: string;
+};
+
+const airlineReportsTableColumnDef: ColumnDef<airlineReportsTableEntry>[] = [
+  {
+    accessorKey: "airline",
+    header: "Airline",
+  },
+  {
+    accessorKey: "numberOfComplaints",
+    header: "Number Of Complaints",
+  },
+  {
+    accessorKey: "numberOfResolvedComplaints",
+    header: "Number of Resolved Complaints",
+  },
+  {
+    accessorKey: "resolutionRating",
+    header: ({ header }) => {
+      return (
+        <div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-sm cursor-pointer">Resolution Rating</p>
+              </TooltipTrigger>
+              <TooltipContent className=" dark:bg-white bg-white text-black w-60 p-1 cursor-pointer">
+                <p className="text-[0.75rem] text-neutral-600">
+                  Dervied from dividing the account's total number of
+                  complaints/ the account's number of resolved complaints.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      );
+    },
+  },
+];
+
+export const AirlineReportsDataTable: React.FC<{
+  data: airlineReportsTableEntry[];
+}> = ({ data }) => {
+  return (
+    <div>
+      <GenericDataTable
+        hasAssignment={false}
+        isDraft={false}
+        data={data.sort(
+          (a, b) =>
+            parseFloat(b.resolutionRating) - parseFloat(a.resolutionRating)
+        )}
+        columns={airlineReportsTableColumnDef}
+      />
+    </div>
+  );
+};
+
+type backlogTicket = {
+  airline: string;
+  activeTickets: string;
+  unresolvedTickets: string;
+  total: string;
+};
+export const ticketBacklogColumnDef: ColumnDef<backlogTicket>[] = [
+  {
+    accessorKey: "airline",
+    header: "Airline",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="whitespace-nowrap">{row.original.airline}</p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "activeTickets",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
         >
-          No results.
-        </TableCell>
-      </TableRow>
-    )}
-  </TableBody>
-</Table>
-</FilterContext.Provider>
- )
-}
-
-type airlineReportsTableEntry ={
-  airline:string,
-  numberOfComplaints:string,
-  numberOfResolvedComplaints:string,
-  resolutionRating:string,
-}
-
-const airlineReportsTableColumnDef:ColumnDef<airlineReportsTableEntry>[]=[
-  {
-    accessorKey:"airline",
-    header:"Airline",
-    
-  },{
-    accessorKey:"numberOfComplaints",
-    header:"Number Of Complaints"
+          Assigned Tickets <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+        </Button>
+      );
+    },
   },
   {
-    accessorKey:"numberOfResolvedComplaints",
-    header:"Number of Resolved Complaints"
-  },
-  {
-    accessorKey:"resolutionRating",
-    header:({header})=>{
+    accessorKey: "unresolvedTickets",
+    sortingFn: (rowA, rowB, columnId) => {
       return (
-        <div>
-        <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <p className="text-sm cursor-pointer">Resolution Rating</p>
-          </TooltipTrigger>
-          <TooltipContent className=" dark:bg-white bg-white text-black w-60 p-1 cursor-pointer">
-            <p className="text-[0.75rem] text-neutral-600">
-              Dervied from dividing the account's total number of complaints/ the account's number of resolved complaints.
-            </p>
-          </TooltipContent>
-         </Tooltip>
-        </TooltipProvider>
-        </div>
-      )
-    }
-  }
-]
-
-export const AirlineReportsDataTable:React.FC<{
-  data:airlineReportsTableEntry[]
-}>=({data})=>{
-  return(
-    <div>
-<GenericDataTable hasAssignment={false} isDraft={false}  data={data.sort((a,b)=>parseFloat(b.resolutionRating)-parseFloat(a.resolutionRating))} columns={airlineReportsTableColumnDef}/>
-    </div>
-  )
-}
-
-type backlogTicket={
-  airline:string,
-  activeTickets:string,
-  unresolvedTickets:string, 
-  total:string
-}
-export const ticketBacklogColumnDef:ColumnDef<backlogTicket>[]=[{
-  accessorKey:"airline",
-  header:"Airline"
-},{
-  accessorKey:"activeTickets",
-  header:"Active Tickets"
-},
-{
-  accessorKey:"unresolvedTickets",
-  header:"Unresolved Tickets"
-},
-{
-  id:"Backlog",
-  header:"% Backlog",
-  cell:({row})=> (
-    <div>
-      <p>{`${(parseFloat(row.original.unresolvedTickets)/parseFloat(row.original.activeTickets)*100).toPrecision(3)}%`}</p>
-    </div>
-  ),
-},
-{
-  accessorKey:"total",
-  header:"% Total",
-  cell:({row})=>(
-    <div>
-    <p>{`${(parseFloat(row.original.unresolvedTickets)/parseFloat(row.original.total)*100).toPrecision(3)}%`}</p>
-  </div>
-  )
-}
-]
-
-type OnTimePerformanceEntry={
-  airline:string,
-  totalFlights:string,
-  onTimeFlights:string,
- 
-}
-
-export const OnTimeTableColumnDef:ColumnDef<OnTimePerformanceEntry>[]=[
-  {
-    accessorKey:"airline",
-    header:"Airline"
+        parseInt(rowA.original.unresolvedTickets) -
+        parseInt(rowB.original.unresolvedTickets)
+      );
+    },
+    invertSorting: true,
+    header: ({ column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Unassigned Tickets <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+        </Button>
+      );
+    },
   },
   {
-    accessorKey:"totalFlights",
-    header:"Total Flights"
-  },
-  {
-    accessorKey:"onTimeFlights",
-    header:"On Time Flights"
-  },
-  {
-    id:"onTimePercentage",
-    header:"% On Time",
-    cell:({row})=>{
-      return(
-        <div>
-          <p>{`${((parseFloat(row.original.onTimeFlights)/parseFloat(row.original.totalFlights)).toPrecision(3)*100)}%`}</p>
-        </div>
-      )
-    }
-  }
-]
-
-type disruptionLeaderEntry={
-  airline:string,
-  totalFlights:string,
-  disruptedFlights:string
-}
-type bestPerformingEntry={
-  airline:string,
-  activeTickets:string,
-  resolvedTickets:string
-}
-
-export const disruptionLeaderColumnDef:ColumnDef<disruptionLeaderEntry>[]=[{
-  accessorKey:"airline",
-  header:"Airline",
-},
-{
-accessorKey:"totalFlights",
-header:"Total Flights"
-},
-{
-  accessorKey:"disruptedFlights",
-  header:"Disrupted Flights"
-},
-{
-  id:"disruptionPercent",
-  header:"% disrupted",
-  cell:({row})=>{
-    return(
+    id: "Backlog",
+    sortingFn: (rowA, rowB, columnId) => {
+      const unresolvedRatioA = parseFloat(
+        (
+          (parseFloat(rowA.original.unresolvedTickets) /
+            parseFloat(rowA.original.activeTickets)) *
+          100
+        ).toPrecision(2)
+      );
+      const unresolvedRatioB = parseFloat(
+        (
+          (parseFloat(rowB.original.unresolvedTickets) /
+            parseFloat(rowB.original.activeTickets)) *
+          100
+        ).toPrecision(2)
+      );
+      return unresolvedRatioA - unresolvedRatioB;
+    },
+    header: ({ column }) => {
+      return (
+        <Button
+          className="flex group items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          % Backlog{" "}
+          <ArrowUpDown className="w-4 opacity-0 group-hover:opacity-100 transition-all h-4 shrink ml-2" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
       <div>
-        <p>{`${((parseFloat(row.original.disruptedFlights)/parseFloat(row.original.totalFlights)).toPrecision(3)*100)}%`}</p>
+        <p>{`${(
+          (parseFloat(row.original.unresolvedTickets) /
+            parseFloat(row.original.activeTickets)) *
+          100
+        ).toPrecision(3)}%`}</p>
       </div>
-    )
-  }
-}
-
-]
-export const bestPerformingColumnDef:ColumnDef<bestPerformingEntry>[]=[{
-  accessorKey:"airline",
-  header:"Airline",
-},
-{
-accessorKey:"activeTickets",
-header:"Active Tickets"
-},
-{
-  accessorKey:"resolvedTickets",
-  header:"Resolved Tickets"
-},
-{
-  id:"resolved percent",
-  header:"% resolved",
-  cell:({row})=>{
-    return(
+    ),
+  },
+  {
+    accessorKey: "total",
+    header: "% Total",
+    cell: ({ row }) => (
       <div>
-        <p>{`${((parseFloat(row.original.resolvedTickets)/parseFloat(row.original.activeTickets)).toPrecision(3)*100)}%`}</p>
+        <p>{`${(
+          (parseFloat(row.original.unresolvedTickets) /
+            parseFloat(row.original.total)) *
+          100
+        ).toPrecision(3)}%`}</p>
       </div>
-    )
-  }
-}
-]
+    ),
+  },
+];
 
-type fdrEntry={
-  airline:string,
-  dateOfIncidence:string,
-  route:string,
-  scheduledTimeDeparture:string,
-  scheduledTimeArrival:string,
-  expectedTimeDeparture:string,
-  expectedTimeArrival:string,
-  complianceList:any[],
-  reasonForDelay?:string,
-  reasonForCancellation?:string,
-  reasonForTarmacDelay?:string,
-}
-export const fdrColumnDef:ColumnDef<fdrEntry>[]=[
+type flightPerformanceColumnEntry = {
+  airline: string;
+  totalFlights: string;
+  delayedFlights:string;
+  cancelledFlights:string;
+  onTimeFlights: string;
+  disruptedFlights: string;
+};
+
+export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
   {
-    accessorKey:"airline",
-    header:"Airline"
+    accessorKey: "airline",
+    header: "Airline",
   },
   {
-    accessorKey:"dateOfIncidence",
-    header:"Date of Incidence"
+    accessorKey: "totalFlights",
+    header: ({ header, column }) => {
+      return (
+       <div className="flex justify-center items-center">
+         <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group "
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Total Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+       </div>
+      );
+    },
+    sortingFn:(rowA,rowB,column)=>{
+      return parseInt(rowA.original.totalFlights)-parseInt(rowB.original.totalFlights)
+    }
   },
   {
-    accessorKey:"route",
-    header:"Route"
+    accessorKey: "delayedFlights",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Delayed Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    sortingFn:(rowA,rowB,column)=>{
+      return parseInt(rowA.original.delayedFlights)-parseInt(rowB.original.delayedFlights)
+    }
   },
   {
-    accessorKey:"scheduledTimeArrival",
-    header:"Scheduled Time Of Arrival"
+    accessorKey: "cancelledFlights",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Cancelled Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    sortingFn:(rowA,rowB,column)=>{
+      return parseInt(rowA.original.cancelledFlights)-parseInt(rowB.original.cancelledFlights)
+    }
   },
   {
-    accessorKey:"scheduledTimeDeparture",
-    header:"Scheduled Time Of Departure"
+    accessorKey: "onTimeFlights",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          On Time Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    sortingFn:(rowA,rowB,column)=>{
+      return parseInt(rowA.original.onTimeFlights)-parseInt(rowB.original.onTimeFlights)
+    }
   },
   {
-    accessorKey:"expectedTimeArrival",
-    header:"Expected Time Of Arrival"
+    accessorKey: "disruptedFlights",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Disrupted Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    sortingFn:(rowA,rowB,column)=>{
+      return parseInt(rowA.original.disruptedFlights)-parseInt(rowB.original.disruptedFlights)
+    }
   },
   {
-    accessorKey:"expectedTimeDeparture",
-    header:"Expected Time Of Departure"
-  },
-  {
-    id:"reasonForDelay",
-    header:"Reason For Delay",
-    cell({row}) {
+    id: "onTimePercentage",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          % On Time{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const onTimePercentage = (parseFloat(row.original.onTimeFlights) / parseFloat(row.original.totalFlights) * 100).toPrecision(3);
       return (
         <div>
-          <p>{row.original["reasonForDelay" as keyof typeof row.original]||"-----"}</p>
+          <p>{`${onTimePercentage}%`}</p>
         </div>
-      )
+      );
+    },
+    sortingFn: (rowA, rowB, columnId) => {
+      const onTimePercentageA = parseInt((parseFloat(rowA.original.onTimeFlights) / parseFloat(rowA.original.totalFlights) * 100).toPrecision(2));
+      const onTimePercentageB = parseInt((parseFloat(rowB.original.onTimeFlights) / parseFloat(rowB.original.totalFlights) * 100).toPrecision(2));
+      console.log(onTimePercentageA-onTimePercentageB)
+      return onTimePercentageA - onTimePercentageB;
+    }
+  },  
+  {
+    id: "disruptionPercent",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          % Disrupted{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const disruptionPercentage = (parseFloat(row.original.disruptedFlights) / parseFloat(row.original.totalFlights) * 100).toPrecision(3);
+      return (
+        <div>
+          <p>{`${disruptionPercentage}%`}</p>
+        </div>
+      );
+    },
+    sortingFn: (rowA, rowB, columnId) => {
+      const disruptionPercentageA = parseFloat((parseFloat(rowA.original.disruptedFlights) / parseFloat(rowA.original.totalFlights) * 100).toPrecision(3));
+      const disruptionPercentageB = parseFloat((parseFloat(rowB.original.disruptedFlights) / parseFloat(rowB.original.totalFlights) * 100).toPrecision(3));
+      
+      return disruptionPercentageA - disruptionPercentageB;
+    }
+  }
+];
+
+type disruptionLeaderEntry = {
+  airline: string;
+  totalFlights: string;
+  disruptedFlights: string;
+};
+type bestPerformingEntry = {
+  airline: string;
+  activeTickets: string;
+  resolvedTickets: string;
+};
+
+export const disruptionLeaderColumnDef: ColumnDef<disruptionLeaderEntry>[] = [
+  {
+    accessorKey: "airline",
+    header: "Airline",
+  },
+  {
+    accessorKey: "totalFlights",
+    header: "Total Flights",
+  },
+  {
+    accessorKey: "disruptedFlights",
+    header: "Disrupted Flights",
+  },
+  {
+    id: "disruptionPercent",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          % Disrupted{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const disruptionPercentage = (parseFloat(row.original.disruptedFlights) / parseFloat(row.original.totalFlights) * 100).toPrecision(3);
+      return (
+        <div>
+          <p>{`${disruptionPercentage}%`}</p>
+        </div>
+      );
+    },
+    sortingFn: (rowA, rowB, columnId) => {
+      const disruptionPercentageA = parseFloat((parseFloat(rowA.original.disruptedFlights) / parseFloat(rowA.original.totalFlights) * 100).toPrecision(3));
+      const disruptionPercentageB = parseFloat((parseFloat(rowB.original.disruptedFlights) / parseFloat(rowB.original.totalFlights) * 100).toPrecision(3));
+      
+      return disruptionPercentageA - disruptionPercentageB;
+    }
+  }
+  ,
+];
+export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
+  {
+    accessorKey: "airline",
+    header: "Airline",
+  },
+  {
+    accessorKey: "activeTickets",
+    header: "Active Tickets",
+  },
+  {
+    accessorKey: "resolvedTickets",
+    header: "Resolved Tickets",
+  },
+  {
+    id: "resolved percent",
+    header: "% resolved",
+    cell: ({ row }) => {
+      const unresolvedTickets=parseFloat(row.original.resolvedTickets)
+      const activeTickets= parseFloat(row.original.activeTickets)
+      const value = (unresolvedTickets/activeTickets).toPrecision(2)*100
+      return (
+        <div>
+          <p>{`${value}%`}</p>
+        </div>
+      );
+    },
+  },
+];
+
+type fdrEntry = {
+  airline: string;
+  dateOfIncidence: string;
+  route: string;
+  scheduledTimeDeparture: string;
+  scheduledTimeArrival: string;
+  expectedTimeDeparture: string;
+  expectedTimeArrival: string;
+  complianceList: any[];
+  reasonForDelay?: string;
+  reasonForCancellation?: string;
+  reasonForTarmacDelay?: string;
+};
+export const fdrColumnDef: ColumnDef<fdrEntry>[] = [
+  {
+    accessorKey: "airline",
+    header: "Airline",
+  },
+  {
+    accessorKey: "dateOfIncidence",
+    header: "Date of Incidence",
+  },
+  {
+    accessorKey: "route",
+    header: "Route",
+  },
+  {
+    accessorKey: "scheduledTimeArrival",
+    header: "Scheduled Time Of Arrival",
+  },
+  {
+    accessorKey: "scheduledTimeDeparture",
+    header: "Scheduled Time Of Departure",
+  },
+  {
+    accessorKey: "expectedTimeArrival",
+    header: "Expected Time Of Arrival",
+  },
+  {
+    accessorKey: "expectedTimeDeparture",
+    header: "Expected Time Of Departure",
+  },
+  {
+    id: "reasonForDelay",
+    header: "Reason For Delay",
+    cell({ row }) {
+      return (
+        <div>
+          <p>
+            {row.original["reasonForDelay" as keyof typeof row.original] ||
+              "-----"}
+          </p>
+        </div>
+      );
     },
   },
   {
-    id:"reasonForCancellation",
-    header:"Reason For Cabcellation",
-    cell({row}) {
+    id: "reasonForCancellation",
+    header: "Reason For Cabcellation",
+    cell({ row }) {
       return (
         <div>
-          <p>{row.original["reasonForCancellation"]||"-----"}</p>
+          <p>{row.original["reasonForCancellation"] || "-----"}</p>
         </div>
-      )
+      );
     },
   },
   {
-    id:"reasonForTarmacDelay",
-    header:"Reason For Tarmac Delay",
-    cell({row}) {
+    id: "reasonForTarmacDelay",
+    header: "Reason For Tarmac Delay",
+    cell({ row }) {
       return (
         <div>
-          <p>{row.original["reasonForTarmacDelay"]||"-----"}</p>
+          <p>{row.original["reasonForTarmacDelay"] || "-----"}</p>
         </div>
-      )
+      );
     },
   },
   {
-    id:"information",
-    header:"Information Shared",
-    cell:({row})=>{
+    id: "information",
+    header: "Information Shared",
+    cell: ({ row }) => {
       return (
         <div className="flex items-center justify-center">
-          {
-            row.original["complianceList"][0].isRequired?<><p>{`${row.original["complianceList"][0].numberOfPassengers} passengers communicated with`}</p></>:<MdClose className="text-red-500 "/>
-          }
+          {row.original["complianceList"][0].isRequired ? (
+            <>
+              <p>{`${row.original["complianceList"][0].numberOfPassengers} passengers communicated with`}</p>
+            </>
+          ) : (
+            <MdClose className="text-red-500 " />
+          )}
         </div>
-      )
-    }
+      );
+    },
   },
   {
-    id:"refreshment",
-    header:"Refreshments Given",
-    cell:({row})=>{
+    id: "refreshment",
+    header: "Refreshments Given",
+    cell: ({ row }) => {
       return (
         <div className="flex items-center justify-center">
-          {
-            row.original["complianceList"][1].isRequired?<><p>{`${row.original["complianceList"][1].numberOfPassengers} passengers attended to`}</p></>:<MdClose className="text-red-500 "/>
-          }
+          {row.original["complianceList"][1].isRequired ? (
+            <>
+              <p>{`${row.original["complianceList"][1].numberOfPassengers} passengers attended to`}</p>
+            </>
+          ) : (
+            <MdClose className="text-red-500 " />
+          )}
         </div>
-      )
-    }
+      );
+    },
   },
   {
-    id:"refund",
-    header:"Refund processed",
-    cell:({row})=>{
+    id: "refund",
+    header: "Refund processed",
+    cell: ({ row }) => {
       return (
         <div className="flex items-center justify-center">
-          {
-            row.original["complianceList"][2].isRequired?<><p>{`${row.original["complianceList"][2].numberOfPassengers} passengers refunded`}</p></>:<MdClose className="text-red-500 "/>
-          }
+          {row.original["complianceList"][2].isRequired ? (
+            <>
+              <p>{`${row.original["complianceList"][2].numberOfPassengers} passengers refunded`}</p>
+            </>
+          ) : (
+            <MdClose className="text-red-500 " />
+          )}
         </div>
-      )
-    }
+      );
+    },
   },
   {
-    id:"REPROTECTION",
-    header:"Reprotection",
-    cell:({row})=>{
+    id: "REPROTECTION",
+    header: "Reprotection",
+    cell: ({ row }) => {
       return (
         <div className="flex items-center justify-center">
-          {
-            row.original["complianceList"][3].isRequired?<><p>{`${row.original["complianceList"][3].numberOfPassengers} passengers attended to`}</p></>:<MdClose className="text-red-500 "/>
-          }
+          {row.original["complianceList"][3].isRequired ? (
+            <>
+              <p>{`${row.original["complianceList"][3].numberOfPassengers} passengers attended to`}</p>
+            </>
+          ) : (
+            <MdClose className="text-red-500 " />
+          )}
         </div>
-      )
-    }
+      );
+    },
   },
   {
-    id:"RESCHEDULE",
-    header:"Flight Rescheduled",
-    cell:({row})=>{
+    id: "RESCHEDULE",
+    header: "Flight Rescheduled",
+    cell: ({ row }) => {
       return (
         <div className="flex items-center justify-center">
-          {
-            row.original["complianceList"][3].isRequired?<><p>{`${row.original["complianceList"][3].numberOfPassengers as keyof typeof row.original} passengers attended to`}</p></>:<MdClose className="text-red-500 "/>
-          }
+          {row.original["complianceList"][3].isRequired ? (
+            <>
+              <p>{`${
+                row.original["complianceList"][3]
+                  .numberOfPassengers as keyof typeof row.original
+              } passengers attended to`}</p>
+            </>
+          ) : (
+            <MdClose className="text-red-500 " />
+          )}
         </div>
-      )
-    }
+      );
+    },
   },
   {
-    id:"compensation",
-    header:"Compensation",
-    cell:({row})=>{
+    id: "compensation",
+    header: "Compensation",
+    cell: ({ row }) => {
       return (
         <div className="flex items-center justify-center">
-          {
-            row.original["complianceList"][3].isRequired?<><p>{`${row.original["complianceList"][3].numberOfPassengers} passengers compensated`}</p></>:<MdClose className="text-red-500 "/>
-          }
+          {row.original["complianceList"][3].isRequired ? (
+            <>
+              <p>{`${row.original["complianceList"][3].numberOfPassengers} passengers compensated`}</p>
+            </>
+          ) : (
+            <MdClose className="text-red-500 " />
+          )}
         </div>
-      )
-    }
+      );
+    },
   },
- 
-]
+];
 
 type delayreport = {
-  id:string,
-  flightNumber:string,
-  Route:string,
-  sta:string,
-  ata:string,
-  delayedDifferenceInHour:string,
-  stipulatedTimeArrived?:string,
-  stipulatedTimeDeparted?:string,
-  actualTimeArrived?:string,
-  actualTimeDeparted?:string
+  id: string;
+  flightNumber: string;
+  Route: string;
+  sta: string;
+  ata: string;
+  delayedDifferenceInHour: string;
+  stipulatedTimeArrived?: string;
+  stipulatedTimeDeparted?: string;
+  actualTimeArrived?: string;
+  actualTimeDeparted?: string;
+};
 
-}
-
-const delayReportColumnDef:ColumnDef<delayreport>[]=[
+export const delayReportColumnDef: ColumnDef<delayreport>[] = [
   {
-    accessorKey:"id",
-    header:"ID"
+    accessorKey: "id",
+    header: "ID",
   },
   {
     accessorKey: "flightNumber",
@@ -4418,38 +5717,57 @@ const delayReportColumnDef:ColumnDef<delayreport>[]=[
   {
     accessorKey: "sta",
     header: "STA / STD",
-    cell:({row})=> {
-     return( <div>
-        <p className="text-sm">{row.original["stipulatedTimeArrived"] || row.original.stipulatedTimeDeparted}</p>
-      </div>)
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["stipulatedTimeArrived"] ||
+              row.original.stipulatedTimeDeparted}
+          </p>
+        </div>
+      );
     },
   },
   {
     accessorKey: "ata",
     header: "ATA / ATD",
-    cell:({row})=> {
-      return( <div>
-         <p className="text-sm">{row.original.actualTimeArrived || row.original.actualTimeDeparted}</p>
-       </div>)
-    }
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original.actualTimeArrived || row.original.actualTimeDeparted}
+          </p>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "delayedDifferenceInHour",
     header: "Delay",
-    cell:({row})=> {
-      const hours = Math.floor(parseInt(row.original["delayedDifferenceInHour"]!)/3600)
-      const remainingSeconds =Math.floor(parseInt(row.original["delayedDifferenceInHour"]!)%3600)
-      const minutes = Math.floor(remainingSeconds/60);
-      return( <div>
-         <p className="text-sm">{row.original["delayedDifferenceInHour"]?`${hours} hours , ${minutes} minutes`:'----'}</p>
-       </div>)
-    }
-  }
-]
-const cancelledReportColumnDef:ColumnDef<delayreport>[]=[
+    cell: ({ row }) => {
+      const hours = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+      );
+      const remainingSeconds = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+      );
+      const minutes = Math.floor(remainingSeconds / 60);
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["delayedDifferenceInHour"]
+              ? `${hours} hours , ${minutes} minutes`
+              : "----"}
+          </p>
+        </div>
+      );
+    },
+  },
+];
+const cancelledReportColumnDef: ColumnDef<delayreport>[] = [
   {
-    accessorKey:"id",
-    header:"ID"
+    accessorKey: "id",
+    header: "ID",
   },
   {
     accessorKey: "flightNumber",
@@ -4462,34 +5780,661 @@ const cancelledReportColumnDef:ColumnDef<delayreport>[]=[
   {
     accessorKey: "sta",
     header: "STA / STD",
-    cell:({row})=> {
-     return( <div>
-        <p className="text-sm">{row.original["stipulatedTimeArrived"] || row.original.stipulatedTimeDeparted}</p>
-      </div>)
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["stipulatedTimeArrived"] ||
+              row.original.stipulatedTimeDeparted}
+          </p>
+        </div>
+      );
     },
   },
   {
     accessorKey: "ata",
     header: "ATA / ATD",
-    cell:({row})=> {
-      return( <div>
-         <p className="text-sm">{row.original.actualTimeArrived || row.original.actualTimeDeparted}</p>
-       </div>)
-    }
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original.actualTimeArrived || row.original.actualTimeDeparted}
+          </p>
+        </div>
+      );
+    },
+  },
+];
+
+export const DelayReportsTable = ({ data }: { data: any[] }) => {
+  return (
+    <div>
+      <GenericDataTable
+        hasAssignment={false}
+        isDraft={false}
+        data={data}
+        columns={delayReportColumnDef}
+      />
+    </div>
+  );
+};
+export const CancelledReportsTable = ({ data }: { data: any[] }) => {
+  return (
+    <div>
+      <GenericDataTable
+        hasAssignment={false}
+        isDraft={false}
+        data={data}
+        columns={cancelledReportColumnDef}
+      />
+    </div>
+  );
+};
+
+type onTimeFlightEntry ={
+  airline:string,
+  numberOfFlights:string;
+  numberOfFlightsOnTime:string
+}
+export const onTimeFlightsColumnDef:ColumnDef<onTimeFlightEntry>[]=[
+  {
+    accessorKey: "airline",
+    header: ({column})=>{
+      return(
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Airline <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      return (
+        <div
+        className="hover:text-blue-400 transition-all"
+          role="button"
+          onClick={() => {
+            nav(
+              `/Das/OnTime/Reports/${row.original.airline.replace(" ", "_")}`
+            );
+          }}
+        >
+          <p>{row.original.airline}</p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "numberOfFlightsOnTime",
+    header: ({column})=>{
+      return(
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        On Time Flights <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
+      )
+    },
+  },
+  {
+    accessorKey: "numberOfFlights",
+    header: ({column})=>{
+      return(
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        Total Flights <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
+      )
+    },
   },
 ]
 
-export const DelayReportsTable=({data}:{data:any[]})=>{
-  return(
-    <div>
-    <GenericDataTable hasAssignment={false} isDraft={false} data={data}  columns={delayReportColumnDef}/>
-        </div>
-  )
+type ReportEntry={
+  id:string,
+  terminal:string,
+  airline:string,
+  acType:string,
+  flightNumber:string,
+  reportType:string,
+  dateOfIncidence:string,
+
 }
-export const CancelledReportsTable=({data}:{data:any[]})=>{
-  return(
-    <div>
-    <GenericDataTable hasAssignment={false} isDraft={false} data={data}  columns={cancelledReportColumnDef}/>
-        </div>
-  )
+
+interface delayedReportEntry extends ReportEntry{
+  delayedDifferenceInHour:string,
+  stipulatedTimeArrived:string,
+  actualTimeArrived:string,
 }
+
+interface onTimeReportEntry extends ReportEntry{
+  stipulatedTimeArrived:string,
+  actualTimeArrived:string,
+}
+
+export const reportEntryColumnDef:ColumnDef<ReportEntry>[]=[{
+  accessorKey:"id",
+  header:"ID"
+},
+{
+  accessorKey:"terminalName",
+  header:"Terminal"
+},
+{
+  accessorKey:"airline",
+  header:"Airline"
+},
+{
+  accessorKey:"dateOfIncidence",
+  header:"Date"
+},
+{
+  accessorKey:"acType",
+  header:"Aircraft Type"
+},
+{
+  accessorKey:"flightNumber",
+  header:"Flight Number"
+},
+{
+  accessorKey:"reportType",
+  header:"Report Type"
+},
+
+]
+export const delayedReportColumnDef:ColumnDef<delayedReportEntry>[]=[{
+  accessorKey:"id",
+  header:"ID"
+},
+{
+  accessorKey:"terminalName",
+  header:"Terminal"
+},
+{
+  accessorKey:"airline",
+  header:"Airline"
+},
+{
+  accessorKey:"dateOfIncidence",
+  header:"Date"
+},
+{
+  accessorKey:"acType",
+  header:"Aircraft Type"
+},
+{
+  accessorKey:"flightNumber",
+  header:"Flight Number"
+},
+{
+  accessorKey:"delayedDifferenceInHour",
+  header:"Delay Amount",
+  cell: ({ row }) => {
+    const hours = Math.floor(
+      parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+    );
+    const remainingSeconds = Math.floor(
+      parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+    );
+    const minutes = Math.floor(remainingSeconds / 60);
+    return (
+      <div>
+        <p className="text-sm">
+          {row.original["delayedDifferenceInHour"]
+            ? `${hours} hours , ${minutes} minutes`
+            : "----"}
+        </p>
+      </div>
+    );
+  },
+},
+{
+  accessorKey:"stipulatedTimeArrived",
+  header:"STA"
+},
+{
+  accessorKey:"actualTimeArrived",
+  header:"ATA"
+},
+{
+  accessorKey:"reportType",
+  header:"Report Type"
+},
+
+]
+export const delayedReportColumnDefDeparture:ColumnDef<delayedReportEntry>[]=[{
+  accessorKey:"id",
+  header:"ID"
+},
+{
+  accessorKey:"terminalName",
+  header:"Terminal"
+},
+{
+  accessorKey:"airline",
+  header:"Airline"
+},
+{
+  accessorKey:"dateOfIncidence",
+  header:"Date"
+},
+{
+  accessorKey:"acType",
+  header:"Aircraft Type"
+},
+{
+  accessorKey:"flightNumber",
+  header:"Flight Number"
+},
+{
+  accessorKey:"delayedDifferenceInHour",
+  header:"Delay Amount",
+  cell: ({ row }) => {
+    const hours = Math.floor(
+      parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+    );
+    const remainingSeconds = Math.floor(
+      parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+    );
+    const minutes = Math.floor(remainingSeconds / 60);
+    return (
+      <div>
+        <p className="text-sm">
+          {row.original["delayedDifferenceInHour"]
+            ? `${hours} hours , ${minutes} minutes`
+            : "----"}
+        </p>
+      </div>
+    );
+  },
+},
+{
+  accessorKey:"stipulatedTimeArrived",
+  header:"STD"
+},
+{
+  accessorKey:"actualTimeArrived",
+  header:"STA"
+},
+{
+  accessorKey:"reportType",
+  header:"Report Type"
+},
+
+]
+export const onTimeReportColumnDef:ColumnDef<onTimeReportEntry>[]=[{
+  accessorKey:"id",
+  header:"ID"
+},
+{
+  accessorKey:"terminalName",
+  header:"Terminal"
+},
+{
+  accessorKey:"airline",
+  header:"Airline"
+},
+{
+  accessorKey:"acType",
+  header:"Aircraft Type"
+},
+{
+  accessorKey:"flightNumber",
+  header:"Flight Number"
+},
+{
+  accessorKey:"delayedDifferenceInHour",
+  header:"Delay Amount",
+  cell: ({ row }) => {
+    const hours = Math.floor(
+      parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+    );
+    const remainingSeconds = Math.floor(
+      parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+    );
+    const minutes = Math.floor(remainingSeconds / 60);
+    return (
+      <div>
+        <p className="text-sm">
+          {row.original["delayedDifferenceInHour"]
+            ? `${hours} hours , ${minutes} minutes`
+            : "----"}
+        </p>
+      </div>
+    );
+  },
+},
+{
+  accessorKey:"stipulatedTimeArrived",
+  header:"STA"
+},
+{
+  accessorKey:"actualTimeArrived",
+  header:"ATA"
+},
+{
+  accessorKey:"reportType",
+  header:"Report Type"
+},
+
+]
+export const onTimeReportColumnDefDeparture:ColumnDef<onTimeReportEntry>[]=[{
+  accessorKey:"id",
+  header:"ID"
+},
+{
+  accessorKey:"terminalName",
+  header:"Terminal"
+},
+{
+  accessorKey:"airline",
+  header:"Airline"
+},
+{
+  accessorKey:"acType",
+  header:"Aircraft Type"
+},
+{
+  accessorKey:"flightNumber",
+  header:"Flight Number"
+},
+{
+  accessorKey:"delayedDifferenceInHour",
+  header:"Delay Amount",
+  cell: ({ row }) => {
+    const hours = Math.floor(
+      parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+    );
+    const remainingSeconds = Math.floor(
+      parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+    );
+    const minutes = Math.floor(remainingSeconds / 60);
+    return (
+      <div>
+        <p className="text-sm">
+          {row.original["delayedDifferenceInHour"]
+            ? `${hours} hours , ${minutes} minutes`
+            : "----"}
+        </p>
+      </div>
+    );
+  },
+},
+{
+  accessorKey:"stipulatedTimeArrived",
+  header:"STD"
+},
+{
+  accessorKey:"actualTimeArrived",
+  header:"ATD"
+},
+{
+  accessorKey:"reportType",
+  header:"Report Type"
+},
+
+]
+
+type message = {
+  from:string,
+  complaintType:string,
+  status:string,
+  date:string
+  
+}
+
+type sentMessage = {
+  to:string,
+  complaintType:string,
+  status:string,
+  date:string
+
+}
+export const InboxColumnDef:ColumnDef<message>[]=[
+  {
+    accessorKey:"from",
+    header:({column})=>{
+      return(
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        From <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
+      )
+    }
+  },
+  {
+    accessorKey:"complaintType",
+    header:"Complaint Type"
+  },
+  {
+    accessorKey:"status",
+    header:"Status",
+    cell:({row})=>{
+      const resolveStatus: (status: string) => string = (status = "") => {
+        const btnStyles: Record<string, string> = {
+          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+          UNASSIGNED: "",
+          RESOLVED: "bg-blue-200 border-2 border-blue-400",
+          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+        }
+    
+        return `${btnStyles[status]} inline h-max p-1`;
+      };
+      return(
+        <div className="flex items-center justify-center">
+         <div className={cn("w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",resolveStatus(row.original.status))}>
+          <p>{row.original.status}</p>
+        </div>
+       </div>
+      )
+    }
+  },
+  { header:"Date",
+    accessorKey:"date"
+  },
+  {
+    id:"actions",
+    cell:({row})=>{
+      return(
+        <div className="">
+          <Popover>
+            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
+                <BsThreeDots className="w-4 h-4 shrink"/>
+            </PopoverTrigger>
+            <PopoverContent className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2" side="left">
+            <div className="hover:bg-slate-200/25  text-white text-sm p-1.5" role="button">
+              <p>View Message</p>
+            </div>
+            <div className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5" role="button">
+              <p>Delete Message</p>
+            </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )
+    }
+  }
+]
+export const OutboxMessageColumnDef:ColumnDef<sentMessage>[]=[
+  {
+    accessorKey:"to",
+    header:({column})=>{
+      return(
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        To <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
+      )
+    }
+  },
+  {
+    accessorKey:"complaintType",
+    header:"Complaint Type"
+  },
+  {
+    accessorKey:"status",
+    header:"Status",
+    cell:({row})=>{
+      const resolveStatus: (status: string) => string = (status = "") => {
+        const btnStyles: Record<string, string> = {
+          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+          UNASSIGNED: "",
+          RESOLVED: "bg-blue-200 border-2 border-blue-400",
+          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+        }
+    
+        return `${btnStyles[status]} inline h-max p-1`;
+      };
+      return(
+        <div className="flex items-center justify-center">
+         <div className={cn("w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",resolveStatus(row.original.status))}>
+          <p>{row.original.status}</p>
+        </div>
+       </div>
+      )
+    }
+  },
+  { header:"Date",
+    accessorKey:"date"
+  },
+  {
+    id:"actions",
+    cell:({row})=>{
+      return(
+        <div className="">
+          <Popover>
+            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
+                <BsThreeDots className="w-4 h-4 shrink"/>
+            </PopoverTrigger>
+            <PopoverContent className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2" side="left">
+            <div className="hover:bg-slate-200/25  text-white text-sm p-1.5" role="button">
+              <p>View Message</p>
+            </div>
+            <div className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5" role="button">
+              <p>Delete Message</p>
+            </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )
+    }
+  }
+]
+export const DraftMessagesColumnDefinition:ColumnDef<sentMessage>[]=[
+  {
+    id:"selection",
+    cell:({row})=>{
+      return(
+        <Checkbox className="border-ncBlue dark:border-ncBlue data-[state=checked]:bg-ncBlue data-[state=checked]:text-white dark:bg-slate-200 bg-slate-200 dark:data-[state=checked]:bg-ncBlue dark:data-[state=checked]:text-white"/>
+      )
+    }
+  },
+  {
+    accessorKey:"to",
+    header:({column})=>{
+      return(
+        <Button
+        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+        onClick={() => {
+          column.toggleSorting(column.getIsSorted() === "asc");
+        }}
+      >
+        To <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+      </Button>
+      )
+    },
+    cell:({row})=>{
+      return(
+       <div className="flex items-center justify-center">
+         <div className="flex flex-col gap-y-1 5  w-max px-1 items-start ">
+          <p className="text-red-500">Draft</p>
+          <p>{row.original.to}</p>
+        </div>
+       </div>
+      )
+    }
+  },
+  {
+    accessorKey:"complaintType",
+    header:"Complaint Type"
+  },
+  {
+    accessorKey:"status",
+    header:"Status",
+    cell:({row})=>{
+      const resolveStatus: (status: string) => string = (status = "") => {
+        const btnStyles: Record<string, string> = {
+          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+          UNASSIGNED: "",
+          RESOLVED: "bg-blue-200 border-2 border-blue-400",
+          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+        }
+    
+        return `${btnStyles[status]} inline h-max p-1`;
+      };
+      return(
+        <div className="flex items-center justify-center">
+         <div className={cn("w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",resolveStatus(row.original.status))}>
+          <p>{row.original.status}</p>
+        </div>
+       </div>
+      )
+    }
+  },
+  { header:"Date",
+    accessorKey:"date"
+  },
+  {
+    id:"actions",
+    cell:({row})=>{
+      return(
+        <div className="">
+          <Popover>
+            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
+                <BsThreeDots className="w-4 h-4 shrink"/>
+            </PopoverTrigger>
+            <PopoverContent className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2" side="left">
+            <div className="hover:bg-slate-200/25  text-white text-sm p-1.5" role="button">
+              <p>View Message</p>
+            </div>
+            <div className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5" role="button">
+              <p>Delete Message</p>
+            </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )
+    }
+  }
+  
+]
