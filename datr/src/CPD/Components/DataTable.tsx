@@ -3418,6 +3418,7 @@ export const airlineColumnDef: ExtendedColumnDef<airlineConfig>[] = [
     cell: ({ row }) => {
       const {axios}=useAxiosClient()
       const client = useQueryClient()
+      const triggerRef=useRef<HTMLButtonElement|null>(null)
       const toggleActivenessMutation=useMutation({
         mutationKey:["airlines",row.original["id"],"activeness"],
         mutationFn:()=>new Promise((resolve,reject)=>{
@@ -3429,12 +3430,13 @@ export const airlineColumnDef: ExtendedColumnDef<airlineConfig>[] = [
       return (
         <div className="flex items-center justify-end">
           <Popover>
-            <PopoverTrigger>
+            <PopoverTrigger ref={triggerRef}>
               <BsThreeDots />
             </PopoverTrigger>
-            <PopoverContent side="left" className="p-1">
+            <PopoverContent side="left" className="p-1  dark:bg-ncBlue bg-ncBlue text-white hover:bg-ncBlue dark:hover:bg-ncBlue ">
              
               <ConfirmationDialog message="This action will permanently change the state of this Airline." onClick={() => {
+                triggerRef.current?.click()
                 sonnerToast.promise(new Promise((resolve,reject)=>{
                   toggleActivenessMutation.mutate(undefined,{
                     onSuccess:(data, variables, context) =>{
@@ -3467,7 +3469,7 @@ export const airlineColumnDef: ExtendedColumnDef<airlineConfig>[] = [
               }}>
                 <div
                   role="button"
-                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                  className="flex items-center space-x-2  group p-2"
                 >
                  {
                   row.original["active"]?<Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>: <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -3509,6 +3511,7 @@ export const routesColumnDef: ExtendedColumnDef<route>[] = [
     cell: ({ row }) => {
       const {axios}=useAxiosClient()
       const client = useQueryClient()
+      const triggerRef=useRef<HTMLButtonElement|null>(null)
       const toggleActivenessMutation=useMutation({
         mutationKey:["routes",row.original["id"],"activeness"],
         mutationFn:()=>new Promise((resolve,reject)=>{
@@ -3520,12 +3523,13 @@ export const routesColumnDef: ExtendedColumnDef<route>[] = [
       return (
         <div className="flex items-center justify-end">
           <Popover>
-            <PopoverTrigger>
+            <PopoverTrigger ref={triggerRef}>
               <BsThreeDots />
             </PopoverTrigger>
-            <PopoverContent side="left" className="p-1">
+            <PopoverContent side="left" className="p-1  dark:bg-ncBlue bg-ncBlue text-white">
               
               <ConfirmationDialog message="This action will permanently change the state of this route." onClick={() => {
+                triggerRef.current?.click()
                 sonnerToast.promise(new Promise((resolve,reject)=>{
                   toggleActivenessMutation.mutate(undefined,{
                     onSuccess:(data, variables, context) =>{
@@ -3558,7 +3562,7 @@ export const routesColumnDef: ExtendedColumnDef<route>[] = [
               }}>
                 <div
                   role="button"
-                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                  className="flex items-center space-x-2  group p-2"
                 >
                  {
                   row.original["active"]?<Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>: <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

@@ -76,9 +76,9 @@ import { Send } from "lucide-react";
 const NewRouteForm = ({ closeDialog }: { closeDialog: () => void }) => {
   const { axios } = useAxiosClient();
   const createRouteMutation = useMutation({
-    mutationFn: (value: { name: string; abbreviation: string }) =>
+    mutationFn: (value: { routeName: string; abbreviation: string }) =>
       new Promise((resolve, reject) =>
-        axios("route/add", {
+        axios("routes/create", {
           method: "POST",
           data: value,
         })
@@ -90,7 +90,7 @@ const NewRouteForm = ({ closeDialog }: { closeDialog: () => void }) => {
     toast.promise(
       new Promise((resolve, reject) =>
         createRouteMutation.mutate(
-          { abbreviation: values.name, ...values },
+          { abbreviation: values.name,routeName:values.name },
           {
             onSuccess: (data) => {
               resolve(data);
