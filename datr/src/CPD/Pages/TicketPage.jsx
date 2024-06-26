@@ -45,7 +45,17 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as sanitizeHtml from "sanitize-html";
 import { toast as sonnerToast } from "sonner";
+
 export const TicketPage = () => {
+  const [messageQueue, setMessageQueue] = useState(() => {
+    const savedQueue = localStorage.getItem("pending");
+    return savedQueue ? JSON.parse(savedQueue) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("pending", JSON.stringify(messageQueue));
+  }, [messageQueue]);
+
   const { id } = useParams();
   if (!id) return redirect("/CPD/Dashboard");
   const { axios } = useAxiosClient();
@@ -76,6 +86,7 @@ export const TicketPage = () => {
         method: "Get",
       }).then((resp) => resp.data),
   });
+
   const sendMessageMutation = useMutation({
     mutationKey: ["comment", "new"],
     mutationFn: () =>
@@ -95,6 +106,32 @@ export const TicketPage = () => {
           .catch((err) => reject(err))
       ),
   });
+  /*To test the the message queue system(makes the message always fail to send) */
+
+  // const sendMessageMutation = useMutation({
+  //   mutationKey: ["comment", "new"],
+  //   mutationFn: () =>
+  //     new Promise((resolve, reject) => {
+  //       const shouldFail = Math.random() < 1; // 100% chance of failing
+  //       if (shouldFail) {
+  //         setTimeout(() => reject(new Error("Simulated network error")), 500);
+  //       } else {
+  //         axios("comments/add", {
+  //           method: "POST",
+  //           data: {
+  //             ticketId: ticketQuery.data["id"],
+  //             content: ticketContent,
+  //             commentType: "MESSAGE",
+  //             mentions: [],
+  //             cc: [],
+  //             bcc: [],
+  //           },
+  //         })
+  //           .then((resp) => resolve(resp.data))
+  //           .catch((err) => reject(err));
+  //       }
+  //     }),
+  // });
   useEffect(() => {
     if (
       currentMessageCount.current < messages.length &&
@@ -140,6 +177,7 @@ export const TicketPage = () => {
       }
     }
   };
+
   const trySendMessage = () => {
     sonnerToast.promise(
       new Promise((resolve, reject) =>
@@ -152,25 +190,89 @@ export const TicketPage = () => {
           },
           onError: (error) => {
             reject(error);
+            setMessageQueue((prevQueue) => [
+              ...prevQueue,
+              { content: ticketContent, sendingStatus: "failed" },
+            ]);
           },
         })
       ),
       {
         loading: "Trying to send message...",
         success: "Message Sent Successfully!",
-        error: (error) => {
-          return (
-            <div className="text-black flex flex-col">
-              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
-                <MdError /> Error
-              </p>
-              <p>{error.response.data.message || error.response.data.detail}</p>
+        error: (error) => (
+          <div className="text-black flex flex-col">
+            <p className="font-semibold">Failed to send message:</p>
+            <div className="flex items-center gap-2 mt-3">
+              <Button
+                variant="ghost"
+                onClick={() => retryMessage(messageQueue.length - 1)}
+              >
+                Retry
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => deleteMessage(messageQueue.length - 1)}
+              >
+                Delete
+              </Button>
             </div>
-          );
-        },
+          </div>
+        ),
       }
     );
   };
+
+  const retryMessage = (index) => {
+    const messageToRetry = messageQueue[index];
+    setMessageQueue((prevQueue) => prevQueue.filter((_, idx) => idx !== index));
+
+    sonnerToast.dismiss();
+    sonnerToast.promise(
+      new Promise((resolve, reject) =>
+        sendMessageMutation.mutate(messageToRetry, {
+          onSuccess: (data) => {
+            resolve(data);
+            setMessages((state) => [...state, data]);
+            commentsQuery.refetch();
+            setTicketContent("");
+          },
+          onError: (error) => {
+            reject(error);
+            setMessageQueue((prevQueue) => [
+              ...prevQueue,
+              { ...messageToRetry, sendingStatus: "failed" },
+            ]);
+            console.error("Failed to resend message:", error);
+          },
+        })
+      ),
+      {
+        loading: "Trying to resend message...",
+        success: "Message Resent Successfully!",
+        error: (error) => (
+          <div className="text-black flex flex-col">
+            <p className="font-semibold">Failed to resend message:</p>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => retryMessage(index)}>
+                Retry
+              </Button>
+              <Button variant="ghost" onClick={() => deleteMessage(index)}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        ),
+      }
+    );
+  };
+
+  const deleteMessage = (index) => {
+    setMessageQueue((prevQueue) => prevQueue.filter((_, idx) => idx !== index));
+    setTicketContent("");
+    sonnerToast.dismiss();
+  };
+
   return (
     <section className="w-full ">
       {ticketQuery.isSuccess && (
@@ -253,20 +355,58 @@ export const TicketPage = () => {
                   ]}
                 />
                 {commentsQuery.isSuccess &&
-                  messages.map((comment) => (
-                    <SignleTicketMessage
-                      isMessage={comment.commentType === "MESSAGE"}
-                      name={`${comment.authorName.split(" ")[0][0]} ${
-                        comment.authorName.split(" ")[1][0]
-                      }`}
-                      username={comment.authorName}
-                      setReplyingTo={setReplyingTo}
-                      message={comment.content}
-                      date={format(
-                        new Date(comment.dateTimeCreated),
-                        "dd, MMMM yyyy"
-                      )}
-                    />
+                  messages.map((comment, index) => (
+                    <div key={index}>
+                      <SignleTicketMessage
+                        isMessage={comment.commentType === "MESSAGE"}
+                        name={`${comment.authorName.split(" ")[0][0]} ${
+                          comment.authorName.split(" ")[1][0]
+                        }`}
+                        username={comment.authorName}
+                        setReplyingTo={setReplyingTo}
+                        message={comment.content}
+                        date={format(
+                          new Date(comment.dateTimeCreated),
+                          "dd, MMMM yyyy"
+                        )}
+                      />
+
+                      {messageQueue > 0 &&
+                        messageQueue.map((comment) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between"
+                          >
+                            <SignleTicketMessage
+                              isMessage={comment.commentType === "MESSAGE"}
+                              name={`${comment.authorName.split(" ")[0][0]} ${
+                                comment.authorName.split(" ")[1][0]
+                              }`}
+                              username={comment.authorName}
+                              setReplyingTo={setReplyingTo}
+                              message={comment.content}
+                              date={format(
+                                new Date(comment.dateTimeCreated),
+                                "dd, MMMM yyyy"
+                              )}
+                            />
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                onClick={() => retryMessage(index)}
+                              >
+                                Retry
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                onClick={() => deleteMessage(index)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
                   ))}
                 <div ref={messageEndRef} />
                 <div
