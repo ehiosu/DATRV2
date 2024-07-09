@@ -6,10 +6,12 @@ import { MdClose } from "react-icons/md";
 interface timeInputProps extends HTMLDivElement {
   onChange: (value: string) => void;
   inputClassname: string;
+  defaultValue?:string;
   value: string;
 }
 export const TimeInput = (props: timeInputProps) => {
-  const { value, onChange, inputClassname } = props;
+  const { value, onChange, inputClassname,defaultValue } = props;
+ 
   const parseTime = (timeString: string) => {
     const parts = timeString ?timeString.split(":"):["0","0"];
     const clampedHour = Math.max(0, Math.min(Number(parts[0] || 0), 23)).toString();
@@ -25,11 +27,19 @@ export const TimeInput = (props: timeInputProps) => {
   };
   const [time, setTime] = useState(parseTime(value));
   useEffect(() => {
-    setTime(parseTime(value));
+    if(!defaultValue || defaultValue!== value){
+      setTime(parseTime(value));
+      console.log("not using default",value)
+    }
+    else{
+      setTime(parseTime(defaultValue as string))
+
+    }
   }, [value]);
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHour = e.target.value;
     if (newHour === '' || (Number(newHour) >= 0 && Number(newHour) <= 23)) {
+      console.log(newHour)
       setTime({ ...time, hour: newHour });
       onChange(formatTime(newHour, time.minute));
     }
@@ -38,6 +48,7 @@ export const TimeInput = (props: timeInputProps) => {
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newMinute = e.target.value;
     if (newMinute === '' || (Number(newMinute) >= 0 && Number(newMinute) <= 59)) {
+      console.log(newMinute)
       setTime({ ...time, minute: newMinute });
       onChange(formatTime(time.hour, newMinute));
     }
