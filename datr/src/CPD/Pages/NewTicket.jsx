@@ -65,9 +65,7 @@ export const NewTicket = () => {
   const nav = useNavigate();
   const { user } = useAuth();
   const { axios: axiosClient } = useAxiosClient();
-  if (!user?.roles.includes("CPO") && !user?.roles.includes("ADMIN")) {
-    return <Navigate to={"/CPD/Dashboard"} />;
-  }
+
   const [isTicketUploading, setIsTicketUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const getGroupedData = (data) => {
