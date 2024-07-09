@@ -17,7 +17,7 @@ export const Dashboard = () => {
   return (
     <div className='w-full py-6  md:px-7'>
         <div className="flex items-center">
-            <p className='text-lg font-[600] text-ncBlue'>Abuja</p>
+            <p className='text-lg font-[600] text-ncBlue'>{terminal}</p>
             {/* <Select value={terminal} onValueChange={setTerminal}>
                 <SelectTrigger disabled={!isSuccess} className='dark:bg-ncBlue bg-ncBlue text-white px-2 w-40   h-10 rounded-md ml-auto'>
                     <SelectValue placeholder="Select A terminal" className='text-sm font-normal'/>
@@ -35,13 +35,13 @@ export const Dashboard = () => {
             </Select> */}
         </div>
         <div>
-            <AuthorizedComponent roles={["ADMIN","DGO","DATA_STATISTIC"]}>
+            <AuthorizedComponent roles={["ADMIN","DATA_STATISTIC",]}>
                     <button onClick={()=>nav('/DAS/New')} className='w-32 text-white h-10 rounded-md bg-ncBlue hover:bg-slate-700/50 transition-all hover:text-ncBlue hover:font-semibold focus:bg-lightPink focus:text-white duration-500 focus:ring-2 focus:ring-offset-4 focus:ring-blue-400'>
                         Add Report
                     </button>
             </AuthorizedComponent>
         </div>
-        <div className="mt-10 flex flex-wrap gap-x-4 gap-y-4 justify-evenly">
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-4 justify-evenly">
             <StatCard
             title='Total Scheduled Flights'
             figure='72'
@@ -63,7 +63,7 @@ export const Dashboard = () => {
             onClick={()=>{}}
             />
         </div>
-        <div className="w-full h-[55vh] p-3 bg-white rounded-t-lg border-t-4 border-t-ncBlue mt-6 rounded-lg flex flex-col">
+        <div className="w-full h-[50vh] p-3 bg-white rounded-t-lg border-t-4 border-t-ncBlue mt-6 rounded-lg flex flex-col">
             <p className='text-lg text-white font-[500] '>Key Performance Metrics</p>
             <div className="flex items-center justify-end space-x-2">
                 <button className='bg-slate-100 h-6 aspect-square rounded-md flex items-center justify-center   hover:bg-slate-200/80 transition-all'>
