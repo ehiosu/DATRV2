@@ -17,6 +17,7 @@ import {
 } from "../../components/ui/dialog.tsx";
 import { cn } from "../../lib/utils.ts";
 import sanitizeHtml from "sanitize-html";
+import { useAuth } from "../../api/useAuth.ts";
 export const SignleMessage = ({
   name,
   username,
@@ -118,6 +119,7 @@ export const SignleTicketMessage = ({
   isMessage = false,
   setReplyingTo,
 }) => {
+  const { user } = useAuth();
   const cleanHtml = (message) => {
     return sanitizeHtml(message, {
       allowedTags: [
@@ -144,6 +146,20 @@ export const SignleTicketMessage = ({
       allowedIframeHostnames: ["www.youtube.com"],
     });
   };
+  if (user.roles[user.roles.length - 1] === "Airline" && !isMessage)
+    return <></>;
+  if (!isMessage && complaintDetails.length === 0) {
+    return (
+      <div className="flex flex-col gap-y-1.5">
+        <div className="w-[50%] min-w-[300px] rounded-md bg-neutral-300 py-3 px-1.5 ">
+          <p className="text-sm">{message}</p>
+        </div>
+        <p className="bg-ncBlue text-white rounded-md px-2 py-1.5 w-max">
+          {username}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col ">
