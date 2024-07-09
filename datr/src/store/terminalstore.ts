@@ -11,7 +11,7 @@ type actions={
 }
 const terminalStore = create(persist<state&actions>(
     (set)=>({
-        terminal:"ALL",
+        terminal:"All",
         setTerminal:(terminal:string)=>set((state)=>({terminal:terminal})),
         date:{
             from:undefined,
