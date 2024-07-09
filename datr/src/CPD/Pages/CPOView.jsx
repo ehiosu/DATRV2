@@ -32,6 +32,7 @@ export const CPOView = () => {
   const { agent } = useParams();
   const { axios } = useAxiosClient();
   const updatedGroup = group.replaceAll("_", " ");
+
   const userQuery = useQuery({
     queryKey: ["user", agent],
     refetchOnMount: true,
@@ -101,6 +102,18 @@ const UserCard = ({ group, user, id }) => {
   const { axios } = useAxiosClient();
   const client = useQueryClient();
   const [newRole, setNewRole] = useState("");
+  const terminalQuery = useQuery({
+    queryKey: ["terminals", "all"],
+    staleTime: Infinity,
+    queryFn: () =>
+      axios("terminals/active", {
+        method: "GET",
+      })
+        .then((resp) => resp.data)
+        .catch((err) => {
+          throw err;
+        }),
+  });
   if (!user) return <></>;
   const changeRoleMutation = useMutation({
     mutationKey: ["role"],
