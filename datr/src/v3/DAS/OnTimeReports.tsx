@@ -37,20 +37,20 @@ export const OnTimeReports = () => {
     },[query.data])
   return (
     <section className='w-full px-6 py-2 '>
-    <div onClick={()=>{nav(-1)}} role='button' className='w-7 h-7  bg-ncBlue rounded-md flex items-center justify-center text-white'>
-        <MdArrowBack className='w-4 h-4 shrink'/>
-    </div>
+ 
     <div className="flex items-center w-full justify-between">
     <p className='text-xl font-semibold'>On Time Flights for {id?.replace("_"," ")}</p>
     <DatePickerWithRange date={date} setDate={setDate}/>
     </div>
-    <div className="w-full h-[60vh] overflow-y-auto border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth">
+    <div className="w-full max-h-[60vh] overflow-y-auto border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth flex flex-col gap-y-4">
     <p className="my-2 ml-2 text-lg font-semibold text-ncBlue">
         Arrivals
       </p>
           {
             query.isLoading?<Skeleton className='w-full h-[60vh]'/>:query.isSuccess&&   <GenericDataTable tableClassname='' downloadExcel DownloadComponent={ReportDownloadComponent} headerClassname='rounded-lg' columns={onTimeReportColumnDef as any} data={splitData.Arrival} hasFilter={true} showColumnFilter filterColumn={"airline"}/>
           }
+      
+
         </div>
     <div className="w-full h-[60vh] overflow-y-auto border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth">
     <p className="my-2 ml-2 text-lg font-semibold text-ncBlue">
