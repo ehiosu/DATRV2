@@ -4,5 +4,7 @@ export const home_pages={
     SHIFT_SUPERVISOR:"/CPD/Dashboard",
     TERMINAL_SUPERVISOR:"/CPD/Dashboard",
     AIRLINE:"/CPD/Tickets",
-    ADMIN:"/CPD/Dashboard"
+    ADMIN:"/CPD/Dashboard",
+    FOU_CPO:"/CPD/Tickets",
+    FOU_HEAD:"/CPD/Dashboard"
 }
