@@ -22,7 +22,9 @@ export const TopNav = () => {
                     <SelectValue placeholder="Select A terminal"/>
                 </SelectTrigger>
                 <SelectContent className='dark:bg-ncBlue bg-ncBlue'>
-                        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='All'>All</SelectItem>
+                      {
+                        location.pathname !== "/DAS/Delays"|| location.pathname !== "/DAS/Cancelled" || location.pathname !== "/DAS/OnTime" &&   <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='All'>All</SelectItem>
+                      }
                         {
                             terminalQuery.isSuccess && terminalQuery.data.map((terminal:any)=>(
                                 <SelectItem value={terminal.name} className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white'>
@@ -43,7 +45,9 @@ export const TopNav = () => {
             <div role='button' className="ml-4 flex space-x-2 items-center w-32">
                 <img src="https://www.pngkey.com/png/full/202-2024792_user-profile-icon-png-download-fa-user-circle.png" className='w-6 h-6 object-contain' alt="" />
                 <div className="flex flex-col  justify-start">
-                    <p className='font-semibold text-[0.75rem]'>{user.firstName}</p>
+                   {
+                    user.roles[user.roles.length-1]==="AIRLINE"? <p className='font-semibold text-[0.75rem]'>{user.airline}</p>: <p className='font-semibold text-[0.75rem]'>{user.firstName|| "External User"}</p>
+                   }
                     <p className='text-[0.65rem] text-neutral-500'>{user.roles[user.roles.length-1]}</p>
                 </div>
             </div>
