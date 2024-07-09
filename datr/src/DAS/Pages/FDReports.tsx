@@ -29,7 +29,7 @@ export const FDReports = () => {
     const [maxPages, setMaxPages] = useState(1);
     const reportsQuery=useQuery({
         queryKey:[terminal,"FDR",`${currentPage}`],
-        queryFn:()=>axios(`flight-disruption-reports/terminal?value=${terminal}&page=${currentPage}&size=20`).then((resp:any)=>{
+        queryFn:()=>axios(`flight-disruption-reports/terminal?value=${terminal}&page=${currentPage}&size=15`).then((resp:any)=>{
             setMaxPages(resp.data.totalPages)
             return resp.data.flightDisruptionReportResponses
         })
