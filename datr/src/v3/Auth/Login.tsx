@@ -53,7 +53,9 @@ export const Login = () => {
           data: values,
         })
           .then((resp: AxiosResponse) => resolve(resp))
-          .catch((err: AxiosError) => reject(err))
+          .catch((err: AxiosError) => {
+            reject(err)
+            throw err})
       ),
   });
   const tryLogin = (values: z.infer<typeof loginFormSchema>) => {
@@ -82,6 +84,9 @@ export const Login = () => {
                 const home_page=home_pages[data.roles[data.roles.length - 1] as keyof typeof home_pages]
                 nav(home_page as string);
               }, 1000);
+          },
+          onError:(error, variables, context)=> {
+            reject(error)
           },
         });
       }),
