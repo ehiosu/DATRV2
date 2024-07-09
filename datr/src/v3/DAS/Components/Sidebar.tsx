@@ -1,7 +1,9 @@
 import { useAuth } from '@/api/useAuth'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { Ban, ClipboardIcon, ClipboardPaste, LogOut, LucideIcon, LucideLayoutDashboard, SendToBack, Ticket, Timer, TimerOff } from 'lucide-react'
 import React from 'react'
+import { BsThreeDots } from 'react-icons/bs'
 import { useLocation, useNavigate } from 'react-router'
 
 export const Sidebar = () => {
@@ -13,7 +15,8 @@ export const Sidebar = () => {
     nav('/')
   }
   return (
-    <div className='flex flex-col lg:w-[15vw] px-1 bg-ncBlue items-center overflow-y-auto '>
+    <>
+    <div className='flex flex-col lg:w-[15vw] px-1 bg-ncBlue items-center overflow-y-auto max-h-screen sticky top-0 md:block hidden'>
        <div className="w-full  py-1.5 aspect-square border-b-2 border-b-neutral-100/40  grid place-items-center px-2">
         <img src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png" className='w-full aspect-square object-contain' alt="" />
       </div>
@@ -35,11 +38,39 @@ export const Sidebar = () => {
       </div>
      
     </div>
-      
-
-
-
     </div>
+    <Sheet >
+    <SheetTrigger className='fixed top-4 left-4 w-8 h-8 bg-ncBlue text-white rounded flex items-center justify-center md:hidden block '>
+      <BsThreeDots/>
+    </SheetTrigger>
+    <SheetContent className='bg-ncBlue text-white'>
+      
+    <div className='flex flex-col lg:w-[15vw] px-1 bg-ncBlue items-center overflow-y-auto max-h-screen sticky top-0'>
+       <div className="w-full  py-1.5 aspect-square border-b-2 border-b-neutral-100/40  grid place-items-center px-2">
+        <img src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png" className='w-[80%] aspect-square object-contain' alt="" />
+      </div>
+    <div className="flex flex-col mt-[20px] md:mt-[40px] px-3  w-full flex-1 p-2">
+
+      <SidebarItem to='/CPD/Dashboard' title='CPD Dashboard' Icon={SendToBack} allowedRoles={["DGO","ADMIN"]}/>
+      <SidebarItem to='/DAS/Dashboard' title='Dashboard' Icon={LucideLayoutDashboard} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
+      <SidebarItem to='/DAS/Delays' title='Delayed Flights' Icon={TimerOff} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
+      <SidebarItem to='/DAS/Cancelled' title='Cancelled Flights' Icon={Ban} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
+      <SidebarItem to='/DAS/OnTime' title='On Time Flights' Icon={Timer} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
+      <SidebarItem to='/DAS/Reports' title='Reports' Icon={ClipboardPaste} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
+{/*       
+      <SidebarItem to='/CPD/Tickets' title='Tickets' Icon={Ticket} allowedRoles={["ADMIN","CPO","AIRLINE","DGO"]}/>
+      <SidebarItem to='/CPD/Reports' title='Reports' Icon={ClipboardIcon} allowedRoles={["ADMIN","CPO","AIRLINE","DGO"]}/>
+      <SidebarItem to='/DAS/Dashboard' title='Data And Statistics' Icon={ClipboardIcon} allowedRoles={["ADMIN","DGO","DATA_STATISTICS"]}/> */}
+      <div onClick={()=>{tryLogout()}} role='button' className="mt-auto px-2 flex items-center space-x-2 text-lightPink hover:bg-slate-100/10 rounded-md h-8 transition-all">
+        <LogOut className='w-4 h-4 shrink '/>
+        <p className='text-sm'>Logout</p>
+      </div>
+     
+    </div>
+    </div>
+    </SheetContent>
+    </Sheet>
+    </>
   )
 }
 type sidebarProps={
@@ -55,7 +86,7 @@ const SidebarItem=({Icon,title,to,allowedRoles}:sidebarProps)=>{
   }
   const nav=useNavigate()
   return(
-    <div role='button' onClick={()=>{nav(to)}} className={cn('w-full px-2  text-neutral-500 flex items-center h-10 my-2 hover:text-white transition-all',location.pathname.includes(to)&&"bg-slate-700/40 rounded-lg text-white")}>
+    <div role='button' onClick={()=>{nav(to)}} className={cn('w-full px-2  text-neutral-500 flex items-center h-9 my-1.5 md:h-10 md:my-2 hover:text-white transition-all',location.pathname.includes(to)&&"bg-slate-700/40 rounded-lg text-white")}>
     <Icon className='w-4 h-4 shrink mr-2'/>
     <p className='text-sm '>{title}</p>
 </div>
