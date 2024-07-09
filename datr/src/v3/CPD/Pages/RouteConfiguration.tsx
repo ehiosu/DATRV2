@@ -48,7 +48,7 @@ export const RouteConfiguration = () => {
       </Dialog>
       <div className="mx-auto w-max">
         <p className="px-1 py-1.5 text-lg font-semibold text-ncBlue border-b-2 border-b-ncBlue">
-          Airlines
+          Routes
         </p>
       </div>
       {getRoutesQuery.isSuccess && (
@@ -90,7 +90,7 @@ const NewRouteForm = ({ closeDialog }: { closeDialog: () => void }) => {
     toast.promise(
       new Promise((resolve, reject) =>
         createRouteMutation.mutate(
-          { abbreviation: values.name,routeName:values.name },
+          {abbreviation:values.abbreviation,routeName:values.name},
           {
             onSuccess: (data) => {
               resolve(data);
@@ -121,6 +121,9 @@ const NewRouteForm = ({ closeDialog }: { closeDialog: () => void }) => {
     name: z.string().min(1, {
       message: "Enter a valid name!",
     }),
+    abbreviation:z.string().min(1,{
+      message:"Enter a valid Abbreviation"
+    })
   });
   const newRouteForm = useForm({
     mode: "onBlur",
@@ -147,6 +150,27 @@ const NewRouteForm = ({ closeDialog }: { closeDialog: () => void }) => {
                 </FormControl>
                 <FormDescription>
                   The name of the route to be created.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+        <FormField
+          name="abbreviation"
+          control={newRouteForm.control}
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Abbreviation</FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  The route abbreviation.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
