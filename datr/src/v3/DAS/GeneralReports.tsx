@@ -12,11 +12,11 @@ import { toast } from "sonner";
 import { useAuth } from "@/api/useAuth";
 
 export const GeneralReports = () => {
-  const { terminal } = useTerminalStore();
+  const { terminal,date,setDate } = useTerminalStore();
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<10 | 20 | 30 | 40 | 200>(200);
+  const [pageSize, setPageSize] = useState<10 | 20 | 30 | 40 | 200>(10);
   const [maxPages, setMaxPages] = useState<number>(1);
-  const query = useReports(terminal, setMaxPages, currentPage, pageSize);
+  const query = useReports(terminal, setMaxPages, currentPage, pageSize,[`${terminal}`,currentPage.toString(),"ARRIVAL"]);
   const [reportData, setReportData] = useState<{
     Arrival: any[];
     Departure: any[];
@@ -44,12 +44,13 @@ export const GeneralReports = () => {
     setReportData(data);
   }, [query.data]);
   return (
-    <section className="w-full px-6 py-2 ">
+    <section className="w-full px-6 py-2 pb-6 ">
       <div className="flex items-center w-full justify-between">
         <p className="text-xl font-semibold">Reports</p>
+        <DatePickerWithRange date={date} setDate={setDate}/>
       </div>
 
-      <div className="w-full h-[60vh] overflow-y-auto border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth">
+      <div className="w-full max-h-[70vh] overflow-y-auto border-2 bg-white border-t-4 border-t-ncBlue rounded-lg py-1 mt-4 scroll-smooth flex flex-col gap-y-4">
         <p className="text-lg font-semibold text-ncBlue my-3 ml-3">Arrivals</p>
 
         {
@@ -59,7 +60,7 @@ export const GeneralReports = () => {
           ) : (
             query.isSuccess && (
               <GenericDataTable
-                DownloadComponent={ReportDownloadComponent}
+                DownloadComponent={ArrivalContainer}
                 tableClassname=""
                 headerClassname="rounded-lg"
                 filterHeader="Airline"
@@ -73,37 +74,64 @@ export const GeneralReports = () => {
             )
           )
         }
-      </div>
-      <div className="mt-5 flex justify-center space-x-4 items-center">
-        <button
-          onClick={() => setCurrentPage((state) => state - 1)}
-          disabled={currentPage === 1}
-          className="w-max px-5 py-1.5 text-sm rounded-lg bg-ncBlue text-white disabled:bg-slate-400"
-        >
-          Previous
-        </button>
-        <button
-          onClick={() => setCurrentPage((state) => state + 1)}
-          disabled={currentPage === maxPages}
-          className="px-5 w-max py-1.5 rounded-lg bg-ncBlue text-white text-sm disabled:bg-slate-400"
-        >
-          Next
-        </button>
-      </div>
+      <NcPagination setPage={setCurrentPage} currentPage={currentPage} maxPage={maxPages} className="my-2 mx-auto w-full gap-x-3 justify-center mt-auto"/>
 
-      <div className="w-full h-[60vh] overflow-y-auto border-2 border-neutral-300 rounded-lg py-1 mt-6 scroll-smooth ">
+      </div>
+      
+<DepartureTable/>
+      
+    </section>
+  );
+};
+
+const DepartureTable=()=>{
+  const { terminal } = useTerminalStore();
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<10 | 20 | 30 | 40 | 200>(10);
+  const [maxPages, setMaxPages] = useState<number>(1);
+  const query = useReports(terminal, setMaxPages, currentPage, pageSize,[`${terminal}`,currentPage.toString(),"DEPARTURE"]);
+  const [reportData, setReportData] = useState<{
+    Arrival: any[];
+    Departure: any[];
+  }>({
+    Arrival: [],
+    Departure: [],
+  });
+
+  useEffect(() => {
+    let data: { Arrival: any[]; Departure: any[] } = {
+      Arrival: [],
+      Departure: [],
+    };
+    console.log({data:query.data,maxPages,currentPage});
+    if (!query.data) return;
+    Object.values(query.data["dataEntryResponses"]).map((datum: any) => {
+      if (datum["reportType"] == "ARRIVAL") {
+        data.Arrival.push(datum);
+      } else {
+        data.Departure.push(datum);
+      }
+    });
+    // if(data.Arrival.length===0){
+    //   setCurrentPage((state)=>Math.min(state+1,maxPages))
+    // }
+
+    setReportData(data);
+  }, [query.data]);
+  return(
+    <section>
+      <div  className="w-full max-h-[70vh] overflow-y-auto border-2 bg-white border-t-4 border-t-ncBlue rounded-lg py-1 mt-4 scroll-smooth flex flex-col gap-y-4">
         <p className="text-lg font-semibold text-ncBlue my-3 ml-3">
           Departures
         </p>
 
         {
-          // Object.values(query.data["dataEntryResponses"])
           query.isLoading ? (
             <Skeleton className="w-full h-[60vh]" />
           ) : (
             query.isSuccess && (
               <GenericDataTable
-                DownloadComponent={DepartureReportDownloadComponent}
+                DownloadComponent={DepartureContainer}
                 tableClassname=""
                 filterHeader="Airline"
                 headerClassname="rounded-lg"
@@ -117,33 +145,98 @@ export const GeneralReports = () => {
             )
           )
         }
+      <NcPagination setPage={setCurrentPage} currentPage={currentPage} maxPage={maxPages} className="my-2 mx-auto w-full gap-x-3 justify-center mt-auto"/>
+
       </div>
-      <div className="mt-5 flex justify-center space-x-4 items-center">
-        <button
-          onClick={() => setCurrentPage((state) => state - 1)}
-          disabled={currentPage === 1}
-          className="w-max px-5 py-1.5 text-sm rounded-lg bg-ncBlue text-white disabled:bg-slate-400"
-        >
-          Previous
-        </button>
-        <button
-          onClick={() => setCurrentPage((state) => state + 1)}
-          disabled={currentPage === maxPages}
-          className="px-5 w-max py-1.5 rounded-lg bg-ncBlue text-white text-sm disabled:bg-slate-400"
-        >
-          Next
-        </button>
-      </div>
+      
     </section>
-  );
-};
+  )
+}
 import ExcelJs from "exceljs";
 import { format } from "date-fns";
+import { NcPagination } from "@/components/ui/NcPagination";
+import { DatePickerWithRange } from "./Delays";
+import { useUnPaginatedTerminalData } from "../hooks/useUnpaginatedTerminalData";
+import { DateRange } from "react-day-picker";
+const ArrivalContainer=({data}:{data:any[]})=>{
+  const {terminal,date}=useTerminalStore()
+  const [terminalData,setTerminalData]=useState<any>({
+    arrival:[],
+    departure:[]
+  })
+  const query = useUnPaginatedTerminalData(terminal,date as DateRange)
+  useEffect(()=>{
+    let temp={arrival:[],departure:[]}
+    if(query.isSuccess){
+      query.data.map((entry:any)=>{
+        if(entry.reportType==="ARRIVAL"){
+          temp.arrival.push(entry)
+        }
+        else{
+          temp.departure.push(entry)
+        }
+      })
+      setTerminalData(temp)
+    }
+      
+  },[query.data])
+  return(
+ 
+<div>
+    
+    {query.isSuccess&& <ReportDownloadComponent data={terminalData.arrival.length===0?data:terminalData.arrival}/>}
+    {
+      query.isLoading && <button className="w-max px-3 py-1.5 bg-ncBlue text-white rounded-md">Loading...</button>
+    }
+    {
+      query.isError && <button className="w-max px-2 py-1.5 bg-red-500 text-white rounded-md" onClick={()=>{query.refetch()}}>Error!</button>
+    }
+</div>  )
+}
+const DepartureContainer=({data}:{data:any[]})=>{
+  const {terminal,date}=useTerminalStore()
+  const [terminalData,setTerminalData]=useState<any>({
+    arrival:[],
+    departure:[]
+  })
+  const query = useUnPaginatedTerminalData(terminal,date as DateRange)
+
+ 
+  useEffect(()=>{
+    let temp={arrival:[],departure:[]}
+    if(query.isSuccess){
+      query.data.map((entry:any)=>{
+        if(entry.reportType==="ARRIVAL"){
+          temp.arrival.push(entry)
+        }
+        else{
+          temp.departure.push(entry)
+        }
+      })
+      setTerminalData(temp)
+    }
+      
+  },[query.data])
+  return(
+    <div>
+    
+    {query.isSuccess&& <ReportDownloadComponent data={terminalData.departure.length===0?data:terminalData.arrival}/>}
+    {
+      query.isLoading && <button className="w-max px-3 py-1.5">Loading...</button>
+    }
+      {
+      query.isError && <button className="w-max px-2 py-1.5 bg-red-500 text-white rounded-md" onClick={()=>{query.refetch()}}>Error!</button>
+    }
+</div>
+  )
+}
 const ReportDownloadComponent: React.FC<{ data: any[] }> = ({ data }) => {
   const { user } = useAuth();
+ 
   const {date}=useTerminalStore()
   const fromDate=format(date?.from? new Date(date?.from )as Date :new Date(),'dd-MM-yyyy')
   const toDate=format(date?.to?new Date(date?.to )as Date:new Date(),'dd-MM-yyyy'||"")
+ 
   const tryDownloadReport = () => {
     toast.promise(
       new Promise((resolve, reject) => {
