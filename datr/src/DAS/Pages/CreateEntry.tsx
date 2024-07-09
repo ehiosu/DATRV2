@@ -34,19 +34,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import TimePicker from "react-time-picker";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { useAxiosClient } from "@/api/useAxiosClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MdError } from "react-icons/md";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useTerminalStore } from '@/store/terminalstore';
-import {TerminalSelector} from "../Components/TerminalSelector.jsx"
 import { TimeInput } from "@/components/ui/TimeInput.js";
+import { useRoutes } from "@/v3/hooks/useRoutes.js";
 export const CreateEntry = () => {
-  const [date, setDate] = useState();
+  const routeQuery = useRoutes()
   const {terminal}=useTerminalStore()
   const newEntryFormSchema = z.object({
     dateOfIncidence: z.date(),
@@ -153,19 +149,19 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
           <form className="w-[80%] mx-auto flex-col flex" onSubmit={form.handleSubmit(TryAddEntry)}>
             
           <button ref={resetBtn} type="reset" className="hidden"> </button>
-          <div className="flex items-center flex-wrap w-full gap-3">
+          <div className="flex items-center flex-wrap w-full gap-3 my-2">
               <FormField
                 name="dateOfIncidence"
                 control={form.control}
                 render={({ field }) => (
-                  <FormItem className="flex flex-col flex-1">
+                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
                     <FormLabel>Date</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             className={cn(
-                              "w-60 justify-start text-left font-normal dark:bg-white bg-white ring-2 ring-blue-400 h-8",
+                              "w-full justify-start text-left font-normal dark:bg-white bg-white ring-2 ring-blue-400 h-8",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -195,27 +191,27 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 name="airline"
                 control={form.control}
                 render={({ field }) => (
-                  <FormItem className="flex flex-1 w-full flex-col my-2 space-y-3">
+                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
                     <FormLabel>Airline:</FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
                       <Select onValueChange={field.onChange} key={field.value} value={field.value}>
                         <SelectTrigger
                           disabled={!getAirlinesQuery.isSuccess}
-                          className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
+                          className="w-full h-8  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
                         >
                           <SelectValue
                             placeholder="Airline..."
                             className="text-neutral-500"
                           />
                         </SelectTrigger>
-                        <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
+                        <SelectContent className="w-full bg-ncBlue text-white rounded-md shadow-md  mx-auto text-center outline-none dark:bg-ncBlue">
                           {getAirlinesQuery.isSuccess &&
                             getAirlinesQuery.data.map((airline: any) => (
                               <>
                                 <SelectItem
                                   value={airline}
-                                  className=" text-[0.9rem] text-neutral-400  w-full p-1 hover:cursor-pointer text-center"
+                                  className=" text-[0.9rem]   focus:bg-slate-200/20 dark:focus:bg-slate-200/20  text-white focus:text-white w-full p-1 hover:cursor-pointer text-center"
                                 >
                                   {airline}
                                 </SelectItem>
@@ -253,10 +249,33 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                   <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
                     <FormLabel>Route</FormLabel>
                     <FormControl>
-                      <Input
-                        className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                        {...field}
-                      />
+                    <Select
+                    key={field.value}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger
+                        disabled={!routeQuery.isSuccess}
+                          className="w-full h-8  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
+                          
+                        >
+                          <SelectValue placeholder="Select A Route" />
+                        </SelectTrigger>
+                        
+                         {
+                          routeQuery.isSuccess && routeQuery.data &&  <SelectContent className="bg-ncBlue text-white dark:bg-ncBlue dark:text-white shadow-none  hover:bg-ncBlue dark:hover:bg-ncBlue">
+                        {
+                          routeQuery.data.map((route:any)=>(
+                            <SelectItem className="bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent  focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white dark:text-white focus:text-white dark:focus:text-white" key={route["id"]} value={route["routeName"]}>
+                            {route["abbreviation"]}
+                           </SelectItem>
+                          ))
+                        }
+                         
+                         </SelectContent>
+                         }
+                        
+                      </Select>
                     </FormControl>
                   </FormItem>
                 )}
@@ -282,7 +301,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                         value={field.value}
                         onChange={field.onChange}
                       /> */}
-                      <TimeInput value={field.value}  className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
+                      <TimeInput value={field.value}  className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange}  inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
                     </FormControl>
                   </FormItem>
                 )}
@@ -317,7 +336,7 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                   <FormLabel>Report Type:</FormLabel>
                   <FormControl>
                     {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                    <Select defaultValue={field.value} key={field.value} onValueChange={(value)=>{
+                    <Select defaultValue={field.value}  key={field.value} onValueChange={(value)=>{
                       setReportType(value as typeof reportType)
                       field.onChange(value)
                     }}>
