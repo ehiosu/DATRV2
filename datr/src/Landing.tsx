@@ -1,24 +1,74 @@
 import { AnimatePresence, useMotionValueEvent, useScroll,motion } from 'framer-motion'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom';
 import { TextGenerateEffect } from './components/ui/TextGenerate';
-
+import minister from "/minister.jpg"
+import dg from "/dg.jpg"
+import welcomeSound from "/Welcome-.mp3"
+import welcome from "/welcome.mp3"
 export const Landing = () => {
   const {scrollYProgress}=useScroll();
   const [scrollPosition,SetScrollPosition]=useState(0)
   const [collapsed,setCollapsed]=useState(false)
+  const [soundPlayed, setSoundPlayed] = useState(false);
+  const hiddenBtn=useRef<HTMLButtonElement|null>(null)
   useMotionValueEvent(scrollYProgress,"change",(current:number)=>{
    SetScrollPosition(current)
   }); 
 
   // data-state={scrollPosition>0.07?"collapsed":"expanded"}
- useEffect(()=>{
-console.log(scrollPosition)
- },[scrollPosition])
+  useEffect(() => {
+    hiddenBtn.current?.click()
+    const sound = new Audio('/Welcome-.mp3'); // Replace with the path to your audio file
+
+    const onMouseMove = () => {
+      if (sound) {
+        sound.play();
+        sound.loop = false;
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("touchstart", onMouseMove);
+      }
+    };
+
+    // Create an audio element and set its source
+
+    // Add a mousemove event listener
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("touchstart", onMouseMove);
+
+    // Clean up when the component unmounts
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("touchstart", onMouseMove);
+
+      if (sound) {
+        sound.pause();
+      }
+    };
+  },[] );
   return (
     <AnimatePresence mode='wait'>
 
-   <main className='w-full flex flex-col overflow-x-hidden'>
+   <main className='w-full flex flex-col overflow-x-hidden relative'>
+    <button className='absolute hidde' ref={hiddenBtn}></button>
+    <div className="fixed top-1/2 md:translate-y-0  md:top-auto md:bottom-8 flex w-max px-1.5  gap-x-3 z-[20]">
+      <img src={minister} className=" w-28 aspect-square rounded-full object-cover h-28 ring-2 ring-offset-2 ring-ncBlue object-top" alt="" />
+      <div>
+        <p className='w-52 bg-ncBlue text-white rounded-md px-5 text-sm py-5 relative  z-[4] overflow-hidden'> <span className="absolute w-[20%] aspect-square border-4 -top-4 z-[1] -right-2 border-white"/>
+        <span className="absolute w-[20%] aspect-square border-4 -bottom-5 z-[1] -left-2 border-white"/>
+        <span className='text-lg font-semibold mr-1.5'>"</span>Under my watch,the NCAA will not relent in its duty to protect your rights as aviation stakeholders <span className='text-lg font-semibold '>"</span></p>
+      </div>
+    </div>
+    <div className="fixed top-20  right-8 flex flex-col w-max px-1.5  gap-x-3 z-[20] h-max py-2  items-center overflow-hidden">
+      <img src={dg} className=" w-28 aspect-square rounded-full object-cover h-28 ring-2 ring-offset-2 ring-ncBlue object-center" alt="" />
+      <div className="bg-ncBlue  text-white px-1.5 py-2 mt-2 relative   rounded-md text-center  flex flex-col overflow-hidden">
+        <span className='w-[20%] aspect-square absolute -top-4 z-[1] -right-3 border-4 border-white rounded-md'/>
+        <span className='w-[20%] aspect-square absolute -bottom-4 z-[1] -left-3 border-4 border-white rounded-md'/>
+      <p className='text-center text-[0.8275rem] font-semibold mt-2'>CAPT. Chris Najomo</p>
+      <p className='text-sm '>Ag. DG NCAA</p>
+      </div>
+      
+    </div>
     <nav className=' bg-ncBlue data-[state=expanded]:h-16 data-[state=collapsed]:h-12 data-[state=collapsed]:rounded-full data-[state=expanded]:rounded-none data-[state=expanded]:w-full data-[state=collapsed]:w-40 sticky data-[state=collapsed]:top-4 data-[state=expanded]:top-0 mx-auto transition-all duration-500 flex items-center px-8 py-3 z-[20]' data-state={"expanded"} >
       <img src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png" className='h-full aspect-square rounded-full object-contain' alt="" />
       <p className='md:text-2xl text-lg text-white ml-2 tracking-wider font-semibold'>NCAA CPD PORTAL</p>
@@ -67,7 +117,7 @@ console.log(scrollPosition)
 
 const FirstSection=()=>{
   return(
-    <section className=' flex flex-col lg:flex-row items-center relative'>
+    <section className=' flex flex-col lg:flex-row items-center relative mt-20'>
     <div className="flex-[1] flex flex-col items-center h-full"> 
     <div className="lg:w-[60%] w-full lg:text-start text-center sticky top-[10%] mt-[10%]">
      <TextGenerateEffect words='Resolve Issues Faster: Streamlined Complaint Creation, Assignment, and Escalation' containerClass='w-full ' className='text-black tracking-wider text-xl lg:text-xl xl:text-4xl  ' />
