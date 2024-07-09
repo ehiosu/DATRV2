@@ -1,33 +1,38 @@
 import { useAuth } from '@/api/useAuth'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { ClipboardIcon, CopyX, LogOut, LucideIcon, LucideLayoutDashboard, MessageCircle, Settings, Ticket } from 'lucide-react'
 import React from 'react'
+import { BsThreeDots } from 'react-icons/bs'
 import { useLocation, useNavigate } from 'react-router'
 
 export const Sidebar = () => {
   const location=useLocation()
   const nav =useNavigate()
-  const {logout}=useAuth()
+  const {logout,access}=useAuth()
   const tryLogout=()=>{
     logout()
     nav('/')
   }
   return (
-    <div className='flex flex-col lg:w-[15vw] px-1 bg-ncBlue items-center overflow-y-auto sticky top-0'>
+   <>
+    <div className='flex flex-col lg:w-[15vw] px-1 bg-ncBlue items-center overflow-y-auto sticky top-0 hidden md:block'>
       <div className="w-full  py-1.5 px-2 aspect-square border-b-2 border-b-neutral-100/40  grid place-items-center">
         <img src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png" className='w-full aspect-square object-contain' alt="" />
       </div>
     <div className="flex flex-col mt-[40px] px-3  w-full flex-1 p-2">
-      <SidebarItem to='/CPD/Dashboard' title='Dashboard' Icon={LucideLayoutDashboard} allowedRoles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN","DGO"]}/>
-      <SidebarItem to='/CPD/Tickets' title='Tickets' Icon={Ticket} mainMenu='/CPD/Ticket' allowedRoles={["ADMIN","CPO","AIRLINE"]}/>
-      <SidebarItem to='/CPD/Messages' title='Messages' Icon={MessageCircle} allowedRoles={["*"]}/>
+      <SidebarItem to='/CPD/Dashboard' title='Dashboard' Icon={LucideLayoutDashboard} allowedRoles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN","DGO","FOU_HEAD"]}/>
+      <SidebarItem to='/CPD/Tickets' title='Tickets' Icon={Ticket} mainMenu='/CPD/Ticket' allowedRoles={["ADMIN","CPO","AIRLINE","FOU_HEAD"]}/>
+      <SidebarItem to='/CPD/Messages' title='Messages' Icon={MessageCircle} allowedRoles={["nobody"]}/>
       <SidebarItem to='/DAS/Dashboard' title='Data And Statistics' Icon={ClipboardIcon} allowedRoles={["ADMIN","DGO","DATA_STATISTICS"]}/>
-      <SidebarItem to='/CPD/Configuration/Sla' title='Configuration' mainMenu='/CPD/Configuration' Icon={Settings} allowedRoles={["ADMIN"]}/>
+      <SidebarItem to='/CPD/Configuration/Sla' title='Configuration' mainMenu='/CPD/Configuration' Icon={Settings} allowedRoles={["ADMIN","FOU_HEAD"]}/>
       <SidebarItem to='/CPD/FDR' title='Flight Disruption' Icon={CopyX} allowedRoles={["ADMIN","AIRLINE"]}/>
-      <div onClick={()=>{tryLogout()}} role='button' className="mt-auto px-2 flex items-center space-x-2 text-lightPink hover:bg-slate-100/10 rounded-md h-8 transition-all">
+      {
+        access&& access!="access"&& <div onClick={()=>{tryLogout()}} role='button' className="mt-auto px-2 flex items-center space-x-2 text-lightPink hover:bg-slate-100/10 rounded-md h-8 transition-all">
         <LogOut className='w-4 h-4 shrink '/>
         <p className='text-sm'>Logout</p>
       </div>
+      }
      
     </div>
       
@@ -35,6 +40,32 @@ export const Sidebar = () => {
 
 
     </div>
+    <Sheet >
+    <SheetTrigger className='fixed top-4 left-4 w-8 h-8 bg-ncBlue text-white rounded flex items-center justify-center md:hidden block'>
+      <BsThreeDots/>
+    </SheetTrigger>
+    <SheetContent className='bg-ncBlue text-white'>
+      
+    <div className="w-full  py-1.5 px-2 aspect-square border-b-2 border-b-neutral-100/40  grid place-items-center">
+        <img src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png" className='w-[80%] aspect-square object-contain' alt="" />
+      </div>
+    <div className="flex flex-col mt-[40px] px-3  w-full flex-1 p-2">
+      <SidebarItem to='/CPD/Dashboard' title='Dashboard' Icon={LucideLayoutDashboard} allowedRoles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN","DGO","FOU_HEAD"]}/>
+      <SidebarItem to='/CPD/Tickets' title='Tickets' Icon={Ticket} mainMenu='/CPD/Ticket' allowedRoles={["ADMIN","CPO","AIRLINE","FOU_HEAD"]}/>
+      <SidebarItem to='/CPD/Messages' title='Messages' Icon={MessageCircle} allowedRoles={["nobody"]}/>
+      <SidebarItem to='/DAS/Dashboard' title='Data And Statistics' Icon={ClipboardIcon} allowedRoles={["ADMIN","DGO","DATA_STATISTICS","FOU_HEAD"]}/>
+      <SidebarItem to='/CPD/Configuration/Sla' title='Configuration' mainMenu='/CPD/Configuration' Icon={Settings} allowedRoles={["ADMIN"]}/>
+      <SidebarItem to='/CPD/FDR' title='Flight Disruption' Icon={CopyX} allowedRoles={["ADMIN","AIRLINE"]}/>
+      {
+        access&& access!="access"&& <div onClick={()=>{tryLogout()}} role='button' className="mt-auto px-2 flex items-center space-x-2 text-lightPink hover:bg-slate-100/10 rounded-md h-8 transition-all">
+        <LogOut className='w-4 h-4 shrink '/>
+        <p className='text-sm'>Logout</p>
+      </div>
+      }
+      </div>
+    </SheetContent>
+    </Sheet>
+    </>
   )
 }
 type sidebarProps={
