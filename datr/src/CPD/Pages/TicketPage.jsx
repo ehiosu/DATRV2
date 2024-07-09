@@ -68,6 +68,8 @@ export const TicketPage = () => {
   const scrollArrowRef = useRef(null);
   const [replyingTo, setReplyingTo] = useState("");
   const textAreaRef = useRef(null);
+  const { user } = useAuth();
+  const role = user.roles[user.roles.length - 1];
   const btnStyles = {
     PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
     UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
@@ -77,6 +79,7 @@ export const TicketPage = () => {
     UNASSIGNED: "",
     CLOSED: "bg-red-200 border-2 border-red-500",
     NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+    AWAITING_APPROVAL: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
   };
   const [ticketContent, setTicketContent] = useState("");
   const ticketQuery = useQuery({
@@ -106,32 +109,7 @@ export const TicketPage = () => {
           .catch((err) => reject(err))
       ),
   });
-  /*To test the the message queue system(makes the message always fail to send) */
 
-  // const sendMessageMutation = useMutation({
-  //   mutationKey: ["comment", "new"],
-  //   mutationFn: () =>
-  //     new Promise((resolve, reject) => {
-  //       const shouldFail = Math.random() < 1; // 100% chance of failing
-  //       if (shouldFail) {
-  //         setTimeout(() => reject(new Error("Simulated network error")), 500);
-  //       } else {
-  //         axios("comments/add", {
-  //           method: "POST",
-  //           data: {
-  //             ticketId: ticketQuery.data["id"],
-  //             content: ticketContent,
-  //             commentType: "MESSAGE",
-  //             mentions: [],
-  //             cc: [],
-  //             bcc: [],
-  //           },
-  //         })
-  //           .then((resp) => resolve(resp.data))
-  //           .catch((err) => reject(err));
-  //       }
-  //     }),
-  // });
   useEffect(() => {
     if (
       currentMessageCount.current < messages.length &&
@@ -289,7 +267,9 @@ export const TicketPage = () => {
                   }`}
                 >
                   {ticketQuery.isSuccess &&
-                    ticketQuery.data.ticketStatus.toLowerCase()}
+                    ticketQuery.data.ticketStatus
+                      .toLowerCase()
+                      .replace("_", " ")}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[0.8275rem]">
@@ -661,8 +641,9 @@ const AddCommentDialog = () => {
 const EscalatePopover = () => {
   const { screenSize } = useWindowSize();
   const { id } = useParams();
-  const { axios } = useAxiosClient();
   const client = useQueryClient();
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+  const { axios } = useAxiosClient();
   const escalateTicketMutation = useMutation({
     mutationKey: ["ticket", `${id}`, "escalate"],
     mutationFn: (values) =>
@@ -724,16 +705,59 @@ const EscalatePopover = () => {
   );
 };
 import logo from "/NCAALogo.png";
-const SeekApprovalPopover = () => {
+const SeekApprovalPopover = ({}) => {
   const { screenSize } = useWindowSize();
+  const { id } = useParams();
+  const client = useQueryClient();
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+  const { axios } = useAxiosClient();
+  console.log(ticketData);
   // const { axios } = useAxiosClient();
   // const client = useQueryClient();
-  const { id } = useParams();
   const [approvalRemark, SetApprovalRemark] = useState("");
   const [HasFocused, SetHasFocused] = useState(false);
+  const submitApprovalMutation = useMutation({
+    mutationKey: ["ticket", id, "approval"],
+    mutationFn: () =>
+      axios(`tickets/submit/approval`, {
+        method: "PUT",
+        data: {
+          ticketId: id,
+          approvalMessage: approvalRemark,
+        },
+      })
+        .then((resp) => {
+          toast({
+            title: "Success!",
+            description: "Ticket Submited For Approval",
+          });
+          client.invalidateQueries({
+            queryKey: ["ticket", id],
+            exact: false,
+          });
+        })
+        .catch((err) =>
+          toast({
+            title: "Success!",
+            description: err.response.data.message || err.response.data.detail,
+            variant: "destructive",
+          })
+        ),
+  });
+
+  const TrySubmit = () => {
+    submitApprovalMutation.mutate();
+  };
+
   return (
     <AlertDialog>
-      <AlertDialogTrigger className="text-xs text-center w-full hover:cursor-pointer hover:text-blue-400 h-6 my-2">
+      <AlertDialogTrigger
+        disabled={
+          ticketData["ticketStatus"] === "RESOLVED" ||
+          ticketData["ticketStatus"] === "AWAITING_APPROVAL"
+        }
+        className="text-xs text-center w-full hover:cursor-pointer hover:text-blue-400 h-6 my-2 disabled:hover:text-black"
+      >
         Submit For Approval
       </AlertDialogTrigger>
       <AlertDialogContent className="space-y-1 overflow-hidden max-h-screen overflow-y-auto">
@@ -769,6 +793,9 @@ const SeekApprovalPopover = () => {
         <Button
           variant={"ghost"}
           disabled={approvalRemark.length == 0}
+          onClick={() => {
+            TrySubmit();
+          }}
           className="hover:bg-lightPink dark:hover:bg-lightPink transition hover:text-white dark:hover:text-white"
         >
           Submit
@@ -845,6 +872,7 @@ const EscalateTicketForm = ({ onSubmitForm }) => {
   );
 };
 const ActionsComponent = () => {
+  const { user } = useAuth();
   return (
     <Popover>
       <PopoverTrigger className="flex items-center justify-center gap-2 text-[0.8275rem] w-40 bg-neutral-200 h-8 rounded-md">
@@ -852,12 +880,133 @@ const ActionsComponent = () => {
       </PopoverTrigger>
       <PopoverContent side="bottom" className="w-44">
         <AddNotePopover />
-        <AddReminderPopover />
-        <EscalatePopover />
+        {/* <AddReminderPopover /> */}
+
+        <EscalateAction />
+        {user.roles.includes("FOU") && (
+          <button className="w-max px-3 py-1.5 bg-ncBlue text-white">
+            Send To Airline
+          </button>
+        )}
+
         <SeekApprovalPopover />
+        <ApproveEscalationAction />
         <DeleteAction />
       </PopoverContent>
     </Popover>
+  );
+};
+import { AuthorizedComponent } from "../../v3/CPD/Components/AuthorizedComponent.tsx";
+const ApproveEscalationAction = () => {
+  const { id } = useParams();
+  const { axios } = useAxiosClient();
+  const client = useQueryClient();
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+  const isAwaitingApproval =
+    ticketData["ticketStatus"] === "AWAITING_ESCALATION_APPROVAL";
+  if (!isAwaitingApproval) return <></>;
+  return (
+    <AuthorizedComponent
+      roles={["SHIFT_SUPERVISOR", "TERMINAL_SUPERVISOR", "ADMIN"]}
+    >
+      <ConfirmationDialog message="This Will permanently alter the status of the ticket.">
+        <p>Approve Escalation</p>
+      </ConfirmationDialog>
+    </AuthorizedComponent>
+  );
+};
+const EscalateAction = () => {
+  const { id } = useParams();
+  const { axios } = useAxiosClient();
+  const client = useQueryClient();
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+  const escalationMutation = useMutation({
+    mutationKey: ["ticket", "id", "escalate"],
+    mutationFn: () =>
+      new Promise((resolve, reject) =>
+        axios(`tickets/escalate/${id}`, {
+          method: "PUT",
+        })
+          .then((resp) => resolve(resp))
+          .catch((err) => reject(err))
+      ),
+  });
+  const tryEscalateTicket = () => {
+    try {
+      sonnerToast.promise(
+        new Promise((resolve, reject) =>
+          escalationMutation.mutate(undefined, {
+            onSuccess: (data) => {
+              resolve(data);
+            },
+            onError: (error) => {
+              reject(error);
+            },
+          })
+        ),
+        {
+          loading: "Trying to escalate ticket...",
+          success: "Ticket Escalated Successfully!",
+          error: (error) => {
+            console.log(error);
+            return (
+              <div className="text-black flex flex-col">
+                <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                  <MdError className="w-4 h-4 shrink " /> Error
+                </p>
+                <p>
+                  {error.response.data
+                    ? error.response.data.message
+                    : error.response.data.detail}
+                </p>
+              </div>
+            );
+          },
+        }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger
+        disabled={
+          ticketData["ticketStatus"] === "ESCALATED" ||
+          ticketData["fouCpoAssigneeName"] ||
+          ticketData["ticketStatus"] === "RESOLVED" ||
+          ticketData["ticketStatus"] === "AWAITING_APPROVAL"
+        }
+        className="w-full text-xs font-normal h-8 hover:text-blue-400 disabled:hover:text-neutral-500"
+      >
+        Escalate Ticket
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader className="flex items-center justify-between flex-row">
+          <AlertDialogTitle className="">Escalate Ticket</AlertDialogTitle>
+          <AlertDialogCancel className="w-7 h-7 flex items-center justify-center   p-0">
+            <AiOutlineClose className="w-4 h-4 shrink" />
+          </AlertDialogCancel>
+        </AlertDialogHeader>
+        <p className="text-sm text-neutral-500">
+          This action can not be reversed and will permanently negate your
+          access to functions within this ticket.
+        </p>
+        <AlertDialogFooter>
+          <AlertDialogAction
+            onClick={() => {
+              tryEscalateTicket();
+            }}
+            className="bg-ncBlue/60 transition-colors duration-300 text-white hover:bg-ncBlue"
+          >
+            Escalate
+          </AlertDialogAction>
+          <AlertDialogCancel className="bg-slate-200 hover:bg-slate-400 transition-colors duration-300">
+            Cancel
+          </AlertDialogCancel>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 import { FiMessageCircle } from "react-icons/fi";
@@ -901,11 +1050,11 @@ const TimerComponent = () => {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div className=" ml-2 h-24 w-[80%] mt-2 border-2 border-neutral-200 rounded-lg bg-white text-center flex flex-col items-center justify-center">
-      <p className="text-darkBlue lg:text-[1.3rem] font-semibold">
+    <div className=" ml-2 h-24 w-[80%] mt-2 border-2 border-neutral-200 rounded-lg  text-center flex flex-col items-center justify-center bg-ncBlue teext-white">
+      <p className="text-white lg:text-[1.3rem] font-semibold">
         Time To Expiry:
       </p>
-      <p className="text-blue-400 lg:text-[1.3rem] font-semibold">
+      <p className="text-white lg:text-[1.3rem] font-semibold">
         {timeToTimeout}
       </p>
     </div>
@@ -1043,6 +1192,33 @@ const DetailCellManager = ({ cellKey, value }) => {
 
 const ApprovalSubAction = () => {
   const { id } = useParams();
+  const { axios } = useAxiosClient();
+  const client = useQueryClient();
+
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+  const changeStatusMutation = useMutation({
+    mutationKey: ["statusChange"],
+    mutationFn: () =>
+      axios
+        .patch(`/tickets/${id}`, [
+          { op: "replace", path: "/ticketStatus", value: `RESOLVED` },
+        ])
+        .then((resp) => {
+          toast({
+            title: "Success!",
+            description: "Ticket Updated",
+          });
+          client.invalidateQueries({ queryKey: ["tickets", `${id}`] });
+        })
+        .catch((err) => {
+          console.log();
+          toast({
+            title: "Error!",
+            description: err.message,
+            variant: "destructive",
+          });
+        }),
+  });
   const popoverRef = useRef(null);
   return (
     <Popover>
@@ -1061,13 +1237,16 @@ const ApprovalSubAction = () => {
         </div>
         <p className="font-semibold text-[0.9rem] my-2">CPO Remark</p>
         <p className="text-sm text-neutral-500">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequatur
-          molestias eos deleniti ad. Magni, obcaecati at ad necessitatibus
-          ducimus numquam itaque exercitationem non, quae et nostrum quia animi
-          optio minus?
+          {ticketData["approvalMessage"]}
         </p>
         <div className="flex mt-3 items-center flex-wrap space-x-2">
-          <ConfirmationDialog>
+          <ConfirmationDialog
+            onClick={() => {
+              changeStatusMutation.mutate();
+              console.log("test");
+            }}
+            message="This action can't be reversed."
+          >
             <button className="w-28  h-9 bg-blue-400 text-white rounded-md">
               Approve
             </button>
@@ -1177,6 +1356,7 @@ import { BiError } from "react-icons/bi";
 import { ConfirmationDialog } from "../Components/DataTable";
 import { AiOutlineClose } from "react-icons/ai";
 import { cn } from "../../lib/utils";
+import { useAuth } from "../../api/useAuth";
 const TicketHistoryLoading = () => {
   return (
     <div>
