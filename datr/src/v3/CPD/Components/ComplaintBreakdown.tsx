@@ -33,12 +33,12 @@ export const ComplaintBreakdown = () => {
     plugins: {
       datalabels: {
         display: true,
-        align: "bottom",
+        align: "center",
         backgroundColor: "#01054C",
         color:"#FFF",
         borderRadius: 3,
         font: {
-          size: 14,
+          size: 12,
         },
       },
     },
