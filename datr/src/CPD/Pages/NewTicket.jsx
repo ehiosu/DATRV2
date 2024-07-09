@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { AiFillStar, AiOutlineArrowDown, AiOutlineClose } from "react-icons/ai";
-import { SearchPage } from "../../Reusable/SearchPage";
-import audio from "/2.mp3";
+import React, { useState } from "react";
+import { AiFillStar, AiOutlineClose } from "react-icons/ai";
+import { useRoutes } from "../../v3/hooks/useRoutes";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import {
   Select,
@@ -67,9 +66,6 @@ export const NewTicket = () => {
   const nav = useNavigate();
   const { user } = useAuth();
   const { axios } = useAxiosClient();
-  if (!user.roles.includes("CPO") && !user.roles.includes("ADMIN")) {
-    return <Navigate to={"/CPD/Dashboard"} />;
-  }
   const [isTicketUploading, setIsTicketUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const getGroupedData = (data) => {
@@ -140,10 +136,23 @@ export const NewTicket = () => {
     priority: z.string("Select a Priority!").min(1, {
       message: "Ensure to select a priority!",
     }),
+    terminalName: z.string("Select a valid terminal"),
   });
   const formatDate = (date) => {
     return format(new Date(date), "dd/MM/yyyy");
   };
+  const terminalQuery = useQuery({
+    queryKey: ["terminals", "all"],
+    staleTime: Infinity,
+    queryFn: () =>
+      axios("terminals/active", {
+        method: "GET",
+      })
+        .then((resp) => resp.data)
+        .catch((err) => {
+          throw err;
+        }),
+  });
   const form = useForm({
     resolver: zodResolver(formSchema),
     mode: "onChange",
@@ -187,6 +196,7 @@ export const NewTicket = () => {
     formSubmitMutation.mutate(values);
   };
 
+  const routesQuery = useRoutes();
   return (
     <section className="w-full  p-4 lg:p-2 h-auto ">
       {/* <div className="w-full  ">
@@ -285,7 +295,7 @@ export const NewTicket = () => {
                   >
                     <SelectTrigger
                       disabled={getRequestTypesQuery.isLoading}
-                      className="w-full h-8 outline-none bg-white rounded-md dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent"
+                      className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
                     >
                       <SelectValue
                         placeholder="Complaint"
@@ -293,11 +303,11 @@ export const NewTicket = () => {
                       />
                     </SelectTrigger>
                     {getRequestTypesQuery.isSuccess && (
-                      <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
+                      <SelectContent className="w-full bg-ncBlue rounded-md shadow-md  mx-auto text-center outline-none">
                         {Object.keys(getRequestTypesQuery.data).map(
                           (requestGroup) => (
                             <SelectGroup key={requestGroup}>
-                              <SelectLabel className="w-full">
+                              <SelectLabel className="w-full text-white">
                                 {requestGroup.replace("_", " ")}
                               </SelectLabel>
                               {getRequestTypesQuery.data[requestGroup].map(
@@ -306,7 +316,7 @@ export const NewTicket = () => {
                                     <SelectItem
                                       key={`${requestType}-${index}`}
                                       value={requestType}
-                                      className=" text-[0.9rem] text-neutral-400   p-1 hover:cursor-pointer text-center"
+                                      className="bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent  focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white dark:text-white focus:text-white dark:focus:text-white"
                                     >
                                       {requestType}
                                     </SelectItem>
@@ -400,20 +410,36 @@ export const NewTicket = () => {
             control={form.control}
             render={({ field }) => (
               <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
-                <FormLabel className="flex flex-row space-x-2 items-center">
-                  {" "}
-                  <p className="  text-[#172B4D]">Route</p>
-                  <AiFillStar className="text-red-500" />
-                </FormLabel>
-
+                <FormLabel>Route</FormLabel>
                 <FormControl>
-                  <Input
-                    className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                    {...field}
-                    placeholder=""
-                  />
+                  <Select
+                    key={field.value}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger
+                      disabled={!routesQuery.isSuccess}
+                      className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
+                    >
+                      <SelectValue placeholder="Select A Route" />
+                    </SelectTrigger>
+
+                    {routesQuery.isSuccess && routesQuery.data && (
+                      <SelectContent className="bg-ncBlue text-white dark:bg-ncBlue dark:text-white shadow-none  hover:bg-ncBlue dark:hover:bg-ncBlue">
+                        {routesQuery.data.map((route) => (
+                          <SelectItem
+                            className="bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent  focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white dark:text-white focus:text-white dark:focus:text-white"
+                            key={route["id"]}
+                            value={route["routeName"]}
+                          >
+                            {route["abbreviation"]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    )}
+                  </Select>
                 </FormControl>
-                <FormMessage className="text-start text-xs" />
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -432,12 +458,15 @@ export const NewTicket = () => {
 
                 <FormControl>
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
+                    <SelectTrigger className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue">
                       <SelectValue placeholder="Select Complaint Source..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-ncBlue bg-ncBlue">
                       {complaintSources.map((source) => (
-                        <SelectItem value={source.value}>
+                        <SelectItem
+                          className="bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent  focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white dark:text-white focus:text-white dark:focus:text-white"
+                          value={source.value}
+                        >
                           {source.title}
                         </SelectItem>
                       ))}
@@ -498,7 +527,7 @@ export const NewTicket = () => {
           />
 
           {/* row-6-above */}
-          <FormField
+          {/* <FormField
             name="attachmentUrls"
             control={form.control}
             render={({ field }) => (
@@ -538,7 +567,7 @@ export const NewTicket = () => {
                 <FormMessage className="text-start text-xs" />
               </FormItem>
             )}
-          />
+          /> */}
 
           {/* row-7-above */}
           <FormField
@@ -556,13 +585,13 @@ export const NewTicket = () => {
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
-                    <SelectTrigger className="w-full h-8 outline-none bg-white rounded-md  dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent">
+                    <SelectTrigger className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue">
                       <SelectValue
                         placeholder="Airline Services"
                         className="text-neutral-500"
                       />
                     </SelectTrigger>
-                    <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
+                    <SelectContent className="w-full bg-ncBlue dark:bg-ncBlue rounded-md shadow-md  mx-auto text-center outline-none">
                       {getAirlinesQuery.isSuccess &&
                       getAirlinesQuery.data.length > 0 ? (
                         getAirlinesQuery.data.map((airline) => {
@@ -600,21 +629,28 @@ export const NewTicket = () => {
                   <AiFillStar className="text-red-500" />
                 </FormLabel>
                 <FormControl>
-                  <Select
+                  <Input
+                    {...field}
+                    type="text"
+                    name=""
+                    id=""
+                    className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                  />
+                  {/* <Select
                     className="outline-none"
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
-                    <SelectTrigger className="w-full h-8 outline-none bg-white rounded-md   dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent">
+                    <SelectTrigger className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue">
                       <SelectValue
                         placeholder="Location"
                         className="text-neutral-500"
                       />
                     </SelectTrigger>
-                    <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
+                    <SelectContent className="w-32 bg-ncBlue dark:bg-ncBlue rounded-md shadow-md  mx-auto text-center outline-none">
                       <SelectItem
                         value="AS"
-                        className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center"
+                        className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center w-full"
                       >
                         MMA
                       </SelectItem>
@@ -627,7 +663,7 @@ export const NewTicket = () => {
                       </SelectItem>
                       <Separator />
                     </SelectContent>
-                  </Select>
+                  </Select> */}
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -652,7 +688,7 @@ export const NewTicket = () => {
                   >
                     <SelectTrigger
                       disabled={getSlasQuery.isError || getSlasQuery.isLoading}
-                      className="w-full h-8 outline-none bg-white rounded-md  dark:bg-white dark:ring-offset-transparent dark:focus:ring-transparent"
+                      className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
                     >
                       <SelectValue
                         placeholder="Select a priority..."
@@ -660,20 +696,70 @@ export const NewTicket = () => {
                       />
                     </SelectTrigger>
                     {getSlasQuery.isSuccess && (
-                      <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none ">
-                        {getSlasQuery.data.map((sla) => {
-                          return (
-                            <>
-                              <SelectItem
-                                value={sla.slaName}
-                                className=" text-[0.9rem] text-neutral-400  inline p-1 hover:cursor-pointer text-center"
-                              >
-                                {sla.slaName}
-                              </SelectItem>
-                              <Separator />
-                            </>
-                          );
-                        })}
+                      <SelectContent className="bg-ncBlue text-white dark:bg-ncBlue dark:text-white shadow-none  hover:bg-ncBlue dark:hover:bg-ncBlue">
+                        {getSlasQuery.data.length &&
+                          getSlasQuery.data.map((sla) => {
+                            return (
+                              <>
+                                <SelectItem
+                                  className="bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent  focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white dark:text-white focus:text-white dark:focus:text-white"
+                                  value={sla.slaName}
+                                >
+                                  {sla.slaName}
+                                </SelectItem>
+                                <Separator />
+                              </>
+                            );
+                          })}
+                      </SelectContent>
+                    )}
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="terminalName"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="col-span-1  text-start space-y-2 flex flex-col items-start mb-4 mx-3">
+                <FormLabel className="flex flex-row space-x-2 items-center">
+                  <p className="  text-[#172B4D]">Terminal</p>
+                  <AiFillStar className="text-red-500" />
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    className="outline-none"
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger
+                      disabled={
+                        terminalQuery.isError || terminalQuery.isLoading
+                      }
+                      className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
+                    >
+                      <SelectValue
+                        placeholder="Select a Terminal..."
+                        className="text-neutral-500"
+                      />
+                    </SelectTrigger>
+                    {terminalQuery.isSuccess && (
+                      <SelectContent className="bg-ncBlue text-white dark:bg-ncBlue dark:text-white shadow-none  hover:bg-ncBlue dark:hover:bg-ncBlue">
+                        {terminalQuery.data &&
+                          terminalQuery.data.map((terminal) => {
+                            return (
+                              <>
+                                <SelectItem
+                                  className="bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent  focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white dark:text-white focus:text-white dark:focus:text-white"
+                                  value={terminal.name}
+                                >
+                                  {terminal.name}
+                                </SelectItem>
+                              </>
+                            );
+                          })}
                       </SelectContent>
                     )}
                   </Select>
