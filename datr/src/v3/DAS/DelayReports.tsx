@@ -38,9 +38,7 @@ export const DelayReports = () => {
     },[query.data])
   return (
     <section className='w-full px-6 py-2 '>
-    <div onClick={()=>{nav(-1)}} role='button' className='w-8 h-8 bg-ncBlue rounded-sm flex items-center justify-center text-white'>
-        <MdArrowBack className='w-4 h-4 shrink'/>
-    </div>
+  
     <div className="flex items-center w-full justify-between">
     <p className='text-xl font-semibold'>Delays for {id?.replace("_"," ")}</p>
     <DatePickerWithRange date={date} setDate={setDate}/>
