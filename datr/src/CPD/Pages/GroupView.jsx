@@ -22,19 +22,29 @@ export const GroupView = () => {
   const query = useQueryParameter();
   const group = query.get("group");
   const { axios } = useAxiosClient();
+  const [search, setSearch] = useState("");
   const nav = useNavigate();
   if (!group) return redirect("/CPD/Dashboard");
 
   const [page, setPage] = useState(1);
+  const onFindUser = (user, reset = false) => {
+    if (reset) {
+      setSearch("");
+    } else {
+      setSearch(user);
+    }
+  };
   const [paginationInfo, setPaginationInfo] = useState({
     totalPages: 0,
     totalElements: 0,
   });
   const groupDataQuery = useQuery({
-    queryKey: ["groups", group, page - 1],
+    queryKey: ["groups", group, page - 1, search],
     queryFn: () =>
       axios(
-        group === "AIRLINE"
+        search
+          ? `users/role-and-firstname?role=${group}&firstname=${search}`
+          : group === "AIRLINE"
           ? "users/role/non-pageable?value=AIRLINE"
           : `users/role?value=${group}&page=${page - 1}&size=10`,
         {
@@ -44,29 +54,32 @@ export const GroupView = () => {
         if (group !== "AIRLINE") {
           console.log(resp);
           setPaginationInfo({
-            totalPages: resp.data.totalPages,
-            totalElements: resp.data.totalElements,
+            totalPages: resp.data.totalPages || 1,
+            totalElements: resp.data.totalElements || resp.data.length,
           });
           return resp.data;
         } else {
           console.log("else");
-          const result = {
-            ncaaUserResponseDtoList: resp.data.sort((a, b) => {
-              if (a.airline < b.airline) {
-                return -1;
-              } else if (a.airline > b.airline) {
-                return 1;
-              }
-              return 0;
-            }),
-          };
-          console.log(result);
-          return result;
+          if (!search) {
+            const result = {
+              ncaaUserResponseDtoList: resp.data.sort((a, b) => {
+                if (a.airline < b.airline) {
+                  return -1;
+                } else if (a.airline > b.airline) {
+                  return 1;
+                }
+                return 0;
+              }),
+            };
+            console.log(result);
+            return result;
+          }
+
+          return resp.data;
         }
       }),
   });
   const updated_group = group.replaceAll("_", " ");
-  console.log(updated_group);
   return (
     <section className="w-full space-y-2">
       <p className="text-xl font-semibold text-ncBlue mt-2 items-center">
@@ -124,13 +137,19 @@ export const GroupView = () => {
       {groupDataQuery.isSuccess ? (
         <div className="h-[50vh] overflow-auto border-t-4 border-t-ncBlue bg-white  border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth w-full">
           <GenericDataTable
+            onFilterValue={search}
+            onFilterChange={onFindUser}
             filterColumn={group === "AIRLINE" ? "airline" : "firstName"}
             hasFilter
             filterHeader={group === "AIRLINE" ? "Airline Name" : "First Name"}
             columns={
               group === "AIRLINE" ? AirlineTableColumnDef : cpoTableColumnDef
             }
-            data={groupDataQuery.data.ncaaUserResponseDtoList}
+            data={
+              search
+                ? groupDataQuery.data
+                : groupDataQuery.data.ncaaUserResponseDtoList
+            }
           />
         </div>
       ) : (
