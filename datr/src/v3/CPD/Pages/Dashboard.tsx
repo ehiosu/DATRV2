@@ -24,8 +24,8 @@ export const Dashboard = () => {
           <p className='text-lg text-ncBlue font-[500]'>Dashboard</p>
           <p className='text-neutral-400 text-sm'>Overview Of System-Wide activities,feel free to explore other pages.</p>
           </div>
-          <AuthorizedComponent roles={["ADMIN","TERMINAL_HEAD","SHIFT_HEAD"]}>
-            <button onClick={()=>{nav('/CPD/New-Ticket')}} className='w-40 h-9 hover:bg-slate-400 transition-all rounded-md bg-ncBlue text-white flex items-center space-x-2 justify-center ml-auto '>
+          <AuthorizedComponent roles={["ADMIN","TERMINAL_SUPERVISOR","SHIFT_SUPERVISOR","FOU_HEAD","FOU_CPO"]}>
+            <button onClick={()=>{nav('/CPD/New-Ticket')}} className='w-max px-3 py-1.5 whitespace-nowrap h-9 hover:bg-slate-400 transition-all rounded-md bg-ncBlue text-white flex items-center space-x-2 justify-center ml-auto '>
               New Ticket <Plus className='w-4 h-4 ml-2 shrink'/>
             </button>
           </AuthorizedComponent>
@@ -212,7 +212,7 @@ const DashboardReports=()=>{
     const terminals=useTerminal()
     const {user}=useAuth()
     const [terminal,setTerminal]=useState("ALL")
-    const query=useTickets("NEW",{from:undefined,to:undefined},1,20,()=>{})
+    const query=useTickets(user.roles[user.roles.length-1]==="FOU_HEAD"?"ESCALATED":"NEW",{from:undefined,to:undefined},1,20,()=>{})
     let data = {
         labels:["Air Peace","Max Air","Dana Air","Arik Air","Aero Contractors"],
         datasets: [{
@@ -292,12 +292,12 @@ const DashboardReports=()=>{
               <div className="flex flex-wrap w-full my-4   xl:gap-y-0 gap-y-4 max-w-full">
                
                 {
-                    terminals.isSuccess? <div className='md:w-full lg:w-[60%] w-full  h-[50vh] p-2 max-w-full  bg-white border-t-4 border-t-ncBlue rounded-t-lg overflow-y-auto  xl:max-w-[48%]  min-w-[400px] mx-auto'><ComplaintBreakdown/>  </div>:terminals.isLoading&&<Skeleton className='w-[48%] min-w-[400px] h-[40vh] mx-auto'/>
+                    terminals.isSuccess? <div className='md:w-full lg:w-[60%] w-full  h-[60vh] p-2 max-w-full  bg-white border-t-4 border-t-ncBlue rounded-t-lg overflow-y-auto  xl:max-w-[48%]  min-w-[400px] mx-auto'><ComplaintBreakdown/>  </div>:terminals.isLoading&&<Skeleton className='w-[48%] min-w-[400px] h-[40vh] mx-auto'/>
                 }
               
                 
                 {
-                    terminals.isSuccess?<div className='md:w-full lg:w-[60%] w-full  h-[50vh] p-2 max-w-full  bg-white border-t-4 border-t-ncBlue rounded-t-lg overflow-y-auto  xl:max-w-[48%]  min-w-[400px] mx-auto'><DisruptionBreakdown/> </div>:terminals.isLoading&&<Skeleton className='w-[48%] min-w-[400px] h-[40vh] mx-auto'/>
+                    terminals.isSuccess?<div className='md:w-full lg:w-[60%] w-full  h-[60vh] p-2 max-w-full  bg-white border-t-4 border-t-ncBlue rounded-t-lg overflow-y-auto  xl:max-w-[48%]  min-w-[400px] mx-auto'><DisruptionBreakdown/> </div>:terminals.isLoading&&<Skeleton className='w-[48%] min-w-[400px] h-[40vh] mx-auto'/>
                 }
                
                 </div>
