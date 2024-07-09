@@ -19,14 +19,17 @@ export const Delays = () => {
   const query=useDelays(terminal,date as DateRange,currentPage,pageSize)
 
   return (
-    <section className='w-full px-6 py-2 '>
+    <section className='w-full px-6 py-2 overflow-x-auto'>
        <div className="flex items-center w-full justify-between">
        <p className='text-xl font-semibold'>Delays</p>
        <DatePickerWithRange date={date} setDate={setDate}/>
        </div>
-        <div className="w-full h-[60vh] overflow-y-auto border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth">
+        <div className="w-full h-[60vh] overflow-y-auto border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth max-w-full overflow-x-auto">
           {
-            query.isLoading?<Skeleton className='w-full h-[60vh]'/>:query.isSuccess&&   <GenericDataTable downloadExcel DownloadComponent={DownloadReportComponent} tableClassname='' headerClassname='rounded-lg' columns={flightsColumnDef as any} data={Object.values(query.data)} hasFilter={true} showColumnFilter filterColumn={"airline"}/>
+            query.isLoading?<Skeleton className='w-full h-[60vh]'/>:query.isSuccess&&   <GenericDataTable downloadExcel DownloadComponent={DownloadReportComponent} tableClassname='' headerClassname='rounded-lg' columns={flightsColumnDef as any} data={terminal==="All"?[]:Object.values(query.data)||[]} hasFilter={true} showColumnFilter filterColumn={"airline"}/>
+          }
+          {
+            query.isError && <GenericDataTable downloadExcel DownloadComponent={DownloadReportComponent} tableClassname='' headerClassname='rounded-lg' columns={flightsColumnDef as any} data={[]} hasFilter={true} showColumnFilter filterColumn={"airline"}/>
           }
         </div>
         {/* <div className='mt-5 flex justify-between items-center'>
