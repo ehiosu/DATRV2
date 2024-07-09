@@ -39,6 +39,8 @@ import TimePicker from "react-time-picker";
 import { toast } from "sonner";
 import { MdError } from "react-icons/md";
 import { useAuth } from "@/api/useAuth";
+import { useRoutes } from "@/v3/hooks/useRoutes";
+import { TimeInput } from "@/components/ui/TimeInput";
 export const FDR = () => {
   const { axios } = useAxiosClient();
   const nav = useNavigate();
@@ -105,6 +107,7 @@ export const FDR = () => {
     mode: "all",
     resolver: zodResolver(formSchema),
   });
+  const routesQuery=useRoutes()
   const activeTerminalsQuery = useQuery({
     queryKey: ["terminals", "all"],
     queryFn: () =>
@@ -214,20 +217,20 @@ useEffect(()=>{
                 <p className="text-[0.8275rem] font-semibold">Report Type</p>
               <Select
                         value={reportType}
-                        onValueChange={setReportType}
+                        onValueChange={(value: typeof reportType)=>{setReportType(value)}}
                       >
                         <SelectTrigger
-                          className="w-full h-9  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
+                          className="w-full h-9  my-1 bg-ncBlue text-white rounded-md dark:bg-ncBlue focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
                           
                         >
                           <SelectValue placeholder="Select A Report Type" />
                         </SelectTrigger>
                         
-                          <SelectContent>
-                           <SelectItem value="Arrival">
+                          <SelectContent className="dark:bg-ncBlue bg-ncBlue">
+                           <SelectItem className="focus:bg-slate-200/20 text-white focus:text-white" value="Arrival">
                             Arrival
                            </SelectItem>
-                           <SelectItem value="Departure">
+                           <SelectItem className="focus:bg-slate-200/20 text-white focus:text-white" value="Departure">
                             Departure
                            </SelectItem>
                           </SelectContent>
@@ -245,7 +248,7 @@ useEffect(()=>{
                         <PopoverTrigger asChild>
                           <Button
                             className={cn(
-                              " w-full justify-start text-left font-normal dark:bg-white bg-white ring-2 ring-blue-400 h-8",
+                              " w-full justify-start text-left font-normal dark:bg-ncBlue bg-ncBlue text-white dark:text-white hover:bg-ncBlue dark:hover:bg-ncBlue/80 ring-2 ring-blue-400 h-8",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -341,7 +344,7 @@ useEffect(()=>{
                 name="terminalName"
                 control={form.control}
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3" >
                     <FormLabel>Terminal</FormLabel>
                     <FormControl>
                       <Select
@@ -349,15 +352,15 @@ useEffect(()=>{
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none"
+                          className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
                           disabled={!activeTerminalsQuery.isSuccess}
                         >
                           <SelectValue placeholder="Select A terminal" />
                         </SelectTrigger>
                         {activeTerminalsQuery.isSuccess && (
-                          <SelectContent>
+                          <SelectContent className="bg-ncBlue text-white dark:bg-ncBlue dark:text-white shadow-none  hover:bg-ncBlue dark:hover:bg-ncBlue">
                             {activeTerminalsQuery.data.map((terminal: any) => (
-                              <SelectItem value={terminal.name}>
+                              <SelectItem className="bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent  focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white dark:text-white focus:text-white dark:focus:text-white" value={terminal.name}>
                                 {terminal.name}
                               </SelectItem>
                             ))}
@@ -378,7 +381,33 @@ useEffect(()=>{
                   <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
                     <FormLabel>Route</FormLabel>
                     <FormControl>
-                      <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/>
+                    <Select
+                    key={field.value}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger
+                        disabled={!routesQuery.isSuccess}
+                          className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
+                          
+                        >
+                          <SelectValue placeholder="Select A Route" />
+                        </SelectTrigger>
+                        
+                         {
+                          routesQuery.isSuccess && routesQuery.data &&  <SelectContent className="bg-ncBlue text-white dark:bg-ncBlue dark:text-white shadow-none  hover:bg-ncBlue dark:hover:bg-ncBlue">
+                        {
+                          routesQuery.data.map((route:any)=>(
+                            <SelectItem className="bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent  focus:bg-transparent dark:focus:bg-transparent text-white dark:text-white focus:text-white dark:focus:text-white" key={route["id"]} value={route["routeName"]}>
+                            {route["abbreviation"]}
+                           </SelectItem>
+                          ))
+                        }
+                         
+                         </SelectContent>
+                         }
+                        
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -396,7 +425,8 @@ useEffect(()=>{
                     }
                   </FormLabel>
                   <FormControl>
-                  <TimePicker value={field.value} onChange={field.onChange} className={"w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"}/>
+                  <TimeInput value={field.value}    className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
+                  {/* <TimePicker value={field.value} onChange={field.onChange} className={"w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"}/> */}
                   </FormControl>
                  </FormItem>
                 )}
@@ -417,7 +447,7 @@ useEffect(()=>{
                     }
                   </FormLabel>
                   <FormControl>
-                  <TimePicker value={field.value} onChange={field.onChange} className={"w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"}/>
+                  <TimeInput value={field.value}    className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
                   </FormControl>
                  </FormItem>
                 )}
