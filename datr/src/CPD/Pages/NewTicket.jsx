@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { useAuth } from "../../api/useAuth";
-import { useAxiosClient } from "../../api/useAxiosClient";
+import { AxiosClient, useAxiosClient } from "../../api/useAxiosClient";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -37,9 +37,8 @@ import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css";
 import { Calendar } from "lucide-react";
-
 import { UploadButton, UploadDropzone } from "@bytescale/upload-widget-react";
-
+import axios from "axios";
 const complaintSources = [
   {
     value: "EMAIL",
@@ -65,7 +64,10 @@ const complaintSources = [
 export const NewTicket = () => {
   const nav = useNavigate();
   const { user } = useAuth();
-  const { axios } = useAxiosClient();
+  const { axios: axiosClient } = useAxiosClient();
+  if (!user?.roles.includes("CPO") && !user?.roles.includes("ADMIN")) {
+    return <Navigate to={"/CPD/Dashboard"} />;
+  }
   const [isTicketUploading, setIsTicketUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const getGroupedData = (data) => {
@@ -88,7 +90,7 @@ export const NewTicket = () => {
   const getSlasQuery = useQuery({
     queryKey: ["slas", "all"],
     queryFn: () =>
-      axios("admin/sla", {
+      axiosClient("admin/sla", {
         method: "GET",
       })
         .then((resp) => resp.data)
@@ -97,14 +99,14 @@ export const NewTicket = () => {
   const getAirlinesQuery = useQuery({
     queryKey: ["airlines", "all"],
     queryFn: () =>
-      axios("airlines/active", {
+      axiosClient("airlines/active", {
         method: "GET",
       }).then((resp) => resp.data),
   });
   const getRequestTypesQuery = useQuery({
     queryKey: ["tickets", "requests", "all"],
     queryFn: () =>
-      axios("admin/complaints/active", {
+      axiosClient("admin/complaints/active", {
         method: "GET",
       }).then((resp) => getGroupedData(resp.data)),
   });
@@ -160,11 +162,13 @@ export const NewTicket = () => {
   const formSubmitMutation = useMutation({
     mutationFn: (values) => {
       console.log(values);
-      return axios("tickets/create", {
-        method: "Post",
+      const axiosInstance = user ? axiosClient : axios; // this would use 'axiosClient' if user is logged in, otherwise it would use regular axios
+
+      return axiosInstance("http://176.58.117.18:8080/api/tickets/create", {
+        method: "POST",
         data: {
           ...values,
-          cpoCreatorEmail: user.email,
+          cpoCreatorEmail: user?.email || null, // if user is logged in would set the user email to cpoCreatorEmail or otherwise it would be null
         },
       }).then((resp) => resp.data);
     },
