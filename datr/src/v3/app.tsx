@@ -47,6 +47,7 @@ import { TerminalConfiguration } from './CPD/Pages/TerminalConfiguration.tsx'
 import { RouteConfiguration } from './CPD/Pages/RouteConfiguration.tsx'
 import { Login } from './Auth/Login.tsx'
 import { AirlineConfiguration } from './CPD/Pages/AirlineConfiguration.tsx'
+import { FdrEdit } from './CPD/Pages/FdrEdit.tsx'
 const queryClient = new QueryClient();
 export const app = () => {
   return (
@@ -66,10 +67,10 @@ export const app = () => {
        <Route element={<CPDLayout/>}>
        <Route path='*' element={<NotFound/>}/>
 
-       <Route path='/CPD/Dashboard' element={<ProtectedRoute roles={["DGO","SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
+       <Route path='/CPD/Dashboard' element={<ProtectedRoute roles={["DGO","SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN","FOU_HEAD"]}>
         <Dashboard/>
        </ProtectedRoute>}/>
-       <Route path='/CPD/Tickets' element={<ProtectedRoute roles={["CPO","SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN","AIRLINE","DGO"]}>
+       <Route path='/CPD/Tickets' element={<ProtectedRoute roles={["CPO","SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN","AIRLINE","DGO","FOU_CPO","FOU_HEAD"]}>
         <Tickets/>
        </ProtectedRoute>}/>
        <Route path='/CPD/Configuration/Sla/edit' element={<ProtectedRoute roles={["ADMIN","FOU","TERMINAL_SUPERVISOR"]}>
@@ -82,12 +83,13 @@ export const app = () => {
        <Route path='/CPD/FDR' element={<ProtectedRoute roles={["ADMIN","AIRLINE",]}>
         <FligthDisruption/>
        </ProtectedRoute>}/>
+       <Route path='/CPD/FDR/Edit/:id' element={<ProtectedRoute roles={["ADMIN","AIRLINE",]}>
+        <FdrEdit/>
+       </ProtectedRoute>}/>
        <Route path='/CPD/FDR/New' element={<ProtectedRoute roles={["ADMIN","AIRLINE",]}>
         <FDR/>
        </ProtectedRoute>}/>
-       <Route path='/CPD/New-Ticket' element={<ProtectedRoute roles={["ADMIN","CPO","SHIFT_HEAD","TERMINAL_HEAD"]}>
-        <NewTicket/>
-       </ProtectedRoute>}/>
+       <Route path='/CPD/New-Ticket' element={<NewTicket/>}/>
        <Route path="/CPD/Ticket/:id" element={<ProtectedRoute roles={["*"]}>
                     <TicketPage />
                    </ProtectedRoute>} />
@@ -214,7 +216,10 @@ type ProtectedRouteProps = {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ roles, children }) => {
   const { user } = useAuth();
   const user_role = user.roles[user.roles.length - 1];
-
+  if(roles[0] === "*"){
+    return <>
+  {children}</>
+  }
   if (!roles.includes(user_role) && roles[0] !== "*") {
     return <Navigate to={home_pages[user_role as keyof typeof home_pages]} />; 
   }
