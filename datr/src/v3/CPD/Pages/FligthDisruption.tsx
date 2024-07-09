@@ -6,14 +6,17 @@ import { Plus } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useFlightDisruptions } from '@/v3/hooks/useFlightDisruptions'
 import { Skeleton } from '@/components/ui/skeleton'
-import { GenericDataTable, fdrColumnDef } from '@/CPD/Components/DataTable'
+import { GenericDataTable, fdrAirlineColumnDef, fdrColumnDef } from '@/CPD/Components/DataTable'
+import { useAuth } from '@/api/useAuth'
 
 export const FligthDisruption = () => {
     const {isSuccess,isLoading,data} = useTerminal()
     const [terminal,setTerminal]=useState("ALL")
+    const {user}=useAuth()
+    const isAirline=user.roles[user.roles.length-1]==="AIRLINE"
     const [currentPage,setCurrentPage]=useState(1)
     const [maxPages,setMaxPages]=useState(1)
-    const [pageSize,setPageSize]=useState(20)
+    const [pageSize,setPageSize]=useState(4)
     const query=useFlightDisruptions(terminal,currentPage,setMaxPages,pageSize)
     const nav= useNavigate()
   return (
@@ -42,19 +45,13 @@ export const FligthDisruption = () => {
                 </button>
     </AuthorizedComponent>
 
-    <div className="h-[60vh] overflow-auto  border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth w-full">
+    <div className="max-h-[60vh] overflow-auto  border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth w-full">
     {
-            query.isLoading?<Skeleton className='w-full h-[60vh]'/>:query.isSuccess&&   <GenericDataTable tableClassname=''  headerClassname='rounded-lg' columns={fdrColumnDef} data={query.data["flightDisruptionReportResponses"]} filterColumn='airline' filterHeader='Airline' showColumnFilter hasFilter/>
+            query.isLoading?<Skeleton className='w-full h-[60vh]'/>:query.isSuccess&&   <GenericDataTable tableClassname=''  headerClassname='rounded-lg' columns={isAirline?fdrAirlineColumnDef:fdrColumnDef} data={isAirline?query.data:query.data["flightDisruptionReportResponses"]} filterColumn='airline' filterHeader='Airline' showColumnFilter hasFilter={!isAirline}/>
           }
     </div>
-    <div className='mt-5 flex justify-center space-x-4 items-center'>
-          <button onClick={()=>setCurrentPage((state)=>state-1)}  disabled={currentPage===1} className='w-max px-5 py-1.5 text-sm rounded-lg bg-ncBlue text-white disabled:bg-slate-400'>
-            Previous
-          </button>
-          <button onClick={()=>setCurrentPage((state)=>state+1)} disabled={currentPage===maxPages}  className='px-5 w-max py-1.5 rounded-lg bg-ncBlue text-white text-sm disabled:bg-slate-400'>
-            Next
-          </button>
-        </div>
+    
+      
     </section>
   )
 }
