@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import {useAxiosClient} from "@/api/useAxiosClient.jsx"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
-export const useReports = (terminal: string, setMaxPage:React.Dispatch<React.SetStateAction<number>>, page: number, size: number) => {
+export const useReports = (terminal: string, setMaxPage:React.Dispatch<React.SetStateAction<number>>, page: number, size: number,key:string[]) => {
     const { axios } = useAxiosClient();
 
     
@@ -14,7 +14,7 @@ export const useReports = (terminal: string, setMaxPage:React.Dispatch<React.Set
         });
 
     const query = useQuery({
-        queryKey:[terminal,"reports",page.toString()],
+        queryKey:key,
         queryFn
     });
 
