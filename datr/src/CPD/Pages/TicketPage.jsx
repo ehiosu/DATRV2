@@ -873,9 +873,16 @@ const EscalateTicketForm = ({ onSubmitForm }) => {
 };
 const ActionsComponent = () => {
   const { user } = useAuth();
+  const { id } = useParams();
+  const client = useQueryClient();
+  const ticketData = client.getQueryData(["tickets", `${id}`]);
+  const isApproved = ticketData.approved;
   return (
     <Popover>
-      <PopoverTrigger className="flex items-center justify-center gap-2 text-[0.8275rem] w-40 bg-neutral-200 h-8 rounded-md">
+      <PopoverTrigger
+        disabled={isApproved}
+        className="flex items-center justify-center disabled:bg-neutral-400 disabled:cursor-not-allowed gap-2 text-[0.8275rem] w-40 bg-neutral-200 h-8 rounded-md"
+      >
         Needs action <ArrowDown className="w-4 aspect-square" />
       </PopoverTrigger>
       <PopoverContent side="bottom" className="w-44">
@@ -910,7 +917,9 @@ const ApproveEscalationAction = () => {
       roles={["SHIFT_SUPERVISOR", "TERMINAL_SUPERVISOR", "ADMIN"]}
     >
       <ConfirmationDialog message="This Will permanently alter the status of the ticket.">
-        <p>Approve Escalation</p>
+        <button className="text-xs text-center hover:text-blue-400 w-full">
+          Approve Escalation
+        </button>
       </ConfirmationDialog>
     </AuthorizedComponent>
   );
@@ -1194,31 +1203,58 @@ const ApprovalSubAction = () => {
   const { id } = useParams();
   const { axios } = useAxiosClient();
   const client = useQueryClient();
+  const { user } = useAuth();
+  const role = user.roles[user.roles.length - 1];
 
   const ticketData = client.getQueryData(["tickets", `${id}`]);
-  const changeStatusMutation = useMutation({
-    mutationKey: ["statusChange"],
-    mutationFn: () =>
-      axios
-        .patch(`/tickets/${id}`, [
-          { op: "replace", path: "/ticketStatus", value: `RESOLVED` },
-        ])
-        .then((resp) => {
-          toast({
-            title: "Success!",
-            description: "Ticket Updated",
-          });
-          client.invalidateQueries({ queryKey: ["tickets", `${id}`] });
+  const isEscalataed = ticketData["ticketStatus"] === "ESCALATED";
+  const isApproved = ticketData.approved;
+  if (isApproved) {
+    return <></>;
+  }
+  const approvalMutation = useMutation({
+    mutationKey: ["ticket", id, "approval"],
+    mutationFn: (isApproved) =>
+      new Promise((resolve, reject) =>
+        axios(`tickets/approve/${id}?is-approved=${isApproved}`, {
+          method: "PUT",
         })
-        .catch((err) => {
-          console.log();
-          toast({
-            title: "Error!",
-            description: err.message,
-            variant: "destructive",
-          });
-        }),
+          .then((resp) => resolve(resp.data))
+          .catch((err) => reject(err))
+      ),
   });
+
+  const tryApprove = (isApproving = true) => {
+    sonnerToast.promise(
+      new Promise((resolve, reject) =>
+        approvalMutation.mutate(isApproving, {
+          onSuccess: (data) => resolve(data),
+          onError: (err) => reject(err),
+        })
+      ),
+      {
+        loading: isApproving
+          ? "Trying to approve request..."
+          : "Rejecting request...",
+        success: isApproving ? "Request Approved!" : "Request Rejected!",
+        error: (error) => {
+          console.log(error);
+          return (
+            <div className="text-black flex flex-col">
+              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                <MdError className="w-4 h-4 shrink" /> Error
+              </p>
+              <p>
+                {error.response && error.response.data
+                  ? error.response.data.message
+                  : "An unexpected error occurred."}
+              </p>
+            </div>
+          );
+        },
+      }
+    );
+  };
   const popoverRef = useRef(null);
   return (
     <Popover>
@@ -1230,7 +1266,7 @@ const ApprovalSubAction = () => {
       </PopoverTrigger>
       <PopoverContent
         side="left"
-        className="md:w-[35vw] min-w-[420px] w-[70vw] h-[60vh] px-4 flex flex-col overflow-y-auto scroll-smooth relative"
+        className="md:w-[35vw] min-w-[420px] w-[70vw] h-max py-6 px-4 flex flex-col overflow-y-auto scroll-smooth relative"
       >
         <div className="h-12 p-1 border-b-2 border-b-neutral-300/60">
           <p className="text-xl font-semibold ">Approvals</p>
@@ -1242,17 +1278,21 @@ const ApprovalSubAction = () => {
         <div className="flex mt-3 items-center flex-wrap space-x-2">
           <ConfirmationDialog
             onClick={() => {
-              changeStatusMutation.mutate();
-              console.log("test");
+              tryApprove(true);
+              popoverRef.current.click();
+              client.invalidateQueries({
+                queryKey: ["ticket", id],
+              });
             }}
             message="This action can't be reversed."
           >
-            <button className="w-28  h-9 bg-blue-400 text-white rounded-md">
+            <button className="w-28  h-9 bg-ncBlue text-white rounded-md">
               Approve
             </button>
           </ConfirmationDialog>
           <button
             onClick={() => {
+              tryApprove(false);
               popoverRef.current.click();
             }}
             className="w-28 bg-lightPink  h-9 rounded-lg text-white"
@@ -1439,13 +1479,13 @@ const TimerComponentManager = () => {
   const isPaused = ticketData.dateTimeTicketReaderPaused !== null;
   const expired = ticketData.expired;
   const deleted = ticketData.deleted;
+  const approved = ticketData.approved;
   const isResting = ticketData.slaMode === "RESTING";
-  console.log({ isPaused, expired, deleted, isResting });
   if (deleted)
     return (
       <DeletedTicketTimer dateTimeModified={ticketData.dateTimeModified} />
     );
-  if (isResting)
+  if (isResting || approved)
     return <PausedTicketTimer dateTimeModified={ticketData.dateTimeModified} />;
   if (!expired && !isPaused && !deleted && !isResting)
     return <TimerComponent />;
@@ -1455,10 +1495,10 @@ const PausedTicketTimer = ({ dateTimeModified }) => {
   return (
     <div className="w-full lg:w-[80%] m-2 h-20 bg-ncBlue text-white border-neutral-200 border-2 rounded-md flex items-center justify-center flex-col ">
       <p className="font-semibold text-white">Timer Paused</p>
-      <p className="text-[0.75rem] pt-2">
+      <p className="text-[0.75rem] pt-2 text-white">
         Last Modification :{" "}
         {dateTimeModified !== null ? (
-          <span className="font-semibold text-neutral-700">
+          <span className="font-semibold text-white">
             {format(new Date(dateTimeModified), "dd / MM / yyyy")}
           </span>
         ) : (
