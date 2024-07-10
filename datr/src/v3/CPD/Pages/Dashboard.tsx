@@ -314,7 +314,7 @@ const DashboardReports=()=>{
                
                
                 {
-                    terminals.isSuccess? <div className='  w-full h-[60vh] p-2 ma bg-white border-t-4 border-t-ncBlue rounded-t-lg overflow-y-auto lg:mx-0 mx-auto'><FlightPerformance/></div>:terminals.isLoading&&  <Skeleton className='w-full h-[50vh] rounded-lg mx-auto'/>
+                    terminals.isSuccess? <div className='  w-full h-[60vh] p-2 ma bg-white border-t-4 border-t-ncBlue rounded-t-lg overflow-y-auto lg:mx-0 mx-auto'><FlightPerformance terminals={terminals.data}/></div>:terminals.isLoading&&  <Skeleton className='w-full h-[50vh] rounded-lg mx-auto'/>
                 }
                 
                
