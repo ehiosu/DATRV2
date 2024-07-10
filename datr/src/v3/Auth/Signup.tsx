@@ -278,6 +278,9 @@ const AirlineRegistration = ({
     contactNumber: z.string().length(11, {
       message: "Contact Number must be 11 characters long",
     }),
+    airlineTypes: z.array(z.enum(["DOMESTIC", "INTERNATIONAL"])).min(1, {
+      message: "Select at least one airline type!",
+    }),
   });
   const form = useForm<z.infer<typeof formSchema>>({
     mode: "onChange",
@@ -297,6 +300,7 @@ const AirlineRegistration = ({
             password: values.password,
             contactAddress: values.contactAddress,
             contactNumber: values.contactNumber,
+            airlineTypes: values.airlineTypes,
           },
         })
           .then((resp) => resolve(resp))
@@ -382,6 +386,7 @@ type airlineRegisterFrom = UseFormReturn<
     password: string;
     contactAddress: string;
     contactNumber: string;
+    airlineTypes: ("DOMESTIC" | "INTERNATIONAL")[];
   },
   any,
   undefined
@@ -544,205 +549,258 @@ const StepperControls: React.FC<{
   );
 };
 const AirlineUserInformation = ({ form }: { form: airlineRegisterFrom }) => {
-    return (
-      <AnimatePresence>
-        <section className="flex  mt-8 mb-4 ">
-    
-           <motion.div
+  return (
+    <AnimatePresence>
+      <section className="flex  mt-8 mb-4 ">
+        <motion.div
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 100 }}
           exit={{ y: 50, opacity: 0 }}
           className="mb-2 mt-6 w-full flex flex-row gap-x-5"
-        >
-              <img
-            src="https://cdn.leonardo.ai/users/7bda8348-b1e4-4a39-9a81-416840f7afad/generations/22f662b9-496f-4bcd-be86-7b58d4baa917/variations/Default_abstract_vibrant_modern_illustration_0_22f662b9-496f-4bcd-be86-7b58d4baa917_0.jpg"
-            className="w-1/3 h-[400px] object-cover rounded-md my-2"
-            alt=""
-          />
-           
-        
-            <div className="grid grid-cols-1 flex-auto w-full md:w-[80%] mx-auto gap-y-2 gap-x-4 ">
-              <FormField
-                name="email"
-                control={form.control}
-                render={({ field }) => (
-                    <FormItem className="gap-y-3">
-                  <FormLabel className="font-[500] text-sm">Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
-                        placeholder="abc@ncaa.gov.ng"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-  
-              <FormField
-                name="firstName"
-                control={form.control}
-                render={({ field }) => (
-                    <FormItem className="gap-y-3">
-                  <FormLabel className="font-[500] text-sm">First Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
-                        placeholder="John"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-  
-              <FormField
-                name="lastName"
-                control={form.control}
-                render={({ field }) => (
-                    <FormItem className="gap-y-3">
-                  <FormLabel className="font-[500] text-sm">Last Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
-                        placeholder="Doe"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-  
-              <FormField
-                name="password"
-                control={form.control}
-                render={({ field }) => (
-                    <FormItem className="gap-y-3">
-                  <FormLabel className="font-[500] text-sm">Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription className="text-[0.75rem]">
-                      Password must be at least 8 characters long and must contain
-                      a special character.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          
-        </motion.div>
-        </section>
-       
-      </AnimatePresence>
-    );
-  };
-  
-  const AirlineAccountInformation = ({ form }: { form: airlineRegisterFrom }) => {
-    return (
-      <AnimatePresence>
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 100 }}
-          exit={{ x: 20, opacity: 0 }}
-          className="mb-4 mt-10 flex flex-row space-x-2"
         >
           <img
             src="https://cdn.leonardo.ai/users/7bda8348-b1e4-4a39-9a81-416840f7afad/generations/22f662b9-496f-4bcd-be86-7b58d4baa917/variations/Default_abstract_vibrant_modern_illustration_0_22f662b9-496f-4bcd-be86-7b58d4baa917_0.jpg"
             className="w-1/3 h-[400px] object-cover rounded-md my-2"
             alt=""
           />
-          <div className="flex flex-col flex-auto">
-            <p className="font-semibold text-lg text-center w-full ">
-              Airline Information
-            </p>
-            
-              <div className="space-y-3" >
-                <FormField
-                  name="airlineName"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem className="col-span-1">
-                      <FormLabel className="font-semibold">
-                        Airline Name
-                      </FormLabel>
-                      <FormControl>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]" >
-                            <SelectValue placeholder="Select An Airline"/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {
-                              ActiveAirlines.map((airline,index)=>(
-                                <SelectItem value={airline} key={`${airline}-${index}`}>{airline}</SelectItem>
-                              ))
-                            }
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-  
-                <FormField
-                  name="contactAddress"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem className="col-span-1">
-                      <FormLabel className="font-semibold">
-                        Contact Address
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
-                          placeholder="Doe"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  name="contactNumber"
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem className="col-span-1">
-                      <FormLabel className="font-semibold">
-                        Contact Number
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                         className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
-                          placeholder="Doe"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-              </div>
-              {Object.keys(form.formState.errors).length > 0 && (
-      <p className="text-red-500 w-full text-center  text-[0.8275rem]">
-       {`${Object.keys(form.formState.errors).length} invalid ${Object.keys(form.formState.errors).length===1?'Field':'Fields'}.`}
-      </p>
-    )}
-            <Button type="submit"  className="mt-auto hover:bg-lightPink hover:text-white transition duration-300 dark:hover:bg-lightPink rounded-lg">Submit Request</Button>
-  
+
+          <div className="grid grid-cols-1 flex-auto w-full md:w-[80%] mx-auto gap-y-2 gap-x-4 ">
+            <FormField
+              name="email"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="gap-y-3">
+                  <FormLabel className="font-[500] text-sm">Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
+                      placeholder="abc@ncaa.gov.ng"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              name="firstName"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="gap-y-3">
+                  <FormLabel className="font-[500] text-sm">
+                    First Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
+                      placeholder="John"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              name="lastName"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="gap-y-3">
+                  <FormLabel className="font-[500] text-sm">
+                    Last Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
+                      placeholder="Doe"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              name="password"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="gap-y-3">
+                  <FormLabel className="font-[500] text-sm">Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
+                      type="password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-[0.75rem]">
+                    Password must be at least 8 characters long and must contain
+                    a special character.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </motion.div>
-      </AnimatePresence>
-    );
-  };
-  
+      </section>
+    </AnimatePresence>
+  );
+};
+
+type AirlineType = "DOMESTIC" | "INTERNATIONAL";
+
+const AirlineAccountInformation = ({ form }: { form: airlineRegisterFrom }) => {
+  const airlineTypes = [
+    { id: 1, label: "Domestic", value: "DOMESTIC" },
+    { id: 2, label: "International", value: "INTERNATIONAL" },
+  ];
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 100 }}
+        exit={{ x: 20, opacity: 0 }}
+        className="mb-4 mt-10 flex flex-row space-x-2"
+      >
+        <img
+          src="https://cdn.leonardo.ai/users/7bda8348-b1e4-4a39-9a81-416840f7afad/generations/22f662b9-496f-4bcd-be86-7b58d4baa917/variations/Default_abstract_vibrant_modern_illustration_0_22f662b9-496f-4bcd-be86-7b58d4baa917_0.jpg"
+          className="w-1/3 h-[400px] object-cover rounded-md my-2"
+          alt=""
+        />
+        <div className="flex flex-col flex-auto">
+          <p className="font-semibold text-lg text-center w-full ">
+            Airline Information
+          </p>
+
+          <div className="space-y-3">
+            <FormField
+              name="airlineName"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="col-span-1">
+                  <FormLabel className="font-semibold">Airline Name</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]">
+                        <SelectValue placeholder="Select An Airline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ActiveAirlines.map((airline, index) => (
+                          <SelectItem
+                            value={airline}
+                            key={`${airline}-${index}`}
+                          >
+                            {airline}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="airlineTypes"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="col-span-1">
+                  <FormLabel className="font-semibold">Airline Types</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center mb-4">
+                      {airlineTypes.map((type) => (
+                        <label key={type.value} className="mr-4">
+                          <input
+                            type="checkbox"
+                            value={type.value}
+                            checked={
+                              field.value
+                                ? field.value.includes(
+                                    type.value as AirlineType
+                                  )
+                                : false
+                            }
+                            onChange={() => {
+                              const newValue = field.value
+                                ? field.value.includes(
+                                    type.value as AirlineType
+                                  )
+                                  ? field.value.filter((v) => v !== type.value)
+                                  : [...field.value, type.value as AirlineType]
+                                : [type.value as AirlineType]; // Initialize field.value if it's undefined
+                              field.onChange(newValue);
+                            }}
+                            className="mr-2"
+                          />
+                          {type.label}
+                        </label>
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="contactAddress"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="col-span-1">
+                  <FormLabel className="font-semibold">
+                    Contact Address
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
+                      placeholder="Doe"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="contactNumber"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="col-span-1">
+                  <FormLabel className="font-semibold">
+                    Contact Number
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-10 p-2 rounded-none border-[1px] dark:bg-[#F1F4F9] bg-[#F1F4F9] dark:border-[#D8D8D8] border-[#D8D8D8] transition-all focus:border-darkBlue text-[0.77rem]"
+                      placeholder="Doe"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          {Object.keys(form.formState.errors).length > 0 && (
+            <p className="text-red-500 w-full text-center  text-[0.8275rem]">
+              {`${Object.keys(form.formState.errors).length} invalid ${
+                Object.keys(form.formState.errors).length === 1
+                  ? "Field"
+                  : "Fields"
+              }.`}
+            </p>
+          )}
+          <Button
+            type="submit"
+            className="mt-auto hover:bg-lightPink hover:text-white transition duration-300 dark:hover:bg-lightPink rounded-lg"
+          >
+            Submit Request
+          </Button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
