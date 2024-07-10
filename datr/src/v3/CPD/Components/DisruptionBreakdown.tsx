@@ -14,17 +14,34 @@ import React, { useState } from "react";
 import { Chart as ChartJs, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import { DatePickerWithRange } from "@/v3/DAS/Delays";
+import { DateRange } from "react-day-picker";
+import { useQuery } from "@tanstack/react-query";
+import {useAxiosClient} from "@/api/useAxiosClient.jsx"
+import { format } from "date-fns";
+import { AxiosResponse } from "axios";
 ChartJs.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 export const DisruptionBreakdown = () => {
   const [selectedTerminal, setSelectedTerminal] = useState("ALL");
   const { data, isSuccess } = useTerminal();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [labels,setLabels]=useState<string[]>([])
+  const {axios}=useAxiosClient()
+  const [maxPages,setMaxPages]=useState(0)
+  const [date,setDate]=useState<DateRange>({
+    from:new Date(),
+    to:new Date()
+  })
+  const query=useQuery({
+    queryKey:["complaint-breakdown",selectedTerminal,date],
+    queryFn:()=>axios(`data-entries/stats/flight-breakdown?terminal=${selectedTerminal}&start-date-of-incidence=${format(date?.from? date.from:new Date(),"dd-MM-yyyy")}&end-date-of-incidence=${format(date?.to? date.to:new Date(),"dd-MM-yyyy")}`).then((resp:AxiosResponse)=>resp.data)
+  })
   const chartData: any = {
     labels: ["Cancelled Flight", "Delayed Flights", "On Time Flights"],
     datasets: [
       {
         label: [],
-        data: [27, 11, 35,],
+        data: query.isSuccess?Object.values(query.data):[],
         backgroundColor: ["#00A3E0", "#7D91F0", "#1464AA"],
       },
     ],
@@ -67,7 +84,8 @@ export const DisruptionBreakdown = () => {
         </Select>
        
       </div>
-      <div className="h-[80%]  w-full flex items-center justify-center max-h-[80%]">
+      <DatePickerWithRange className='bg-ncBlue text-white dark:bg-ncBlue dark:text-white w-max px-1.5 rounded-lg hover:bg-ncBlue dark:hover:bg-ncBlue focus:bg-ncBlue dark:focus:bg-ncBlue my-1.5' date={date} setDate={setDate}/>
+      <div className="h-[70%]  w-full flex items-center justify-center max-h-[70%]">
         <Doughnut options={options} data={chartData} />
       </div>
     </div>

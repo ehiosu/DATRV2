@@ -5495,7 +5495,7 @@ export const AirlineReportsDataTable: React.FC<{
   );
 };
 
-type backlogTicket = {
+export type backlogTicket = {
   airline: string;
   activeTickets: string;
   unresolvedTickets: string;
@@ -5551,68 +5551,47 @@ export const ticketBacklogColumnDef: ColumnDef<backlogTicket>[] = [
     },
   },
   {
-    id: "Backlog",
+    id: "total",
+    header:"Total Tickets" ,
     sortingFn: (rowA, rowB, columnId) => {
-      const unresolvedRatioA = parseFloat(
-        (
-          (parseFloat(rowA.original.unresolvedTickets) /
-            parseFloat(rowA.original.activeTickets)) *
-          100
-        ).toPrecision(2)
-      );
-      const unresolvedRatioB = parseFloat(
-        (
-          (parseFloat(rowB.original.unresolvedTickets) /
-            parseFloat(rowB.original.activeTickets)) *
-          100
-        ).toPrecision(2)
-      );
-      return unresolvedRatioA - unresolvedRatioB;
-    },
-    header: ({ column }) => {
+      const totalA=parseInt(rowA.original.unresolvedTickets)+ parseInt(rowA.original.activeTickets)
+      const totalB=parseInt(rowB.original.unresolvedTickets)+ parseInt(rowB.original.activeTickets)
       return (
-        <Button
-          className="flex group items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200"
-          onClick={() => {
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}
-        >
-          % Backlog{" "}
-          <ArrowUpDown className="w-4 opacity-0 group-hover:opacity-100 transition-all h-4 shrink ml-2" />
-        </Button>
+        totalA-totalB
       );
     },
-    cell: ({ row }) => (
+    cell: ({ row }) => {
+      const total = parseInt(row.original.activeTickets) + parseInt(row.original.unresolvedTickets)
+    return(
       <div>
-        <p>{`${(
-          (parseFloat(row.original.unresolvedTickets) /
-            parseFloat(row.original.activeTickets)) *
-          100
-        ).toPrecision(3)}%`}</p>
-      </div>
-    ),
+      <p>{total||0}</p>
+    </div>
+    )
+    },
   },
   {
-    accessorKey: "total",
-    header: "% Total",
-    cell: ({ row }) => (
+    id: "unassigned",
+    header: "% Unassigned",
+    cell: ({ row }) => {
+      const total = parseInt(row.original.activeTickets) + parseInt(row.original.unresolvedTickets)
+    return(
       <div>
-        <p>{`${(
-          (parseFloat(row.original.unresolvedTickets) /
-            parseFloat(row.original.total)) *
-          100
-        ).toPrecision(3)}%`}</p>
-      </div>
-    ),
+      <p>{`${((
+        (parseFloat(row.original.unresolvedTickets) / total) ||0
+      )*
+      100).toPrecision(3)}%`}</p>
+    </div>
+    )
+    },
   },
 ];
 
 type flightPerformanceColumnEntry = {
   airline: string;
-  totalFlights: string;
-  delayedFlights: string;
-  cancelledFlights: string;
-  onTimeFlights: string;
+  totalFlightCount: string;
+  delayedFlightCount: string;
+  cancelledFlightCount: string;
+  onTimeFlightCount: string;
   disruptedFlights: string;
 };
 
@@ -5622,7 +5601,7 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
     header: "Airline",
   },
   {
-    accessorKey: "totalFlights",
+    accessorKey: "totalFlightCount",
     header: ({ header, column }) => {
       return (
         <div className="flex justify-center items-center">
@@ -5640,13 +5619,13 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
     },
     sortingFn: (rowA, rowB, column) => {
       return (
-        parseInt(rowA.original.totalFlights) -
-        parseInt(rowB.original.totalFlights)
+        parseInt(rowA.original.totalFlightCount) -
+        parseInt(rowB.original.totalFlightCount)
       );
     },
   },
   {
-    accessorKey: "delayedFlights",
+    accessorKey: "delayedFlightCount",
     header: ({ header, column }) => {
       return (
         <Button
@@ -5662,13 +5641,13 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
     },
     sortingFn: (rowA, rowB, column) => {
       return (
-        parseInt(rowA.original.delayedFlights) -
-        parseInt(rowB.original.delayedFlights)
+        parseInt(rowA.original.delayedFlightCount) -
+        parseInt(rowB.original.delayedFlightCount)
       );
     },
   },
   {
-    accessorKey: "cancelledFlights",
+    accessorKey: "cancelledFlightCount",
     header: ({ header, column }) => {
       return (
         <Button
@@ -5684,13 +5663,13 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
     },
     sortingFn: (rowA, rowB, column) => {
       return (
-        parseInt(rowA.original.cancelledFlights) -
-        parseInt(rowB.original.cancelledFlights)
+        parseInt(rowA.original.cancelledFlightCount) -
+        parseInt(rowB.original.cancelledFlightCount)
       );
     },
   },
   {
-    accessorKey: "onTimeFlights",
+    accessorKey: "onTimeFlightCount",
     header: ({ header, column }) => {
       return (
         <Button
@@ -5706,13 +5685,21 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
     },
     sortingFn: (rowA, rowB, column) => {
       return (
-        parseInt(rowA.original.onTimeFlights) -
-        parseInt(rowB.original.onTimeFlights)
+        parseInt(rowA.original.onTimeFlightCount) -
+        parseInt(rowB.original.onTimeFlightCount)
       );
     },
   },
   {
-    accessorKey: "disruptedFlights",
+    id: "disruptedFlights",
+    cell:({row})=>{
+      const disruptedFlights= parseInt(row.original.cancelledFlightCount) + parseInt(row.original.delayedFlightCount)
+      return(
+        <div>
+          <p>{disruptedFlights}</p>
+        </div>
+      )
+    },
     header: ({ header, column }) => {
       return (
         <Button
@@ -5727,9 +5714,11 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     sortingFn: (rowA, rowB, column) => {
-      return (
-        parseInt(rowA.original.disruptedFlights) -
-        parseInt(rowB.original.disruptedFlights)
+      const disruptedFlightsA= parseInt(rowA.original.cancelledFlightCount) + parseInt(rowA.original.delayedFlightCount)
+      const disruptedFlightsB= parseInt(rowB.original.cancelledFlightCount) + parseInt(rowB.original.delayedFlightCount)
+      return (column.getIsSorted() === "asc"?
+        disruptedFlightsA -
+        disruptedFlightsB: disruptedFlightsB-disruptedFlightsA
       );
     },
   },
@@ -5749,33 +5738,37 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     cell: ({ row }) => {
-      const onTimePercentage = (
-        (parseFloat(row.original.onTimeFlights) /
-          parseFloat(row.original.totalFlights)) *
+      let onTimePercentage = (
+        (parseFloat(row.original.onTimeFlightCount) /
+          parseFloat(row.original.totalFlightCount)) *
         100
-      ).toPrecision(3);
+      ).toPrecision(2);
+      if(parseInt(row.original.onTimeFlightCount)==0 || parseInt(row.original.totalFlightCount)==0){
+        onTimePercentage=0
+      }
+     
       return (
         <div>
-          <p>{`${onTimePercentage}%`}</p>
+          <p>{`${onTimePercentage?onTimePercentage:"0"}%`}</p>
         </div>
       );
     },
     sortingFn: (rowA, rowB, columnId) => {
       const onTimePercentageA = parseInt(
         (
-          (parseFloat(rowA.original.onTimeFlights) /
-            parseFloat(rowA.original.totalFlights)) *
+          (parseFloat(rowA.original.onTimeFlightCount) /
+            parseFloat(rowA.original.totalFlightCount)) *
           100
         ).toPrecision(2)
       );
       const onTimePercentageB = parseInt(
         (
-          (parseFloat(rowB.original.onTimeFlights) /
-            parseFloat(rowB.original.totalFlights)) *
+          (parseFloat(rowB.original.onTimeFlightCount) /
+            parseFloat(rowB.original.totalFlightCount)) *
           100
         ).toPrecision(2)
       );
-      console.log(onTimePercentageA - onTimePercentageB);
+      
       return onTimePercentageA - onTimePercentageB;
     },
   },
@@ -5795,14 +5788,17 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     cell: ({ row }) => {
-      const disruptionPercentage = (
-        (parseFloat(row.original.disruptedFlights) /
-          parseFloat(row.original.totalFlights)) *
-        100
-      ).toPrecision(3);
+      const disruptedFlight = parseFloat(row.original.cancelledFlightCount) + parseInt(row.original.delayedFlightCount)
+      let disruptionPercentage = (
+        disruptedFlight /
+          parseFloat(row.original.totalFlightCount)) *
+        100 ;
+      if(parseFloat(row.original.cancelledFlightCount)==0 || parseInt(row.original.delayedFlightCoun)==0){
+        disruptionPercentage=0
+      }
       return (
         <div>
-          <p>{`${disruptionPercentage}%`}</p>
+          <p>{`${!disruptionPercentage?0 :disruptionPercentage.toPrecision(3)  }%`}</p>
         </div>
       );
     },
@@ -5894,7 +5890,7 @@ export const disruptionLeaderColumnDef: ColumnDef<disruptionLeaderEntry>[] = [
         ).toPrecision(3)
       );
 
-      return disruptionPercentageA - disruptionPercentageB;
+      return (disruptionPercentageA - disruptionPercentageB);
     },
   },
 ];
@@ -5905,7 +5901,21 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
   },
   {
     accessorKey: "activeTickets",
-    header: "Active Tickets",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            console.log("click",column)
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Active Tickets{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    enableSorting:true,
   },
   {
     accessorKey: "resolvedTickets",
@@ -5913,14 +5923,38 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
   },
   {
     id: "resolved percent",
-    header: "% resolved",
+    header: ({ header, column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
+          onClick={() => {
+            console.log("click",column)
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          % Resolved{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    enableSorting:true,
+    sortingFn:(rowA,rowB, columnId)=>{
+      const unresolvedTicketsA = parseFloat(rowA.original.resolvedTickets);
+      const activeTicketsA = parseFloat(rowA.original.activeTickets);
+      const valueA = (unresolvedTicketsA / activeTicketsA).toPrecision(2) * 100;
+      const unresolvedTicketsB = parseFloat(rowB.original.resolvedTickets);
+      const activeTicketsB = parseFloat(rowB.original.activeTickets);
+      const valueB = (unresolvedTicketsB / activeTicketsB).toPrecision(2) * 100;
+
+      return (valueA - valueB)
+    },
     cell: ({ row }) => {
       const unresolvedTickets = parseFloat(row.original.resolvedTickets);
       const activeTickets = parseFloat(row.original.activeTickets);
       const value = (unresolvedTickets / activeTickets).toPrecision(2) * 100;
       return (
         <div>
-          <p>{`${value}%`}</p>
+          <p>{`${value||0}%`}</p>
         </div>
       );
     },
