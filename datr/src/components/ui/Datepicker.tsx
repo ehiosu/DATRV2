@@ -41,7 +41,7 @@ export function DatePickerDemo({className,mode}:{className?:string,mode:DayPicke
     )
   }
 
-  export function DateRangePicker({className,date,setDate,setCurrentPage}:{className?:string,date:DateRange,setDate:React.Dispatch<React.SetStateAction<DateRange|undefined>>,setCurrentPage:React.Dispatch<React.SetStateAction<number>>}) {
+  export function DateRangePicker({className,date,setDate,setCurrentPage}:{className?:string,date:DateRange,setDate:React.Dispatch<React.SetStateAction<DateRange>>,setCurrentPage?:React.Dispatch<React.SetStateAction<number>>}) {
     const nav=useNavigate();
     const client=useQueryClient();
     return (
