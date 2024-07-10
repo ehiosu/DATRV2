@@ -44,8 +44,8 @@ export const Delays = () => {
   )
 }
 interface daterangeProps extends React.HTMLAttributes<HTMLDivElement>{
-  date:DateRange|undefined,
-  setDate:(date:DateRange|undefined)=>void
+  date:DateRange,
+  setDate:(date:DateRange)=>void
 }
 export function DatePickerWithRange({
   className,
