@@ -22,7 +22,7 @@ export const Sidebar = () => {
       </div>
     <div className="flex flex-col mt-[40px] px-3  w-full flex-1 p-2">
       <SidebarItem to='/CPD/Dashboard' title='Dashboard' Icon={LucideLayoutDashboard} allowedRoles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN","DGO","FOU_HEAD"]}/>
-      <SidebarItem to='/CPD/Tickets' title='Tickets' Icon={Ticket} mainMenu='/CPD/Ticket' allowedRoles={["ADMIN","CPO","AIRLINE","FOU_HEAD"]}/>
+      <SidebarItem to='/CPD/Tickets' title='Complaints' Icon={Ticket} mainMenu='/CPD/Ticket' allowedRoles={["ADMIN","CPO","AIRLINE","FOU_HEAD"]}/>
       <SidebarItem to='/CPD/Messages' title='Messages' Icon={MessageCircle} allowedRoles={["nobody"]}/>
       <SidebarItem to='/DAS/Dashboard' title='Data And Statistics' Icon={ClipboardIcon} allowedRoles={["ADMIN","DGO","DATA_STATISTICS"]}/>
       <SidebarItem to='/CPD/Configuration/Sla' title='Configuration' mainMenu='/CPD/Configuration' Icon={Settings} allowedRoles={["ADMIN","FOU_HEAD"]}/>
