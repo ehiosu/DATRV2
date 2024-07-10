@@ -63,14 +63,13 @@ const complaintSources = [
 ];
 export const NewTicket = () => {
   const nav = useNavigate();
-  const { user } = useAuth();
+  const { user, access } = useAuth();
   const { axios: axiosClient } = useAxiosClient();
-
+  const isExternal = access === "access" || !access;
   const [isTicketUploading, setIsTicketUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const getGroupedData = (data) => {
     let res = {};
-    console.log(data);
     data.map((datum) => {
       if (datum.active) {
         if (res[datum.category]) {
@@ -88,25 +87,39 @@ export const NewTicket = () => {
   const getSlasQuery = useQuery({
     queryKey: ["slas", "all"],
     queryFn: () =>
-      axiosClient("admin/sla", {
-        method: "GET",
-      })
-        .then((resp) => resp.data)
-        .catch((err) => err),
+      isExternal
+        ? axios("http://176.58.117.18:8080/api/admin/sla", {
+            method: "GET",
+          })
+            .then((resp) => resp.data)
+            .catch((err) => err)
+        : axiosClient("admin/sla", {
+            method: "GET",
+          })
+            .then((resp) => resp.data)
+            .catch((err) => err),
   });
   const getAirlinesQuery = useQuery({
     queryKey: ["airlines", "all"],
     queryFn: () =>
-      axiosClient("airlines/active", {
-        method: "GET",
-      }).then((resp) => resp.data),
+      isExternal
+        ? axios("http://176.58.117.18:8080/api/airlines/active", {
+            method: "GET",
+          }).then((resp) => resp.data)
+        : axiosClient("airlines/active", {
+            method: "GET",
+          }).then((resp) => resp.data),
   });
   const getRequestTypesQuery = useQuery({
     queryKey: ["tickets", "requests", "all"],
     queryFn: () =>
-      axiosClient("admin/complaints/active", {
-        method: "GET",
-      }).then((resp) => getGroupedData(resp.data)),
+      isExternal
+        ? axios("http://176.58.117.18:8080/api/admin/complaints/active", {
+            method: "GET",
+          }).then((resp) => getGroupedData(resp.data))
+        : axiosClient("admin/complaints/active", {
+            method: "GET",
+          }).then((resp) => getGroupedData(resp.data)),
   });
 
   const formSchema = z.object({
@@ -145,13 +158,21 @@ export const NewTicket = () => {
     queryKey: ["terminals", "all"],
     staleTime: Infinity,
     queryFn: () =>
-      axios("terminals/active", {
-        method: "GET",
-      })
-        .then((resp) => resp.data)
-        .catch((err) => {
-          throw err;
-        }),
+      isExternal
+        ? axios("http://176.58.117.18:8080/api/terminals/active", {
+            method: "GET",
+          })
+            .then((resp) => resp.data)
+            .catch((err) => {
+              throw err;
+            })
+        : axiosClient("terminals/active", {
+            method: "GET",
+          })
+            .then((resp) => resp.data)
+            .catch((err) => {
+              throw err;
+            }),
   });
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -198,7 +219,7 @@ export const NewTicket = () => {
     formSubmitMutation.mutate(values);
   };
 
-  const routesQuery = useRoutes();
+  const routesQuery = useRoutes(isExternal);
   return (
     <section className="w-full  p-4 lg:p-2 h-auto ">
       {/* <div className="w-full  ">
