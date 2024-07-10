@@ -15,7 +15,9 @@ const statusColumnMap={
   ALL:generalTicketColumnDefiniton,
   RESOLVED:ResolvedTicketColumnDefinition,
   ESCALATED:UnresolvedTicketsColumnDefinition,
-  NEW:generalTicketColumnDefiniton
+  NEW:generalTicketColumnDefiniton,
+  AWAITING_ESCALATION_APPROVAL:generalTicketColumnDefiniton,
+  AWAITING_APPROVAL:generalTicketColumnDefiniton
 }
 export const Tickets = () => {
   const [filter,setFilter]=useState("ALL")
@@ -60,6 +62,11 @@ export const Tickets = () => {
        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='AWAITING_ESCALATION_APPROVAL'>
           Awaiting Escalation Approval
+        </SelectItem>
+       </AuthorizedComponent>
+       <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
+       <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='AWAITING_APPROVAL'>
+          Awaiting  Approval
         </SelectItem>
        </AuthorizedComponent>
       </SelectContent>
