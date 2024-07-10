@@ -86,7 +86,7 @@ export const Landing = () => {
       <div className="flex-[1] text-black flex flex-col items-center ">
       <TextGenerateEffect words='Streamline Your Support: Track Tickets, Flights, and Reports in One Place'containerClass='mt-16 tracking-widest text-black md:w-[60%] lg:w-[50%] mb-4 text-center '  className="  text-slate-900 md:text-3xl text-xl font-[500] tracking-widest"/>
  <TextGenerateEffect words='Unify your support: Simplify ticket management, gain flight insights, and unlock powerful reporting.' className='text-sm  text-white  font-[400] mt-2' containerClass='md:w-[60%] lg:w-[40%]  text-center mt-4   text-black  leading-2 '/>
- <a href='https://ncaa.gov.ng/report-forms' className="inline-flex h-12 animate-shimmer items-center justify-center rounded-full mt-4 border  border-slate-800 bg-[linear-gradient(110deg,#f8f9fa,55%,#f1f1f1)] bg-[length:200%_100%] px-6 font-medium text-ncBlue transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 mx-auto">Log a Complaint</a>
+ <Link to={"/CPD/New-Ticket"} className="inline-flex h-12 animate-shimmer items-center justify-center rounded-full mt-4 border  border-slate-800 bg-[linear-gradient(110deg,#f8f9fa,55%,#f1f1f1)] bg-[length:200%_100%] px-6 font-medium text-ncBlue transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 mx-auto">Log a Complaint</Link>
       </div>
       
     </div>
