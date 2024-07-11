@@ -258,8 +258,15 @@ export const TicketPage = () => {
           <div className="flex md:gap-0 gap-3 justify-between items-center flex-wrap flex-1 ">
             <div className="flex flex-col">
               <div className="flex  gap-2 items-center ">
-                <p className="text-[1.4rem] font-semibold text-darkBlue">
-                  {ticketQuery.data.complainantType}
+                <p className="text-[1.2rem]  font-semibold text-darkBlue">
+                  <span className="mx-1.5">
+                    {" "}
+                    {ticketQuery.data["complainantName"]}
+                  </span>
+                  {"/"}
+                  <span className="mx-1 5">
+                    {ticketQuery.data.complainantType}
+                  </span>
                 </p>
                 <span
                   className={`block w-max px-3 text-[0.7275rem] rounded-md ${
