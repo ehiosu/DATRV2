@@ -37,7 +37,6 @@ import {
   ColumnFiltersState,
 } from "@tanstack/react-table";
 
-
 import {
   Table,
   TableBody,
@@ -145,34 +144,36 @@ export const recentTicketcolumnDefinition: ColumnDef<recieptData>[] = [
     header: "Complainant Type",
   },
   {
-    id:"actions",
-    cell:({row})=>{
-      return(
-        <AuthorizedComponent roles={["ADMIN","SHIFT_HEAD","TERMINAL_HEAD"]}>
+    id: "actions",
+    cell: ({ row }) => {
+      return (
+        <AuthorizedComponent roles={["ADMIN", "SHIFT_HEAD", "TERMINAL_HEAD"]}>
           <Popover>
             <PopoverTrigger>
-              <BsThreeDots className="w-5 h-5 shrink"/>
+              <BsThreeDots className="w-5 h-5 shrink" />
             </PopoverTrigger>
-            <PopoverContent side="left" className="px-2 py-2 bg-ncBlue dark:bg-ncBlue rounded-lg w-max space-y-1">
+            <PopoverContent
+              side="left"
+              className="px-2 py-2 bg-ncBlue dark:bg-ncBlue rounded-lg w-max space-y-1"
+            >
               <AlertDialog>
                 <AlertDialogTrigger className="p-1 dark:hover:bg-slate-100/20 flex items-center hover:bg-slate-100/20 text-sm text-start w-full h-8 text-white rounded-t-lg">
-                <User className="w-4 h-4 shrink mr-2"/>
+                  <User className="w-4 h-4 shrink mr-2" />
                   Assign ticket
                 </AlertDialogTrigger>
               </AlertDialog>
               <AlertDialog>
                 <AlertDialogTrigger className="dark:hover:bg-slate-100/20 flex items-center hover:bg-slate-100/20 text-sm text-start w-full h-8 text-white rounded-b-lg p-1">
-                <Trash className="w-4 h-4 mr-2 shrink"/>
-                Delete Ticket
+                  <Trash className="w-4 h-4 mr-2 shrink" />
+                  Delete Ticket
                 </AlertDialogTrigger>
               </AlertDialog>
             </PopoverContent>
           </Popover>
-      </AuthorizedComponent>
-      )
-    }
-  }
- 
+        </AuthorizedComponent>
+      );
+    },
+  },
 ];
 
 interface DataTableProps<TData, TValue> {
@@ -277,19 +278,19 @@ export const generalTicketColumnDefiniton: ColumnDef<GeneralTicket>[] = [
   {
     accessorKey: "group",
     header: "Group",
-    cell:({row})=>{
-     return(
-      <div>
-      <p>{row.original.group || "----"}</p>
-    </div>
-     )
-    }
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p>{row.original.group || "----"}</p>
+        </div>
+      );
+    },
   },
-  
+
   {
     accessorKey: "ticketStatus",
     header: "Status",
-    cell:({row})=>{
+    cell: ({ row }) => {
       const btnStyles: Record<string, string> = {
         PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
         UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
@@ -299,49 +300,77 @@ export const generalTicketColumnDefiniton: ColumnDef<GeneralTicket>[] = [
         UNASSIGNED: "",
         RESOLVED: "bg-blue-200 border-2 border-blue-400",
         CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-      }
+      };
       return (
-       <div className="flex items-center justify-center">
-         <div className={cn("w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",btnStyles[row.original["ticketStatus"] as keyof typeof btnStyles])}>
-          <p>{row.original.ticketStatus}</p>
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",
+              btnStyles[row.original["ticketStatus"] as keyof typeof btnStyles]
+            )}
+          >
+            <p>{row.original.ticketStatus}</p>
+          </div>
         </div>
-       </div>
-      )
-    }
-   
+      );
+    },
   },
   {
     accessorKey: "dateTimeCreated",
     header: "Date",
-    cell:({row})=>{
-      return(
+    cell: ({ row }) => {
+      return (
         <div>
-          <p className="">{format(new Date(row.original["dateTimeCreated"] as string),'dd-MM-yyyy')}</p>
+          <p className="">
+            {format(
+              new Date(row.original["dateTimeCreated"] as string),
+              "dd-MM-yyyy"
+            )}
+          </p>
         </div>
-      )
-    }
+      );
+    },
   },
   {
-    id:"actions",
-    cell:({row})=>{
-      const nav =useNavigate()
-      return(
-        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
-            <Popover>
-              <PopoverTrigger>
-                <BsThreeDots/>
-              </PopoverTrigger>
-              <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
-                <div onClick={()=>{nav(`/CPD/Ticket/${row.original.id}`)}} role="button" className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">View Ticket Details</div>
-                <AuthorizedComponent roles={["ADMIN"]}>
-                <div role="button" className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">Delete Ticket</div>
-                </AuthorizedComponent>
-
-              </PopoverContent>
-            </Popover>
+    id: "actions",
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      return (
+        <AuthorizedComponent
+          roles={[
+            "SHIFT_SUPERVISOR",
+            "TERMINAL_SUPERVISOR",
+            "ADMIN",
+            "AIRLINE",
+          ]}
+        >
+          <Popover>
+            <PopoverTrigger>
+              <BsThreeDots />
+            </PopoverTrigger>
+            <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+              <div
+                onClick={() => {
+                  nav(`/CPD/Ticket/${row.original.id}`);
+                }}
+                role="button"
+                className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2"
+              >
+                View Ticket Details
+              </div>
+              <AuthorizedComponent roles={["ADMIN"]}>
+                <div
+                  role="button"
+                  className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2"
+                >
+                  Delete Ticket
+                </div>
+              </AuthorizedComponent>
+            </PopoverContent>
+          </Popover>
         </AuthorizedComponent>
-      )
-    }
+      );
+    },
   },
 ];
 
@@ -1259,11 +1288,11 @@ export const openTicketColumnDefinition: ExtendedColumnDef<openTicket>[] = [
     accessorKey: "complainantType",
     header: "Complainant Type",
   },
-  
+
   {
     accessorKey: "ticketStatus",
     header: "Status",
-    cell:({row})=>{
+    cell: ({ row }) => {
       const btnStyles: Record<string, string> = {
         PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
         UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
@@ -1273,42 +1302,62 @@ export const openTicketColumnDefinition: ExtendedColumnDef<openTicket>[] = [
         UNASSIGNED: "",
         NEW: "bg-blue-200 border-2 border-blue-400",
         CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-      }
+      };
       return (
-       <div className="flex items-center justify-center">
-         <div className={cn("w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",btnStyles[row.original["ticketStatus" as any] as keyof typeof btnStyles])}>
-          <p>{row.original.ticketStatus}</p>
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",
+              btnStyles[
+                row.original["ticketStatus" as any] as keyof typeof btnStyles
+              ]
+            )}
+          >
+            <p>{row.original.ticketStatus}</p>
+          </div>
         </div>
-       </div>
-      )
-    }
-   
+      );
+    },
   },
   {
     accessorKey: "dateOfIncident",
     header: "Date due",
   },
   {
-    id:"actions",
-    cell:({row})=>{
-      const nav =useNavigate()
-      return(
-        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
-            <Popover>
-              <PopoverTrigger>
-                <BsThreeDots/>
-              </PopoverTrigger>
-              <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
-                <div onClick={()=>{nav(`/CPD/Ticket/${row.original.id}`)}} role="button" className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">View Ticket Details</div>
-                <AuthorizedComponent roles={["ADMIN"]}>
-                <div role="button" className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">Delete Ticket</div>
-                </AuthorizedComponent>
-
-              </PopoverContent>
-            </Popover>
+    id: "actions",
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      return (
+        <AuthorizedComponent
+          roles={["SHIFT_SUPERVISOR", "TERMINAL_SUPERVISOR", "ADMIN"]}
+        >
+          <Popover>
+            <PopoverTrigger>
+              <BsThreeDots />
+            </PopoverTrigger>
+            <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+              <div
+                onClick={() => {
+                  nav(`/CPD/Ticket/${row.original.id}`);
+                }}
+                role="button"
+                className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2"
+              >
+                View Ticket Details
+              </div>
+              <AuthorizedComponent roles={["ADMIN"]}>
+                <div
+                  role="button"
+                  className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2"
+                >
+                  Delete Ticket
+                </div>
+              </AuthorizedComponent>
+            </PopoverContent>
+          </Popover>
         </AuthorizedComponent>
-      )
-    }
+      );
+    },
   },
 ];
 const openTicketData: openTicket[] = [
@@ -1580,7 +1629,7 @@ const StatusTableCell = ({ cell, row }: { cell: any; row: any }) => {
       UNASSIGNED: "",
       RESOLVED: "bg-blue-200 border-2 border-blue-400",
       CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-    }
+    };
 
     return `${btnStyles[status]} inline h-max p-1`;
   };
@@ -1628,81 +1677,101 @@ const StatusTableCell = ({ cell, row }: { cell: any; row: any }) => {
   );
 };
 
-export const ResolvedTicketColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
+export const ResolvedTicketColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] =
+  [
+    {
+      accessorKey: "id",
+      header: "ID",
+    },
 
-  {
-    accessorKey: "complainantName",
-    header: "Complainant",
-  },
-  {
-    accessorKey: "complainantType",
-    header: "Complainant Type",
-  },
-  {
-    accessorKey: "creatorName",
-    header: "CPO",
-  },
-  {
-    accessorKey: "group",
-    header: "Group",
-  },
+    {
+      accessorKey: "complainantName",
+      header: "Complainant",
+    },
+    {
+      accessorKey: "complainantType",
+      header: "Complainant Type",
+    },
+    {
+      accessorKey: "creatorName",
+      header: "CPO",
+    },
+    {
+      accessorKey: "group",
+      header: "Group",
+    },
 
-  
-  {
-    accessorKey: "ticketStatus",
-    header: "Status",
-    cell:({row})=>{
-      const btnStyles: Record<string, string> = {
-        PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
-        UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
-        NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
-        ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
-        OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
-        UNASSIGNED: "",
-        RESOLVED: "bg-blue-200 border-2 border-blue-400",
-        CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-      }
-      return (
-       <div className="flex items-center justify-center">
-         <div className={cn("w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",btnStyles[row.original["ticketStatus" as any] as keyof typeof btnStyles])}>
-          <p>{row.original.ticketStatus}</p>
-        </div>
-       </div>
-      )
-    }
-   
-  },
-  {
-    accessorKey: "dateOfIncident",
-    header: "Date due",
-  },
-  {
-    id:"actions",
-    cell:({row})=>{
-      const nav =useNavigate()
-      return(
-        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
+    {
+      accessorKey: "ticketStatus",
+      header: "Status",
+      cell: ({ row }) => {
+        const btnStyles: Record<string, string> = {
+          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+          UNASSIGNED: "",
+          RESOLVED: "bg-blue-200 border-2 border-blue-400",
+          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+        };
+        return (
+          <div className="flex items-center justify-center">
+            <div
+              className={cn(
+                "w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",
+                btnStyles[
+                  row.original["ticketStatus" as any] as keyof typeof btnStyles
+                ]
+              )}
+            >
+              <p>{row.original.ticketStatus}</p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "dateOfIncident",
+      header: "Date due",
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const nav = useNavigate();
+        return (
+          <AuthorizedComponent
+            roles={["SHIFT_SUPERVISOR", "TERMINAL_SUPERVISOR", "ADMIN"]}
+          >
             <Popover>
               <PopoverTrigger>
-                <BsThreeDots/>
+                <BsThreeDots />
               </PopoverTrigger>
               <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
-                <div onClick={()=>{nav(`/CPD/Ticket/${row.original.id}`)}} role="button" className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">View Ticket Details</div>
+                <div
+                  onClick={() => {
+                    nav(`/CPD/Ticket/${row.original.id}`);
+                  }}
+                  role="button"
+                  className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2"
+                >
+                  View Ticket Details
+                </div>
                 <AuthorizedComponent roles={["ADMIN"]}>
-                <div role="button" className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">Delete Ticket</div>
+                  <div
+                    role="button"
+                    className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2"
+                  >
+                    Delete Ticket
+                  </div>
                 </AuthorizedComponent>
-
               </PopoverContent>
             </Popover>
-        </AuthorizedComponent>
-      )
-    }
-  },
-];
+          </AuthorizedComponent>
+        );
+      },
+    },
+  ];
 const resolvedTicketPlaceholderData: ResolvedTicket[] = [
   {
     id: "1",
@@ -1855,87 +1924,108 @@ export const ResolvedTicketsTable = ({ data }: { data: ResolvedTicket[] }) => {
   );
 };
 
-export const UnresolvedTicketsColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] = [
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
+export const UnresolvedTicketsColumnDefinition: ExtendedColumnDef<ResolvedTicket>[] =
+  [
+    {
+      accessorKey: "id",
+      header: "ID",
+    },
 
-  {
-    accessorKey: "complainantName",
-    header: "Complainant",
-  },
-  {
-    accessorKey: "complainantType",
-    header: "Complainant Type",
-  },
-  {
-    accessorKey: "creatorName",
-    header: "CPO",
-  },
-  {
-    accessorKey: "group",
-    header: "Group",
-    cell:({row})=>{
-     return(
-      <div>
-      <p>{row.original.group || "----"}</p>
-    </div>
-     )
-    }
-  },
-  
-  {
-    accessorKey: "ticketStatus",
-    header: "Status",
-    cell:({row})=>{
-      const btnStyles: Record<string, string> = {
-        PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
-        UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
-        NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
-        ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
-        OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
-        UNASSIGNED: "",
-        RESOLVED: "bg-blue-200 border-2 border-blue-400",
-        CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-      }
-      return (
-       <div className="flex items-center justify-center">
-         <div className={cn("w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",btnStyles[row.original["ticketStatus" as any] as keyof typeof btnStyles])}>
-          <p>{row.original.ticketStatus}</p>
-        </div>
-       </div>
-      )
-    }
-   
-  },
-  {
-    accessorKey: "dateOfIncident",
-    header: "Date due",
-  },
-  {
-    id:"actions",
-    cell:({row})=>{
-      const nav =useNavigate()
-      return(
-        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
+    {
+      accessorKey: "complainantName",
+      header: "Complainant",
+    },
+    {
+      accessorKey: "complainantType",
+      header: "Complainant Type",
+    },
+    {
+      accessorKey: "creatorName",
+      header: "CPO",
+    },
+    {
+      accessorKey: "group",
+      header: "Group",
+      cell: ({ row }) => {
+        return (
+          <div>
+            <p>{row.original.group || "----"}</p>
+          </div>
+        );
+      },
+    },
+
+    {
+      accessorKey: "ticketStatus",
+      header: "Status",
+      cell: ({ row }) => {
+        const btnStyles: Record<string, string> = {
+          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+          UNASSIGNED: "",
+          RESOLVED: "bg-blue-200 border-2 border-blue-400",
+          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+        };
+        return (
+          <div className="flex items-center justify-center">
+            <div
+              className={cn(
+                "w-max px-3  h-8 flex items-center justify-center text-sm text-center rounded-full",
+                btnStyles[
+                  row.original["ticketStatus" as any] as keyof typeof btnStyles
+                ]
+              )}
+            >
+              <p>{row.original.ticketStatus}</p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "dateOfIncident",
+      header: "Date due",
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const nav = useNavigate();
+        return (
+          <AuthorizedComponent
+            roles={["SHIFT_SUPERVISOR", "TERMINAL_SUPERVISOR", "ADMIN"]}
+          >
             <Popover>
               <PopoverTrigger>
-                <BsThreeDots/>
+                <BsThreeDots />
               </PopoverTrigger>
               <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
-                <div onClick={()=>{nav(`/CPD/Ticket/${row.original.id}`)}} role="button" className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">View Ticket Details</div>
+                <div
+                  onClick={() => {
+                    nav(`/CPD/Ticket/${row.original.id}`);
+                  }}
+                  role="button"
+                  className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2"
+                >
+                  View Ticket Details
+                </div>
                 <AuthorizedComponent roles={["ADMIN"]}>
-                <div role="button" className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2">Delete Ticket</div>
+                  <div
+                    role="button"
+                    className="text-red-500 hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2"
+                  >
+                    Delete Ticket
+                  </div>
                 </AuthorizedComponent>
-
               </PopoverContent>
             </Popover>
-        </AuthorizedComponent>
-      )
-    }
-  },
-];
+          </AuthorizedComponent>
+        );
+      },
+    },
+  ];
 
 const UnresolvedTicketsPlaceholderData: ResolvedTicket[] = [
   {
@@ -2961,9 +3051,8 @@ export const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
         </div>
       );
     },
-   
   },
-  
+
   {
     accessorKey: "resolutionHour",
     header: "Resolution Time",
@@ -2996,21 +3085,21 @@ export const slaGeneralColumnDef: ExtendedColumnDef<SlaGeneral>[] = [
       return (
         <div>
           <div
-          className="grid w-6 h-6 place-items-center group-hover:text-black hover:bg-slate-100/80 transition-all"
-          role="button"
-          onClick={() => {
-            nav(
-              `/CPD/Configuration/Sla/edit/?slaName=${row.original[
-                "slaName"
-              ].replace(" ", "_")}`
-            );
-          }}
-        >
-          <Pencil
-            size={14}
-            className="hover:scale-115 transition text-neutral-500 hover:text-blue-300 hover:font-semibold"
-          />
-        </div>
+            className="grid w-6 h-6 place-items-center group-hover:text-black hover:bg-slate-100/80 transition-all"
+            role="button"
+            onClick={() => {
+              nav(
+                `/CPD/Configuration/Sla/edit/?slaName=${row.original[
+                  "slaName"
+                ].replace(" ", "_")}`
+              );
+            }}
+          >
+            <Pencil
+              size={14}
+              className="hover:scale-115 transition text-neutral-500 hover:text-blue-300 hover:font-semibold"
+            />
+          </div>
         </div>
       );
     },
@@ -3223,7 +3312,9 @@ export const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
           className="w-full flex items-center justify-center hover:text-blue-300 transition"
           role="button"
           onClick={() => {
-            nav(`/CPD/Configuration/user_groups/?group=${row.original["name"]}`);
+            nav(
+              `/CPD/Configuration/user_groups/?group=${row.original["name"]}`
+            );
           }}
         >
           <p>{groupMap[row.original["name"] as keyof typeof groupMap]}</p>
@@ -3300,29 +3391,32 @@ export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
     },
   },
   {
-    id:"active",
-    header:"State",
-    cell:({row})=>{
-      return(
+    id: "active",
+    header: "State",
+    cell: ({ row }) => {
+      return (
         <div>
-          <p>{row.original["active"]?"Active":"Inactive"}</p>
+          <p>{row.original["active"] ? "Active" : "Inactive"}</p>
         </div>
-      )
-    }
+      );
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const {axios}=useAxiosClient()
-      const client = useQueryClient()
-      const toggleActivenessMutation=useMutation({
-        mutationKey:["terminal",row.original["id"],"activeness"],
-        mutationFn:()=>new Promise((resolve,reject)=>{
-          axios(`terminals/${row.original["id"]}`,{
-            method:"PUT"
-          }).then((resp:any)=>resolve(resp.data)).catch((err:Error)=>reject(err))
-        })
-      })
+      const { axios } = useAxiosClient();
+      const client = useQueryClient();
+      const toggleActivenessMutation = useMutation({
+        mutationKey: ["terminal", row.original["id"], "activeness"],
+        mutationFn: () =>
+          new Promise((resolve, reject) => {
+            axios(`terminals/${row.original["id"]}`, {
+              method: "PUT",
+            })
+              .then((resp: any) => resolve(resp.data))
+              .catch((err: Error) => reject(err));
+          }),
+      });
       return (
         <div className="flex items-center justify-end">
           <Popover>
@@ -3341,46 +3435,56 @@ export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
                   </p>
                 </div>
               </ConfirmationDialog>
-              <ConfirmationDialog message="This action will permanently change the state of this terminal." onClick={() => {
-                sonnerToast.promise(new Promise((resolve,reject)=>{
-                  toggleActivenessMutation.mutate(undefined,{
-                    onSuccess:(data, variables, context) =>{
-                      resolve(data)
-                      client.invalidateQueries({
-                        queryKey:["terminals","all"],
-                       
-                      })
-                    },
-                    onError:(error, variables, context)=> {
-                      reject(error)
-                    },
-                  })
-                }),{
-                  loading:"Changing Terminal State...",
-                  success:"State Updated Successfully!",
-                  error:(error)=> {
-                    return (
-                      <div className="text-black flex flex-col">
-                        <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
-                          <MdError className="w-4 h-4 shrink " /> Error
-                        </p>
-                        <p>{error.response.data.message || error.response.data.detail}</p>
-                      </div>
-                    );
-                  }
-                })
-
-
-              }}>
+              <ConfirmationDialog
+                message="This action will permanently change the state of this terminal."
+                onClick={() => {
+                  sonnerToast.promise(
+                    new Promise((resolve, reject) => {
+                      toggleActivenessMutation.mutate(undefined, {
+                        onSuccess: (data, variables, context) => {
+                          resolve(data);
+                          client.invalidateQueries({
+                            queryKey: ["terminals", "all"],
+                          });
+                        },
+                        onError: (error, variables, context) => {
+                          reject(error);
+                        },
+                      });
+                    }),
+                    {
+                      loading: "Changing Terminal State...",
+                      success: "State Updated Successfully!",
+                      error: (error) => {
+                        return (
+                          <div className="text-black flex flex-col">
+                            <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                              <MdError className="w-4 h-4 shrink " /> Error
+                            </p>
+                            <p>
+                              {error.response.data.message ||
+                                error.response.data.detail}
+                            </p>
+                          </div>
+                        );
+                      },
+                    }
+                  );
+                }}
+              >
                 <div
                   role="button"
                   className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
                 >
-                 {
-                  row.original["active"]?<Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>: <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                 }
+                  {row.original["active"] ? (
+                    <Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  ) : (
+                    <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  )}
                   <p className="text-[0.8275rem] group-hover:font-semibold">
-                    {row.original["active"]?"Deactivate Terminal":"Activate Terminal"} 
+                    {row.original["active"]
+                      ? "Deactivate Terminal"
+                      : "Activate Terminal"}
                   </p>
                 </div>
               </ConfirmationDialog>
@@ -3395,87 +3499,100 @@ export const airlineColumnDef: ExtendedColumnDef<airlineConfig>[] = [
   {
     accessorKey: "id",
     header: "ID",
-
   },
   {
     accessorKey: "airlineName",
     header: "Name",
-   
   },
   {
-    id:"active",
-    header:"State",
-    cell:({row})=>{
-      return(
+    id: "active",
+    header: "State",
+    cell: ({ row }) => {
+      return (
         <div>
-          <p>{row.original.active?"Active":"Inactive"}</p>
+          <p>{row.original.active ? "Active" : "Inactive"}</p>
         </div>
-      )
-    }
+      );
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const {axios}=useAxiosClient()
-      const client = useQueryClient()
-      const triggerRef=useRef<HTMLButtonElement|null>(null)
-      const toggleActivenessMutation=useMutation({
-        mutationKey:["airlines",row.original["id"],"activeness"],
-        mutationFn:()=>new Promise((resolve,reject)=>{
-          axios(`airlines/${row.original["id"]}`,{
-            method:"PUT"
-          }).then((resp:any)=>resolve(resp.data)).catch((err:Error)=>reject(err))
-        })
-      })
+      const { axios } = useAxiosClient();
+      const client = useQueryClient();
+      const triggerRef = useRef<HTMLButtonElement | null>(null);
+      const toggleActivenessMutation = useMutation({
+        mutationKey: ["airlines", row.original["id"], "activeness"],
+        mutationFn: () =>
+          new Promise((resolve, reject) => {
+            axios(`airlines/${row.original["id"]}`, {
+              method: "PUT",
+            })
+              .then((resp: any) => resolve(resp.data))
+              .catch((err: Error) => reject(err));
+          }),
+      });
       return (
         <div className="flex items-center justify-end">
           <Popover>
             <PopoverTrigger ref={triggerRef}>
               <BsThreeDots />
             </PopoverTrigger>
-            <PopoverContent side="left" className="p-1  dark:bg-ncBlue bg-ncBlue text-white hover:bg-ncBlue dark:hover:bg-ncBlue ">
-             
-              <ConfirmationDialog message="This action will permanently change the state of this Airline." onClick={() => {
-                triggerRef.current?.click()
-                sonnerToast.promise(new Promise((resolve,reject)=>{
-                  toggleActivenessMutation.mutate(undefined,{
-                    onSuccess:(data, variables, context) =>{
-                      resolve(data)
-                      client.invalidateQueries({
-                        queryKey:["airlines","all","config"],
-                       
-                      })
-                    },
-                    onError:(error, variables, context)=> {
-                      reject(error)
-                    },
-                  })
-                }),{
-                  loading:"Changing Airline State...",
-                  success:"State Updated Successfully!",
-                  error:(error)=> {
-                    return (
-                      <div className="text-black flex flex-col">
-                        <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
-                          <MdError className="w-4 h-4 shrink " /> Error
-                        </p>
-                        <p>{error.response.data.message || error.response.data.detail}</p>
-                      </div>
-                    );
-                  }
-                })
-
-
-              }}>
+            <PopoverContent
+              side="left"
+              className="p-1  dark:bg-ncBlue bg-ncBlue text-white hover:bg-ncBlue dark:hover:bg-ncBlue "
+            >
+              <ConfirmationDialog
+                message="This action will permanently change the state of this Airline."
+                onClick={() => {
+                  triggerRef.current?.click();
+                  sonnerToast.promise(
+                    new Promise((resolve, reject) => {
+                      toggleActivenessMutation.mutate(undefined, {
+                        onSuccess: (data, variables, context) => {
+                          resolve(data);
+                          client.invalidateQueries({
+                            queryKey: ["airlines", "all", "config"],
+                          });
+                        },
+                        onError: (error, variables, context) => {
+                          reject(error);
+                        },
+                      });
+                    }),
+                    {
+                      loading: "Changing Airline State...",
+                      success: "State Updated Successfully!",
+                      error: (error) => {
+                        return (
+                          <div className="text-black flex flex-col">
+                            <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                              <MdError className="w-4 h-4 shrink " /> Error
+                            </p>
+                            <p>
+                              {error.response.data.message ||
+                                error.response.data.detail}
+                            </p>
+                          </div>
+                        );
+                      },
+                    }
+                  );
+                }}
+              >
                 <div
                   role="button"
                   className="flex items-center space-x-2  group p-2"
                 >
-                 {
-                  row.original["active"]?<Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>: <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                 }
+                  {row.original["active"] ? (
+                    <Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  ) : (
+                    <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  )}
                   <p className="text-[0.8275rem] group-hover:font-semibold">
-                    {row.original["active"]?"Deactivate Airline":"Activate Airline"} 
+                    {row.original["active"]
+                      ? "Deactivate Airline"
+                      : "Activate Airline"}
                   </p>
                 </div>
               </ConfirmationDialog>
@@ -3489,86 +3606,101 @@ export const airlineColumnDef: ExtendedColumnDef<airlineConfig>[] = [
 export const routesColumnDef: ExtendedColumnDef<route>[] = [
   {
     accessorKey: "id",
-    header: "ID"
+    header: "ID",
   },
   {
     accessorKey: "routeName",
     header: "Name",
   },
   {
-    id:"active",
-    header:"State",
-    cell:({row})=>{
-      return(
+    id: "active",
+    header: "State",
+    cell: ({ row }) => {
+      return (
         <div>
-          <p>{row.original["active"]?"Active":"Inactive"}</p>
+          <p>{row.original["active"] ? "Active" : "Inactive"}</p>
         </div>
-      )
-    }
+      );
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const {axios}=useAxiosClient()
-      const client = useQueryClient()
-      const triggerRef=useRef<HTMLButtonElement|null>(null)
-      const toggleActivenessMutation=useMutation({
-        mutationKey:["routes",row.original["id"],"activeness"],
-        mutationFn:()=>new Promise((resolve,reject)=>{
-          axios(`routes/${row.original["id"]}`,{
-            method:"PUT"
-          }).then((resp:any)=>resolve(resp.data)).catch((err:Error)=>reject(err))
-        })
-      })
+      const { axios } = useAxiosClient();
+      const client = useQueryClient();
+      const triggerRef = useRef<HTMLButtonElement | null>(null);
+      const toggleActivenessMutation = useMutation({
+        mutationKey: ["routes", row.original["id"], "activeness"],
+        mutationFn: () =>
+          new Promise((resolve, reject) => {
+            axios(`routes/${row.original["id"]}`, {
+              method: "PUT",
+            })
+              .then((resp: any) => resolve(resp.data))
+              .catch((err: Error) => reject(err));
+          }),
+      });
       return (
         <div className="flex items-center justify-end">
           <Popover>
             <PopoverTrigger ref={triggerRef}>
               <BsThreeDots />
             </PopoverTrigger>
-            <PopoverContent side="left" className="p-1  dark:bg-ncBlue bg-ncBlue text-white">
-              
-              <ConfirmationDialog message="This action will permanently change the state of this route." onClick={() => {
-                triggerRef.current?.click()
-                sonnerToast.promise(new Promise((resolve,reject)=>{
-                  toggleActivenessMutation.mutate(undefined,{
-                    onSuccess:(data, variables, context) =>{
-                      resolve(data)
-                      client.invalidateQueries({
-                        queryKey:["routes","all"],
-                       
-                      })
-                    },
-                    onError:(error, variables, context)=> {
-                      reject(error)
-                    },
-                  })
-                }),{
-                  loading:"Changing Terminal State...",
-                  success:"State Updated Successfully!",
-                  error:(error)=> {
-                    return (
-                      <div className="text-black flex flex-col">
-                        <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
-                          <MdError className="w-4 h-4 shrink " /> Error
-                        </p>
-                        <p>{error.response.data.message || error.response.data.detail}</p>
-                      </div>
-                    );
-                  }
-                })
-
-
-              }}>
+            <PopoverContent
+              side="left"
+              className="p-1  dark:bg-ncBlue bg-ncBlue text-white"
+            >
+              <ConfirmationDialog
+                message="This action will permanently change the state of this route."
+                onClick={() => {
+                  triggerRef.current?.click();
+                  sonnerToast.promise(
+                    new Promise((resolve, reject) => {
+                      toggleActivenessMutation.mutate(undefined, {
+                        onSuccess: (data, variables, context) => {
+                          resolve(data);
+                          client.invalidateQueries({
+                            queryKey: ["routes", "all"],
+                          });
+                        },
+                        onError: (error, variables, context) => {
+                          reject(error);
+                        },
+                      });
+                    }),
+                    {
+                      loading: "Changing Terminal State...",
+                      success: "State Updated Successfully!",
+                      error: (error) => {
+                        return (
+                          <div className="text-black flex flex-col">
+                            <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                              <MdError className="w-4 h-4 shrink " /> Error
+                            </p>
+                            <p>
+                              {error.response.data.message ||
+                                error.response.data.detail}
+                            </p>
+                          </div>
+                        );
+                      },
+                    }
+                  );
+                }}
+              >
                 <div
                   role="button"
                   className="flex items-center space-x-2  group p-2"
                 >
-                 {
-                  row.original["active"]?<Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>: <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                 }
+                  {row.original["active"] ? (
+                    <Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  ) : (
+                    <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  )}
                   <p className="text-[0.8275rem] group-hover:font-semibold">
-                    {row.original["active"]?"Deactivate Route":"Activate Route"} 
+                    {row.original["active"]
+                      ? "Deactivate Route"
+                      : "Activate Route"}
                   </p>
                 </div>
               </ConfirmationDialog>
@@ -3694,17 +3826,17 @@ type flightDataTableProps = {
 export const flightsColumnDef: ColumnDef<DelayedFlight>[] = [
   {
     accessorKey: "airline",
-    header:({header,column})=>{
+    header: ({ header, column }) => {
       return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Airline <ArrowUpDown className="w-4 h-4 shrink ml-2" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Airline <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+        </Button>
+      );
     },
     cell: ({ row }) => {
       const nav = useNavigate();
@@ -3726,77 +3858,77 @@ export const flightsColumnDef: ColumnDef<DelayedFlight>[] = [
   },
   {
     accessorKey: "numberOfFlight",
-    header:({header,column})=>{
+    header: ({ header, column }) => {
       return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Number Of Flights <ArrowUpDown className="w-4 h-4 shrink ml-2" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Number Of Flights <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+        </Button>
+      );
     },
   },
   {
     accessorKey: "numberOfDelays",
-    header:({header,column})=>{
+    header: ({ header, column }) => {
       return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Number Of Delays <ArrowUpDown className="w-4 h-4 shrink ml-2" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Number Of Delays <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+        </Button>
+      );
     },
   },
   {
     accessorKey: "delayLessThanHour",
-    header:({header,column})=>{
+    header: ({ header, column }) => {
       return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        {"Delays < 1 hour"} <ArrowUpDown className="w-4 h-4 shrink ml-2" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          {"Delays < 1 hour"} <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+        </Button>
+      );
     },
   },
   {
     accessorKey: "delayInBetweenOneAndTwoHour",
-    header:({header,column})=>{
+    header: ({ header, column }) => {
       return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Delays 1-2 hours <ArrowUpDown className="w-4 h-4 shrink ml-2" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Delays 1-2 hours <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+        </Button>
+      );
     },
   },
   {
     accessorKey: "delayGreaterThanTwoHour",
-    header:({header,column})=>{
+    header: ({ header, column }) => {
       return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        {"Delays > 2 hours"} <ArrowUpDown className="w-4 h-4 shrink ml-2" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          {"Delays > 2 hours"} <ArrowUpDown className="w-4 h-4 shrink ml-2" />
+        </Button>
+      );
     },
   },
 ];
@@ -3824,23 +3956,24 @@ export const CancelledFlightsDataTable: React.FC<flightDataTableProps> = ({
 export const cancelledFlightColumnDef: ColumnDef<cancelledFlight>[] = [
   {
     accessorKey: "airline",
-    header: ({column})=>{
-      return(
+    header: ({ column }) => {
+      return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Airline <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Airline{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
     },
     cell: ({ row }) => {
       const nav = useNavigate();
       return (
         <div
-        className="hover:text-blue-400 transition-all"
+          className="hover:text-blue-400 transition-all"
           role="button"
           onClick={() => {
             nav(
@@ -3855,32 +3988,34 @@ export const cancelledFlightColumnDef: ColumnDef<cancelledFlight>[] = [
   },
   {
     accessorKey: "numberOfCancelled",
-    header: ({column})=>{
-      return(
+    header: ({ column }) => {
+      return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Cancelled Flights <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Cancelled Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
     },
   },
   {
     accessorKey: "numberOfFlight",
-    header: ({column})=>{
-      return(
+    header: ({ column }) => {
+      return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Total Flights <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Total Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
     },
   },
 ];
@@ -3943,15 +4078,16 @@ export const cancelledFlightPlaceholderData: cancelledFlight[] = [
   },
 ];
 
-const statusFilterFn = (row:Row<Report>, id:string, filterValue:string) => {
-  console.log(filterValue,row.original)
- if(filterValue==="" as any) return true
- if(filterValue==="Delayed") return row.original["delayed" as keyof Report]
- if(filterValue==="On Time") return row.original["onTime" as keyof Report]
- if(filterValue==="Cancelled") return row.original["cancelled" as keyof Report]
- else{
-  return true
- }
+const statusFilterFn = (row: Row<Report>, id: string, filterValue: string) => {
+  console.log(filterValue, row.original);
+  if (filterValue === ("" as any)) return true;
+  if (filterValue === "Delayed") return row.original["delayed" as keyof Report];
+  if (filterValue === "On Time") return row.original["onTime" as keyof Report];
+  if (filterValue === "Cancelled")
+    return row.original["cancelled" as keyof Report];
+  else {
+    return true;
+  }
 };
 
 export const arrivalReportsColumnDef: ColumnDef<Report>[] = [
@@ -4066,32 +4202,32 @@ export const arrivalReportsColumnDef: ColumnDef<Report>[] = [
   //   },
   // },
   {
-    accessorKey:"Status",
-    id:"status",
-    enableColumnFilter:true,
-    filterFn:statusFilterFn as any,
-    header:({column,table})=>{
-      const {setCurrentFilters}=useContext(FilterContext)
-      return(
+    accessorKey: "Status",
+    id: "status",
+    enableColumnFilter: true,
+    filterFn: statusFilterFn as any,
+    header: ({ column, table }) => {
+      const { setCurrentFilters } = useContext(FilterContext);
+      return (
         <Select
           onValueChange={(value) => {
             setCurrentFilters((state) => [
-              ...state.filter(filter => filter.id !== 'status'),
+              ...state.filter((filter) => filter.id !== "status"),
               { id: "status", value: value === "ALL" ? "" : value },
             ]);
           }}
         >
-        <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent ">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-        <SelectItem value="ALL">ALL</SelectItem>
+          <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent ">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">ALL</SelectItem>
             <SelectItem value="On Time">On Time</SelectItem>
             <SelectItem value="Delayed">Delayed</SelectItem>
             <SelectItem value="Cancelled">Cancelled</SelectItem>
-        </SelectContent>
-      </Select>
-      )
+          </SelectContent>
+        </Select>
+      );
     },
     cell: ({ row }) => {
       let status = "On Time";
@@ -4110,32 +4246,32 @@ export const arrivalReportsColumnDef: ColumnDef<Report>[] = [
   {
     accessorKey: "reportType",
     enableColumnFilter: true,
-    header: ({ table,column, }) => {
+    header: ({ table, column }) => {
       const { currentFilters, setCurrentFilters } = useContext(FilterContext);
       return (
         <Select
-        onValueChange={(value) => {
-          setCurrentFilters((state) => [
-            ...state.filter(filter => filter.id !== 'reportType'),
-            { id: "reportType", value: value === "ALL" ? "" : value },
-          ]);
-        }}
+          onValueChange={(value) => {
+            setCurrentFilters((state) => [
+              ...state.filter((filter) => filter.id !== "reportType"),
+              { id: "reportType", value: value === "ALL" ? "" : value },
+            ]);
+          }}
         >
           <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent w-40">
             <SelectValue placeholder="Reprot Type." />
           </SelectTrigger>
           <SelectContent>
-          <SelectItem value="ALL">ALL</SelectItem>
+            <SelectItem value="ALL">ALL</SelectItem>
             <SelectItem value="ARRIVAL">Arrival</SelectItem>
             <SelectItem value="DEPARTURE">Departure</SelectItem>
           </SelectContent>
         </Select>
       );
     },
-    sortingFn:(row:Row<Report>,id:string,value:string)=>{
-      if(value==="ALL")return true
-      else{
-        return row.original["reportType"].includes(value)
+    sortingFn: (row: Row<Report>, id: string, value: string) => {
+      if (value === "ALL") return true;
+      else {
+        return row.original["reportType"].includes(value);
       }
     },
     cell: ({ row }) => {
@@ -4261,32 +4397,32 @@ export const departureReportsColumnDef: ColumnDef<Report>[] = [
   //   },
   // },
   {
-    accessorKey:"Status",
-    id:"status",
-    enableColumnFilter:true,
-    filterFn:statusFilterFn as any,
-    header:({column,table})=>{
-      const {setCurrentFilters}=useContext(FilterContext)
-      return(
+    accessorKey: "Status",
+    id: "status",
+    enableColumnFilter: true,
+    filterFn: statusFilterFn as any,
+    header: ({ column, table }) => {
+      const { setCurrentFilters } = useContext(FilterContext);
+      return (
         <Select
           onValueChange={(value) => {
             setCurrentFilters((state) => [
-              ...state.filter(filter => filter.id !== 'status'),
+              ...state.filter((filter) => filter.id !== "status"),
               { id: "status", value: value === "ALL" ? "" : value },
             ]);
           }}
         >
-        <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent ">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-        <SelectItem value="ALL">ALL</SelectItem>
+          <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent ">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">ALL</SelectItem>
             <SelectItem value="On Time">On Time</SelectItem>
             <SelectItem value="Delayed">Delayed</SelectItem>
             <SelectItem value="Cancelled">Cancelled</SelectItem>
-        </SelectContent>
-      </Select>
-      )
+          </SelectContent>
+        </Select>
+      );
     },
     cell: ({ row }) => {
       let status = "On Time";
@@ -4305,32 +4441,32 @@ export const departureReportsColumnDef: ColumnDef<Report>[] = [
   {
     accessorKey: "reportType",
     enableColumnFilter: true,
-    header: ({ table,column, }) => {
+    header: ({ table, column }) => {
       const { currentFilters, setCurrentFilters } = useContext(FilterContext);
       return (
         <Select
-        onValueChange={(value) => {
-          setCurrentFilters((state) => [
-            ...state.filter(filter => filter.id !== 'reportType'),
-            { id: "reportType", value: value === "ALL" ? "" : value },
-          ]);
-        }}
+          onValueChange={(value) => {
+            setCurrentFilters((state) => [
+              ...state.filter((filter) => filter.id !== "reportType"),
+              { id: "reportType", value: value === "ALL" ? "" : value },
+            ]);
+          }}
         >
           <SelectTrigger className="dark:bg-transparent bg-transparent border-transparent dark:border-transparent w-40">
             <SelectValue placeholder="Reprot Type." />
           </SelectTrigger>
           <SelectContent>
-          <SelectItem value="ALL">ALL</SelectItem>
+            <SelectItem value="ALL">ALL</SelectItem>
             <SelectItem value="ARRIVAL">Arrival</SelectItem>
             <SelectItem value="DEPARTURE">Departure</SelectItem>
           </SelectContent>
         </Select>
       );
     },
-    sortingFn:(row:Row<Report>,id:string,value:string)=>{
-      if(value==="ALL")return true
-      else{
-        return row.original["reportType"].includes(value)
+    sortingFn: (row: Row<Report>, id: string, value: string) => {
+      if (value === "ALL") return true;
+      else {
+        return row.original["reportType"].includes(value);
       }
     },
     cell: ({ row }) => {
@@ -4434,9 +4570,9 @@ export function ReportsDataTable<TData, TValue>({
 
 type reportProps = {
   data: any[];
-  reportConfig:any[]
+  reportConfig: any[];
 };
-export const ReportsTable: React.FC<reportProps> = ({ data,reportConfig }) => {
+export const ReportsTable: React.FC<reportProps> = ({ data, reportConfig }) => {
   return (
     <div className="w-full h-full  overflow-y-auto max-h-[60vh]">
       <GenericDataTable
@@ -4469,15 +4605,21 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    cell:({row})=>{
-      const nav=useNavigate()
-      const group = new URLSearchParams(useLocation().search).get("group")
-      return(
-        <div onClick={()=>{nav(`/CPD/Configuration/User/${row.original["id"]}?group=${group}`)}} role="button" className="hover:text-blue-400 transition-all">
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      const group = new URLSearchParams(useLocation().search).get("group");
+      return (
+        <div
+          onClick={() => {
+            nav(`/CPD/Configuration/User/${row.original["id"]}?group=${group}`);
+          }}
+          role="button"
+          className="hover:text-blue-400 transition-all"
+        >
           <p>{row.original.email}</p>
-          </div>
-      )
-    }
+        </div>
+      );
+    },
   },
   {
     accessorKey: "firstName",
@@ -4915,17 +5057,17 @@ const FilterContext = createContext<filterContextProviderType>({
 interface GenericDataTableProps<TData, TValue>
   extends DataTableProps<TData, TValue> {
   isExcelPresentable?: boolean;
-  isHeaderSticky?:boolean;
-  showColumnFilter?:boolean;
-  downloadExcel?:boolean;
-  hasFilter?:boolean;
-  filterColumn?:string;
-  headerClassname?:string;
-  rowClassname?:string;
-  tableClassname?:string;
-  reportConfig?:any[];
-  DownloadComponent?:React.FC<{data:any[]}>,
-  filterHeader?:string
+  isHeaderSticky?: boolean;
+  showColumnFilter?: boolean;
+  downloadExcel?: boolean;
+  hasFilter?: boolean;
+  filterColumn?: string;
+  headerClassname?: string;
+  rowClassname?: string;
+  tableClassname?: string;
+  reportConfig?: any[];
+  DownloadComponent?: React.FC<{ data: any[] }>;
+  filterHeader?: string;
 }
 
 export function GenericDataTable<TData, TValue>({
@@ -4934,23 +5076,23 @@ export function GenericDataTable<TData, TValue>({
   hasAssignment = false,
   isDraft = false,
   isExcelPresentable = false,
-  isHeaderSticky=false,
-  showColumnFilter=false,
-  downloadExcel=false,
-  hasFilter=false,
-  filterColumn="",
-  headerClassname="",
-  rowClassname="",
-  tableClassname="",
-  reportConfig=[],
-  filterHeader="",
-  DownloadComponent
+  isHeaderSticky = false,
+  showColumnFilter = false,
+  downloadExcel = false,
+  hasFilter = false,
+  filterColumn = "",
+  headerClassname = "",
+  rowClassname = "",
+  tableClassname = "",
+  reportConfig = [],
+  filterHeader = "",
+  DownloadComponent,
 }: GenericDataTableProps<TData, TValue>) {
-   const [currentFilters, setCurrentFilters] = useState<ColumnFilter[]>([]);
+  const [currentFilters, setCurrentFilters] = useState<ColumnFilter[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnVisibility,setColumnVisibility]=useState<VisibilityState>({})
-  const [columnFilters,setColumnFilters]=useState<ColumnFiltersState>([])
-  const {user}=useAuth()
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const { user } = useAuth();
   const table = useReactTable({
     data,
     columns,
@@ -4959,118 +5101,154 @@ export function GenericDataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange:setColumnVisibility,
-    onColumnFiltersChange:setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnFiltersChange: setColumnFilters,
     state: {
       columnFilters: columnFilters,
       sorting,
-      columnVisibility:columnVisibility
+      columnVisibility: columnVisibility,
     },
   });
 
-
-
-
   return (
     <>
-  <div className="flex items-center justify-end gap-x-3 my-2 px-1.5">
-    {
-      hasFilter && <input type="text" value={table.getColumn(filterColumn)?.getFilterValue() as string} onChange={(e)=>{table.getColumn(filterColumn as string)?.setFilterValue(e.target.value)}} name="" className="w-56 h-10 rounded-lg outline-none border-2 border-neutral-300 text-sm" placeholder={`Filter: ${filterHeader}`} id="" />
-    }
-   {
-    downloadExcel && DownloadComponent? <DownloadComponent data={data}/>:<></>
-   }
-  {showColumnFilter&& 
-   <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className=" dark:bg-ncBlue bg-ncBlue text-white dark:text- ">
-              Columns
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter(
-                (column) => column.getCanHide()
-              )
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible() as boolean}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-         }
-   </div>
- 
-    <FilterContext.Provider value={{ currentFilters:columnFilters, setCurrentFilters:setColumnFilters }}>
-      <Table className={cn(tableClassname)}>
-        <TableHeader className={cn(isHeaderSticky&&"sticky top-0",headerClassname)}>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className={cn(isHeaderSticky&&"sticky top-0 r",headerClassname)}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead
-                    className={cn(
-                      "text-center",
-                      isExcelPresentable &&
-                        "border-2 border-neutral-200 min-w-4 p-1 h-4 text-black dark:text-black whitespace-nowrap",isHeaderSticky && "sticky top-0"
-                    )}
-                    key={header.id}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row,index) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                className={cn(isExcelPresentable && "",rowClassname,index%2===1?"bg-[#F4F5FF]":"bg-white")}
+      <div className="flex items-center justify-end gap-x-3 my-2 px-1.5">
+        {hasFilter && (
+          <input
+            type="text"
+            value={table.getColumn(filterColumn)?.getFilterValue() as string}
+            onChange={(e) => {
+              table
+                .getColumn(filterColumn as string)
+                ?.setFilterValue(e.target.value);
+            }}
+            name=""
+            className="w-56 h-10 rounded-lg outline-none border-2 border-neutral-300 text-sm"
+            placeholder={`Filter: ${filterHeader}`}
+            id=""
+          />
+        )}
+        {downloadExcel && DownloadComponent ? (
+          <DownloadComponent data={data} />
+        ) : (
+          <></>
+        )}
+        {showColumnFilter && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className=" dark:bg-ncBlue bg-ncBlue text-white dark:text- "
               >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    className={cn(
-                      "text-center",
-                      isExcelPresentable &&
-                        "border-2 border-neutral-200 min-w-4 p-1 h-4  whitespace-nowrap "
-                    )}
-                    key={cell.id}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible() as boolean}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+
+      <FilterContext.Provider
+        value={{
+          currentFilters: columnFilters,
+          setCurrentFilters: setColumnFilters,
+        }}
+      >
+        <Table className={cn(tableClassname)}>
+          <TableHeader
+            className={cn(isHeaderSticky && "sticky top-0", headerClassname)}
+          >
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow
+                key={headerGroup.id}
+                className={cn(
+                  isHeaderSticky && "sticky top-0 r",
+                  headerClassname
+                )}
+              >
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead
+                      className={cn(
+                        "text-center",
+                        isExcelPresentable &&
+                          "border-2 border-neutral-200 min-w-4 p-1 h-4 text-black dark:text-black whitespace-nowrap",
+                        isHeaderSticky && "sticky top-0"
+                      )}
+                      key={header.id}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </FilterContext.Provider>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row, index) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className={cn(
+                    isExcelPresentable && "",
+                    rowClassname,
+                    index % 2 === 1 ? "bg-[#F4F5FF]" : "bg-white"
+                  )}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      className={cn(
+                        "text-center",
+                        isExcelPresentable &&
+                          "border-2 border-neutral-200 min-w-4 p-1 h-4  whitespace-nowrap "
+                      )}
+                      key={cell.id}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </FilterContext.Provider>
     </>
   );
 }
@@ -5252,8 +5430,8 @@ export const ticketBacklogColumnDef: ColumnDef<backlogTicket>[] = [
 type flightPerformanceColumnEntry = {
   airline: string;
   totalFlights: string;
-  delayedFlights:string;
-  cancelledFlights:string;
+  delayedFlights: string;
+  cancelledFlights: string;
   onTimeFlights: string;
   disruptedFlights: string;
 };
@@ -5267,22 +5445,25 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
     accessorKey: "totalFlights",
     header: ({ header, column }) => {
       return (
-       <div className="flex justify-center items-center">
-         <Button
-          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group "
-          onClick={() => {
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}
-        >
-          Total Flights{" "}
-          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-        </Button>
-       </div>
+        <div className="flex justify-center items-center">
+          <Button
+            className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group "
+            onClick={() => {
+              column.toggleSorting(column.getIsSorted() === "asc");
+            }}
+          >
+            Total Flights{" "}
+            <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+          </Button>
+        </div>
       );
     },
-    sortingFn:(rowA,rowB,column)=>{
-      return parseInt(rowA.original.totalFlights)-parseInt(rowB.original.totalFlights)
-    }
+    sortingFn: (rowA, rowB, column) => {
+      return (
+        parseInt(rowA.original.totalFlights) -
+        parseInt(rowB.original.totalFlights)
+      );
+    },
   },
   {
     accessorKey: "delayedFlights",
@@ -5299,9 +5480,12 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
         </Button>
       );
     },
-    sortingFn:(rowA,rowB,column)=>{
-      return parseInt(rowA.original.delayedFlights)-parseInt(rowB.original.delayedFlights)
-    }
+    sortingFn: (rowA, rowB, column) => {
+      return (
+        parseInt(rowA.original.delayedFlights) -
+        parseInt(rowB.original.delayedFlights)
+      );
+    },
   },
   {
     accessorKey: "cancelledFlights",
@@ -5318,9 +5502,12 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
         </Button>
       );
     },
-    sortingFn:(rowA,rowB,column)=>{
-      return parseInt(rowA.original.cancelledFlights)-parseInt(rowB.original.cancelledFlights)
-    }
+    sortingFn: (rowA, rowB, column) => {
+      return (
+        parseInt(rowA.original.cancelledFlights) -
+        parseInt(rowB.original.cancelledFlights)
+      );
+    },
   },
   {
     accessorKey: "onTimeFlights",
@@ -5337,9 +5524,12 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
         </Button>
       );
     },
-    sortingFn:(rowA,rowB,column)=>{
-      return parseInt(rowA.original.onTimeFlights)-parseInt(rowB.original.onTimeFlights)
-    }
+    sortingFn: (rowA, rowB, column) => {
+      return (
+        parseInt(rowA.original.onTimeFlights) -
+        parseInt(rowB.original.onTimeFlights)
+      );
+    },
   },
   {
     accessorKey: "disruptedFlights",
@@ -5356,9 +5546,12 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
         </Button>
       );
     },
-    sortingFn:(rowA,rowB,column)=>{
-      return parseInt(rowA.original.disruptedFlights)-parseInt(rowB.original.disruptedFlights)
-    }
+    sortingFn: (rowA, rowB, column) => {
+      return (
+        parseInt(rowA.original.disruptedFlights) -
+        parseInt(rowB.original.disruptedFlights)
+      );
+    },
   },
   {
     id: "onTimePercentage",
@@ -5376,7 +5569,11 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     cell: ({ row }) => {
-      const onTimePercentage = (parseFloat(row.original.onTimeFlights) / parseFloat(row.original.totalFlights) * 100).toPrecision(3);
+      const onTimePercentage = (
+        (parseFloat(row.original.onTimeFlights) /
+          parseFloat(row.original.totalFlights)) *
+        100
+      ).toPrecision(3);
       return (
         <div>
           <p>{`${onTimePercentage}%`}</p>
@@ -5384,12 +5581,24 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     sortingFn: (rowA, rowB, columnId) => {
-      const onTimePercentageA = parseInt((parseFloat(rowA.original.onTimeFlights) / parseFloat(rowA.original.totalFlights) * 100).toPrecision(2));
-      const onTimePercentageB = parseInt((parseFloat(rowB.original.onTimeFlights) / parseFloat(rowB.original.totalFlights) * 100).toPrecision(2));
-      console.log(onTimePercentageA-onTimePercentageB)
+      const onTimePercentageA = parseInt(
+        (
+          (parseFloat(rowA.original.onTimeFlights) /
+            parseFloat(rowA.original.totalFlights)) *
+          100
+        ).toPrecision(2)
+      );
+      const onTimePercentageB = parseInt(
+        (
+          (parseFloat(rowB.original.onTimeFlights) /
+            parseFloat(rowB.original.totalFlights)) *
+          100
+        ).toPrecision(2)
+      );
+      console.log(onTimePercentageA - onTimePercentageB);
       return onTimePercentageA - onTimePercentageB;
-    }
-  },  
+    },
+  },
   {
     id: "disruptionPercent",
     header: ({ header, column }) => {
@@ -5406,7 +5615,11 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     cell: ({ row }) => {
-      const disruptionPercentage = (parseFloat(row.original.disruptedFlights) / parseFloat(row.original.totalFlights) * 100).toPrecision(3);
+      const disruptionPercentage = (
+        (parseFloat(row.original.disruptedFlights) /
+          parseFloat(row.original.totalFlights)) *
+        100
+      ).toPrecision(3);
       return (
         <div>
           <p>{`${disruptionPercentage}%`}</p>
@@ -5414,12 +5627,24 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     sortingFn: (rowA, rowB, columnId) => {
-      const disruptionPercentageA = parseFloat((parseFloat(rowA.original.disruptedFlights) / parseFloat(rowA.original.totalFlights) * 100).toPrecision(3));
-      const disruptionPercentageB = parseFloat((parseFloat(rowB.original.disruptedFlights) / parseFloat(rowB.original.totalFlights) * 100).toPrecision(3));
-      
+      const disruptionPercentageA = parseFloat(
+        (
+          (parseFloat(rowA.original.disruptedFlights) /
+            parseFloat(rowA.original.totalFlights)) *
+          100
+        ).toPrecision(3)
+      );
+      const disruptionPercentageB = parseFloat(
+        (
+          (parseFloat(rowB.original.disruptedFlights) /
+            parseFloat(rowB.original.totalFlights)) *
+          100
+        ).toPrecision(3)
+      );
+
       return disruptionPercentageA - disruptionPercentageB;
-    }
-  }
+    },
+  },
 ];
 
 type disruptionLeaderEntry = {
@@ -5462,7 +5687,11 @@ export const disruptionLeaderColumnDef: ColumnDef<disruptionLeaderEntry>[] = [
       );
     },
     cell: ({ row }) => {
-      const disruptionPercentage = (parseFloat(row.original.disruptedFlights) / parseFloat(row.original.totalFlights) * 100).toPrecision(3);
+      const disruptionPercentage = (
+        (parseFloat(row.original.disruptedFlights) /
+          parseFloat(row.original.totalFlights)) *
+        100
+      ).toPrecision(3);
       return (
         <div>
           <p>{`${disruptionPercentage}%`}</p>
@@ -5470,13 +5699,24 @@ export const disruptionLeaderColumnDef: ColumnDef<disruptionLeaderEntry>[] = [
       );
     },
     sortingFn: (rowA, rowB, columnId) => {
-      const disruptionPercentageA = parseFloat((parseFloat(rowA.original.disruptedFlights) / parseFloat(rowA.original.totalFlights) * 100).toPrecision(3));
-      const disruptionPercentageB = parseFloat((parseFloat(rowB.original.disruptedFlights) / parseFloat(rowB.original.totalFlights) * 100).toPrecision(3));
-      
+      const disruptionPercentageA = parseFloat(
+        (
+          (parseFloat(rowA.original.disruptedFlights) /
+            parseFloat(rowA.original.totalFlights)) *
+          100
+        ).toPrecision(3)
+      );
+      const disruptionPercentageB = parseFloat(
+        (
+          (parseFloat(rowB.original.disruptedFlights) /
+            parseFloat(rowB.original.totalFlights)) *
+          100
+        ).toPrecision(3)
+      );
+
       return disruptionPercentageA - disruptionPercentageB;
-    }
-  }
-  ,
+    },
+  },
 ];
 export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
   {
@@ -5495,9 +5735,9 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
     id: "resolved percent",
     header: "% resolved",
     cell: ({ row }) => {
-      const unresolvedTickets=parseFloat(row.original.resolvedTickets)
-      const activeTickets= parseFloat(row.original.activeTickets)
-      const value = (unresolvedTickets/activeTickets).toPrecision(2)*100
+      const unresolvedTickets = parseFloat(row.original.resolvedTickets);
+      const activeTickets = parseFloat(row.original.activeTickets);
+      const value = (unresolvedTickets / activeTickets).toPrecision(2) * 100;
       return (
         <div>
           <p>{`${value}%`}</p>
@@ -5835,31 +6075,32 @@ export const CancelledReportsTable = ({ data }: { data: any[] }) => {
   );
 };
 
-type onTimeFlightEntry ={
-  airline:string,
-  numberOfFlights:string;
-  numberOfFlightsOnTime:string
-}
-export const onTimeFlightsColumnDef:ColumnDef<onTimeFlightEntry>[]=[
+type onTimeFlightEntry = {
+  airline: string;
+  numberOfFlights: string;
+  numberOfFlightsOnTime: string;
+};
+export const onTimeFlightsColumnDef: ColumnDef<onTimeFlightEntry>[] = [
   {
     accessorKey: "airline",
-    header: ({column})=>{
-      return(
+    header: ({ column }) => {
+      return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Airline <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Airline{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
     },
     cell: ({ row }) => {
       const nav = useNavigate();
       return (
         <div
-        className="hover:text-blue-400 transition-all"
+          className="hover:text-blue-400 transition-all"
           role="button"
           onClick={() => {
             nav(
@@ -5874,524 +6115,361 @@ export const onTimeFlightsColumnDef:ColumnDef<onTimeFlightEntry>[]=[
   },
   {
     accessorKey: "numberOfFlightsOnTime",
-    header: ({column})=>{
-      return(
+    header: ({ column }) => {
+      return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        On Time Flights <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          On Time Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
     },
   },
   {
     accessorKey: "numberOfFlights",
-    header: ({column})=>{
-      return(
+    header: ({ column }) => {
+      return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        Total Flights <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          Total Flights{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
     },
   },
-]
+];
 
-type ReportEntry={
-  id:string,
-  terminal:string,
-  airline:string,
-  acType:string,
-  flightNumber:string,
-  reportType:string,
-  dateOfIncidence:string,
+type ReportEntry = {
+  id: string;
+  terminal: string;
+  airline: string;
+  acType: string;
+  flightNumber: string;
+  reportType: string;
+  dateOfIncidence: string;
+};
 
+interface delayedReportEntry extends ReportEntry {
+  delayedDifferenceInHour: string;
+  stipulatedTimeArrived: string;
+  actualTimeArrived: string;
 }
 
-interface delayedReportEntry extends ReportEntry{
-  delayedDifferenceInHour:string,
-  stipulatedTimeArrived:string,
-  actualTimeArrived:string,
+interface onTimeReportEntry extends ReportEntry {
+  stipulatedTimeArrived: string;
+  actualTimeArrived: string;
 }
 
-interface onTimeReportEntry extends ReportEntry{
-  stipulatedTimeArrived:string,
-  actualTimeArrived:string,
-}
-
-export const reportEntryColumnDef:ColumnDef<ReportEntry>[]=[{
-  accessorKey:"id",
-  header:"ID"
-},
-{
-  accessorKey:"terminalName",
-  header:"Terminal"
-},
-{
-  accessorKey:"airline",
-  header:"Airline"
-},
-{
-  accessorKey:"dateOfIncidence",
-  header:"Date"
-},
-{
-  accessorKey:"acType",
-  header:"Aircraft Type"
-},
-{
-  accessorKey:"flightNumber",
-  header:"Flight Number"
-},
-{
-  accessorKey:"reportType",
-  header:"Report Type"
-},
-
-]
-export const delayedReportColumnDef:ColumnDef<delayedReportEntry>[]=[{
-  accessorKey:"id",
-  header:"ID"
-},
-{
-  accessorKey:"terminalName",
-  header:"Terminal"
-},
-{
-  accessorKey:"airline",
-  header:"Airline"
-},
-{
-  accessorKey:"dateOfIncidence",
-  header:"Date"
-},
-{
-  accessorKey:"acType",
-  header:"Aircraft Type"
-},
-{
-  accessorKey:"flightNumber",
-  header:"Flight Number"
-},
-{
-  accessorKey:"delayedDifferenceInHour",
-  header:"Delay Amount",
-  cell: ({ row }) => {
-    const hours = Math.floor(
-      parseInt(row.original["delayedDifferenceInHour"]!) / 3600
-    );
-    const remainingSeconds = Math.floor(
-      parseInt(row.original["delayedDifferenceInHour"]!) % 3600
-    );
-    const minutes = Math.floor(remainingSeconds / 60);
-    return (
-      <div>
-        <p className="text-sm">
-          {row.original["delayedDifferenceInHour"]
-            ? `${hours} hours , ${minutes} minutes`
-            : "----"}
-        </p>
-      </div>
-    );
+export const reportEntryColumnDef: ColumnDef<ReportEntry>[] = [
+  {
+    accessorKey: "id",
+    header: "ID",
   },
-},
-{
-  accessorKey:"stipulatedTimeArrived",
-  header:"STA"
-},
-{
-  accessorKey:"actualTimeArrived",
-  header:"ATA"
-},
-{
-  accessorKey:"reportType",
-  header:"Report Type"
-},
-
-]
-export const delayedReportColumnDefDeparture:ColumnDef<delayedReportEntry>[]=[{
-  accessorKey:"id",
-  header:"ID"
-},
-{
-  accessorKey:"terminalName",
-  header:"Terminal"
-},
-{
-  accessorKey:"airline",
-  header:"Airline"
-},
-{
-  accessorKey:"dateOfIncidence",
-  header:"Date"
-},
-{
-  accessorKey:"acType",
-  header:"Aircraft Type"
-},
-{
-  accessorKey:"flightNumber",
-  header:"Flight Number"
-},
-{
-  accessorKey:"delayedDifferenceInHour",
-  header:"Delay Amount",
-  cell: ({ row }) => {
-    const hours = Math.floor(
-      parseInt(row.original["delayedDifferenceInHour"]!) / 3600
-    );
-    const remainingSeconds = Math.floor(
-      parseInt(row.original["delayedDifferenceInHour"]!) % 3600
-    );
-    const minutes = Math.floor(remainingSeconds / 60);
-    return (
-      <div>
-        <p className="text-sm">
-          {row.original["delayedDifferenceInHour"]
-            ? `${hours} hours , ${minutes} minutes`
-            : "----"}
-        </p>
-      </div>
-    );
+  {
+    accessorKey: "terminalName",
+    header: "Terminal",
   },
-},
-{
-  accessorKey:"stipulatedTimeArrived",
-  header:"STD"
-},
-{
-  accessorKey:"actualTimeArrived",
-  header:"STA"
-},
-{
-  accessorKey:"reportType",
-  header:"Report Type"
-},
-
-]
-export const onTimeReportColumnDef:ColumnDef<onTimeReportEntry>[]=[{
-  accessorKey:"id",
-  header:"ID"
-},
-{
-  accessorKey:"terminalName",
-  header:"Terminal"
-},
-{
-  accessorKey:"airline",
-  header:"Airline"
-},
-{
-  accessorKey:"acType",
-  header:"Aircraft Type"
-},
-{
-  accessorKey:"flightNumber",
-  header:"Flight Number"
-},
-{
-  accessorKey:"delayedDifferenceInHour",
-  header:"Delay Amount",
-  cell: ({ row }) => {
-    const hours = Math.floor(
-      parseInt(row.original["delayedDifferenceInHour"]!) / 3600
-    );
-    const remainingSeconds = Math.floor(
-      parseInt(row.original["delayedDifferenceInHour"]!) % 3600
-    );
-    const minutes = Math.floor(remainingSeconds / 60);
-    return (
-      <div>
-        <p className="text-sm">
-          {row.original["delayedDifferenceInHour"]
-            ? `${hours} hours , ${minutes} minutes`
-            : "----"}
-        </p>
-      </div>
-    );
+  {
+    accessorKey: "airline",
+    header: "Airline",
   },
-},
-{
-  accessorKey:"stipulatedTimeArrived",
-  header:"STA"
-},
-{
-  accessorKey:"actualTimeArrived",
-  header:"ATA"
-},
-{
-  accessorKey:"reportType",
-  header:"Report Type"
-},
-
-]
-export const onTimeReportColumnDefDeparture:ColumnDef<onTimeReportEntry>[]=[{
-  accessorKey:"id",
-  header:"ID"
-},
-{
-  accessorKey:"terminalName",
-  header:"Terminal"
-},
-{
-  accessorKey:"airline",
-  header:"Airline"
-},
-{
-  accessorKey:"acType",
-  header:"Aircraft Type"
-},
-{
-  accessorKey:"flightNumber",
-  header:"Flight Number"
-},
-{
-  accessorKey:"delayedDifferenceInHour",
-  header:"Delay Amount",
-  cell: ({ row }) => {
-    const hours = Math.floor(
-      parseInt(row.original["delayedDifferenceInHour"]!) / 3600
-    );
-    const remainingSeconds = Math.floor(
-      parseInt(row.original["delayedDifferenceInHour"]!) % 3600
-    );
-    const minutes = Math.floor(remainingSeconds / 60);
-    return (
-      <div>
-        <p className="text-sm">
-          {row.original["delayedDifferenceInHour"]
-            ? `${hours} hours , ${minutes} minutes`
-            : "----"}
-        </p>
-      </div>
-    );
+  {
+    accessorKey: "dateOfIncidence",
+    header: "Date",
   },
-},
-{
-  accessorKey:"stipulatedTimeArrived",
-  header:"STD"
-},
-{
-  accessorKey:"actualTimeArrived",
-  header:"ATD"
-},
-{
-  accessorKey:"reportType",
-  header:"Report Type"
-},
-
-]
+  {
+    accessorKey: "acType",
+    header: "Aircraft Type",
+  },
+  {
+    accessorKey: "flightNumber",
+    header: "Flight Number",
+  },
+  {
+    accessorKey: "reportType",
+    header: "Report Type",
+  },
+];
+export const delayedReportColumnDef: ColumnDef<delayedReportEntry>[] = [
+  {
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
+    accessorKey: "terminalName",
+    header: "Terminal",
+  },
+  {
+    accessorKey: "airline",
+    header: "Airline",
+  },
+  {
+    accessorKey: "dateOfIncidence",
+    header: "Date",
+  },
+  {
+    accessorKey: "acType",
+    header: "Aircraft Type",
+  },
+  {
+    accessorKey: "flightNumber",
+    header: "Flight Number",
+  },
+  {
+    accessorKey: "delayedDifferenceInHour",
+    header: "Delay Amount",
+    cell: ({ row }) => {
+      const hours = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+      );
+      const remainingSeconds = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+      );
+      const minutes = Math.floor(remainingSeconds / 60);
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["delayedDifferenceInHour"]
+              ? `${hours} hours , ${minutes} minutes`
+              : "----"}
+          </p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "stipulatedTimeArrived",
+    header: "STA",
+  },
+  {
+    accessorKey: "actualTimeArrived",
+    header: "ATA",
+  },
+  {
+    accessorKey: "reportType",
+    header: "Report Type",
+  },
+];
+export const delayedReportColumnDefDeparture: ColumnDef<delayedReportEntry>[] =
+  [
+    {
+      accessorKey: "id",
+      header: "ID",
+    },
+    {
+      accessorKey: "terminalName",
+      header: "Terminal",
+    },
+    {
+      accessorKey: "airline",
+      header: "Airline",
+    },
+    {
+      accessorKey: "dateOfIncidence",
+      header: "Date",
+    },
+    {
+      accessorKey: "acType",
+      header: "Aircraft Type",
+    },
+    {
+      accessorKey: "flightNumber",
+      header: "Flight Number",
+    },
+    {
+      accessorKey: "delayedDifferenceInHour",
+      header: "Delay Amount",
+      cell: ({ row }) => {
+        const hours = Math.floor(
+          parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+        );
+        const remainingSeconds = Math.floor(
+          parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+        );
+        const minutes = Math.floor(remainingSeconds / 60);
+        return (
+          <div>
+            <p className="text-sm">
+              {row.original["delayedDifferenceInHour"]
+                ? `${hours} hours , ${minutes} minutes`
+                : "----"}
+            </p>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "stipulatedTimeArrived",
+      header: "STD",
+    },
+    {
+      accessorKey: "actualTimeArrived",
+      header: "STA",
+    },
+    {
+      accessorKey: "reportType",
+      header: "Report Type",
+    },
+  ];
+export const onTimeReportColumnDef: ColumnDef<onTimeReportEntry>[] = [
+  {
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
+    accessorKey: "terminalName",
+    header: "Terminal",
+  },
+  {
+    accessorKey: "airline",
+    header: "Airline",
+  },
+  {
+    accessorKey: "acType",
+    header: "Aircraft Type",
+  },
+  {
+    accessorKey: "flightNumber",
+    header: "Flight Number",
+  },
+  {
+    accessorKey: "delayedDifferenceInHour",
+    header: "Delay Amount",
+    cell: ({ row }) => {
+      const hours = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+      );
+      const remainingSeconds = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+      );
+      const minutes = Math.floor(remainingSeconds / 60);
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["delayedDifferenceInHour"]
+              ? `${hours} hours , ${minutes} minutes`
+              : "----"}
+          </p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "stipulatedTimeArrived",
+    header: "STA",
+  },
+  {
+    accessorKey: "actualTimeArrived",
+    header: "ATA",
+  },
+  {
+    accessorKey: "reportType",
+    header: "Report Type",
+  },
+];
+export const onTimeReportColumnDefDeparture: ColumnDef<onTimeReportEntry>[] = [
+  {
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
+    accessorKey: "terminalName",
+    header: "Terminal",
+  },
+  {
+    accessorKey: "airline",
+    header: "Airline",
+  },
+  {
+    accessorKey: "acType",
+    header: "Aircraft Type",
+  },
+  {
+    accessorKey: "flightNumber",
+    header: "Flight Number",
+  },
+  {
+    accessorKey: "delayedDifferenceInHour",
+    header: "Delay Amount",
+    cell: ({ row }) => {
+      const hours = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) / 3600
+      );
+      const remainingSeconds = Math.floor(
+        parseInt(row.original["delayedDifferenceInHour"]!) % 3600
+      );
+      const minutes = Math.floor(remainingSeconds / 60);
+      return (
+        <div>
+          <p className="text-sm">
+            {row.original["delayedDifferenceInHour"]
+              ? `${hours} hours , ${minutes} minutes`
+              : "----"}
+          </p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "stipulatedTimeArrived",
+    header: "STD",
+  },
+  {
+    accessorKey: "actualTimeArrived",
+    header: "ATD",
+  },
+  {
+    accessorKey: "reportType",
+    header: "Report Type",
+  },
+];
 
 type message = {
-  from:string,
-  complaintType:string,
-  status:string,
-  date:string
-  
-}
+  from: string;
+  complaintType: string;
+  status: string;
+  date: string;
+};
 
 type sentMessage = {
-  to:string,
-  complaintType:string,
-  status:string,
-  date:string
-
-}
-export const InboxColumnDef:ColumnDef<message>[]=[
+  to: string;
+  complaintType: string;
+  status: string;
+  date: string;
+};
+export const InboxColumnDef: ColumnDef<message>[] = [
   {
-    accessorKey:"from",
-    header:({column})=>{
-      return(
+    accessorKey: "from",
+    header: ({ column }) => {
+      return (
         <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        From <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
-    }
-  },
-  {
-    accessorKey:"complaintType",
-    header:"Complaint Type"
-  },
-  {
-    accessorKey:"status",
-    header:"Status",
-    cell:({row})=>{
-      const resolveStatus: (status: string) => string = (status = "") => {
-        const btnStyles: Record<string, string> = {
-          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
-          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
-          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
-          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
-          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
-          UNASSIGNED: "",
-          RESOLVED: "bg-blue-200 border-2 border-blue-400",
-          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-        }
-    
-        return `${btnStyles[status]} inline h-max p-1`;
-      };
-      return(
-        <div className="flex items-center justify-center">
-         <div className={cn("w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",resolveStatus(row.original.status))}>
-          <p>{row.original.status}</p>
-        </div>
-       </div>
-      )
-    }
-  },
-  { header:"Date",
-    accessorKey:"date"
-  },
-  {
-    id:"actions",
-    cell:({row})=>{
-      return(
-        <div className="">
-          <Popover>
-            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
-                <BsThreeDots className="w-4 h-4 shrink"/>
-            </PopoverTrigger>
-            <PopoverContent className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2" side="left">
-            <div className="hover:bg-slate-200/25  text-white text-sm p-1.5" role="button">
-              <p>View Message</p>
-            </div>
-            <div className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5" role="button">
-              <p>Delete Message</p>
-            </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      )
-    }
-  }
-]
-export const OutboxMessageColumnDef:ColumnDef<sentMessage>[]=[
-  {
-    accessorKey:"to",
-    header:({column})=>{
-      return(
-        <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        To <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
-    }
-  },
-  {
-    accessorKey:"complaintType",
-    header:"Complaint Type"
-  },
-  {
-    accessorKey:"status",
-    header:"Status",
-    cell:({row})=>{
-      const resolveStatus: (status: string) => string = (status = "") => {
-        const btnStyles: Record<string, string> = {
-          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
-          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
-          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
-          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
-          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
-          UNASSIGNED: "",
-          RESOLVED: "bg-blue-200 border-2 border-blue-400",
-          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-        }
-    
-        return `${btnStyles[status]} inline h-max p-1`;
-      };
-      return(
-        <div className="flex items-center justify-center">
-         <div className={cn("w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",resolveStatus(row.original.status))}>
-          <p>{row.original.status}</p>
-        </div>
-       </div>
-      )
-    }
-  },
-  { header:"Date",
-    accessorKey:"date"
-  },
-  {
-    id:"actions",
-    cell:({row})=>{
-      return(
-        <div className="">
-          <Popover>
-            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
-                <BsThreeDots className="w-4 h-4 shrink"/>
-            </PopoverTrigger>
-            <PopoverContent className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2" side="left">
-            <div className="hover:bg-slate-200/25  text-white text-sm p-1.5" role="button">
-              <p>View Message</p>
-            </div>
-            <div className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5" role="button">
-              <p>Delete Message</p>
-            </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      )
-    }
-  }
-]
-export const DraftMessagesColumnDefinition:ColumnDef<sentMessage>[]=[
-  {
-    id:"selection",
-    cell:({row})=>{
-      return(
-        <Checkbox className="border-ncBlue dark:border-ncBlue data-[state=checked]:bg-ncBlue data-[state=checked]:text-white dark:bg-slate-200 bg-slate-200 dark:data-[state=checked]:bg-ncBlue dark:data-[state=checked]:text-white"/>
-      )
-    }
-  },
-  {
-    accessorKey:"to",
-    header:({column})=>{
-      return(
-        <Button
-        className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
-        onClick={() => {
-          column.toggleSorting(column.getIsSorted() === "asc");
-        }}
-      >
-        To <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-      </Button>
-      )
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          From{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
     },
-    cell:({row})=>{
-      return(
-       <div className="flex items-center justify-center">
-         <div className="flex flex-col gap-y-1 5  w-max px-1 items-start ">
-          <p className="text-red-500">Draft</p>
-          <p>{row.original.to}</p>
-        </div>
-       </div>
-      )
-    }
   },
   {
-    accessorKey:"complaintType",
-    header:"Complaint Type"
+    accessorKey: "complaintType",
+    header: "Complaint Type",
   },
   {
-    accessorKey:"status",
-    header:"Status",
-    cell:({row})=>{
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
       const resolveStatus: (status: string) => string = (status = "") => {
         const btnStyles: Record<string, string> = {
           PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
@@ -6402,43 +6480,244 @@ export const DraftMessagesColumnDefinition:ColumnDef<sentMessage>[]=[
           UNASSIGNED: "",
           RESOLVED: "bg-blue-200 border-2 border-blue-400",
           CLOSED: "bg-neutral-200 border-2 border-neutral-400",
-        }
-    
+        };
+
         return `${btnStyles[status]} inline h-max p-1`;
       };
-      return(
+      return (
         <div className="flex items-center justify-center">
-         <div className={cn("w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",resolveStatus(row.original.status))}>
-          <p>{row.original.status}</p>
+          <div
+            className={cn(
+              "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
+              resolveStatus(row.original.status)
+            )}
+          >
+            <p>{row.original.status}</p>
+          </div>
         </div>
-       </div>
-      )
-    }
+      );
+    },
   },
-  { header:"Date",
-    accessorKey:"date"
-  },
+  { header: "Date", accessorKey: "date" },
   {
-    id:"actions",
-    cell:({row})=>{
-      return(
+    id: "actions",
+    cell: ({ row }) => {
+      return (
         <div className="">
           <Popover>
             <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
-                <BsThreeDots className="w-4 h-4 shrink"/>
+              <BsThreeDots className="w-4 h-4 shrink" />
             </PopoverTrigger>
-            <PopoverContent className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2" side="left">
-            <div className="hover:bg-slate-200/25  text-white text-sm p-1.5" role="button">
-              <p>View Message</p>
-            </div>
-            <div className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5" role="button">
-              <p>Delete Message</p>
-            </div>
+            <PopoverContent
+              className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
+              side="left"
+            >
+              <div
+                className="hover:bg-slate-200/25  text-white text-sm p-1.5"
+                role="button"
+              >
+                <p>View Message</p>
+              </div>
+              <div
+                className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
+                role="button"
+              >
+                <p>Delete Message</p>
+              </div>
             </PopoverContent>
           </Popover>
         </div>
-      )
-    }
-  }
-  
-]
+      );
+    },
+  },
+];
+export const OutboxMessageColumnDef: ColumnDef<sentMessage>[] = [
+  {
+    accessorKey: "to",
+    header: ({ column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          To{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: "complaintType",
+    header: "Complaint Type",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const resolveStatus: (status: string) => string = (status = "") => {
+        const btnStyles: Record<string, string> = {
+          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+          UNASSIGNED: "",
+          RESOLVED: "bg-blue-200 border-2 border-blue-400",
+          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+        };
+
+        return `${btnStyles[status]} inline h-max p-1`;
+      };
+      return (
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
+              resolveStatus(row.original.status)
+            )}
+          >
+            <p>{row.original.status}</p>
+          </div>
+        </div>
+      );
+    },
+  },
+  { header: "Date", accessorKey: "date" },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      return (
+        <div className="">
+          <Popover>
+            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
+              <BsThreeDots className="w-4 h-4 shrink" />
+            </PopoverTrigger>
+            <PopoverContent
+              className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
+              side="left"
+            >
+              <div
+                className="hover:bg-slate-200/25  text-white text-sm p-1.5"
+                role="button"
+              >
+                <p>View Message</p>
+              </div>
+              <div
+                className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
+                role="button"
+              >
+                <p>Delete Message</p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
+  },
+];
+export const DraftMessagesColumnDefinition: ColumnDef<sentMessage>[] = [
+  {
+    id: "selection",
+    cell: ({ row }) => {
+      return (
+        <Checkbox className="border-ncBlue dark:border-ncBlue data-[state=checked]:bg-ncBlue data-[state=checked]:text-white dark:bg-slate-200 bg-slate-200 dark:data-[state=checked]:bg-ncBlue dark:data-[state=checked]:text-white" />
+      );
+    },
+  },
+  {
+    accessorKey: "to",
+    header: ({ column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          To{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-center">
+          <div className="flex flex-col gap-y-1 5  w-max px-1 items-start ">
+            <p className="text-red-500">Draft</p>
+            <p>{row.original.to}</p>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "complaintType",
+    header: "Complaint Type",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const resolveStatus: (status: string) => string = (status = "") => {
+        const btnStyles: Record<string, string> = {
+          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+          UNASSIGNED: "",
+          RESOLVED: "bg-blue-200 border-2 border-blue-400",
+          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+        };
+
+        return `${btnStyles[status]} inline h-max p-1`;
+      };
+      return (
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
+              resolveStatus(row.original.status)
+            )}
+          >
+            <p>{row.original.status}</p>
+          </div>
+        </div>
+      );
+    },
+  },
+  { header: "Date", accessorKey: "date" },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      return (
+        <div className="">
+          <Popover>
+            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
+              <BsThreeDots className="w-4 h-4 shrink" />
+            </PopoverTrigger>
+            <PopoverContent
+              className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
+              side="left"
+            >
+              <div
+                className="hover:bg-slate-200/25  text-white text-sm p-1.5"
+                role="button"
+              >
+                <p>View Message</p>
+              </div>
+              <div
+                className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
+                role="button"
+              >
+                <p>Delete Message</p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
+  },
+];
