@@ -1,7 +1,7 @@
 import { useAuth } from '@/api/useAuth'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
-import { Ban, ClipboardIcon, ClipboardPaste, LogOut, LucideIcon, LucideLayoutDashboard, SendToBack, Ticket, Timer, TimerOff } from 'lucide-react'
+import { Ban, ClipboardIcon, ClipboardPaste, CopyX, LogOut, LucideIcon, LucideLayoutDashboard, SendToBack, Ticket, Timer, TimerOff } from 'lucide-react'
 import React from 'react'
 import { BsThreeDots } from 'react-icons/bs'
 import { useLocation, useNavigate } from 'react-router'
@@ -28,6 +28,8 @@ export const Sidebar = () => {
       <SidebarItem to='/DAS/Cancelled' title='Cancelled Flights' Icon={Ban} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
       <SidebarItem to='/DAS/OnTime' title='On Time Flights' Icon={Timer} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
       <SidebarItem to='/DAS/Reports' title='Reports' Icon={ClipboardPaste} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
+      <SidebarItem to='/CPD/FDR' title='Flight Disruption' Icon={CopyX} allowedRoles={["ADMIN","AIRLINE","DATA_STATISTICS"]}/>
+
 {/*       
       <SidebarItem to='/CPD/Tickets' title='Tickets' Icon={Ticket} allowedRoles={["ADMIN","CPO","AIRLINE","DGO"]}/>
       <SidebarItem to='/CPD/Reports' title='Reports' Icon={ClipboardIcon} allowedRoles={["ADMIN","CPO","AIRLINE","DGO"]}/>
@@ -57,6 +59,7 @@ export const Sidebar = () => {
       <SidebarItem to='/DAS/Cancelled' title='Cancelled Flights' Icon={Ban} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
       <SidebarItem to='/DAS/OnTime' title='On Time Flights' Icon={Timer} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
       <SidebarItem to='/DAS/Reports' title='Reports' Icon={ClipboardPaste} allowedRoles={["DGO","ADMIN","DATA_STATISTICS"]}/>
+      <SidebarItem to='/CPD/FDR' title='Flight Disruption' Icon={CopyX} allowedRoles={["ADMIN","AIRLINE","DATA_STATISTICS"]}/>
 {/*       
       <SidebarItem to='/CPD/Tickets' title='Tickets' Icon={Ticket} allowedRoles={["ADMIN","CPO","AIRLINE","DGO"]}/>
       <SidebarItem to='/CPD/Reports' title='Reports' Icon={ClipboardIcon} allowedRoles={["ADMIN","CPO","AIRLINE","DGO"]}/>
