@@ -129,7 +129,7 @@ export const FDR = () => {
 useEffect(()=>{
   console.log(form.formState.errors)
 },[form.formState.errors])
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: any) => {
     const data={
       "terminalName": values.terminalName,
       "airline": user.airline,
