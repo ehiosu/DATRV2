@@ -41,12 +41,13 @@ import { MdError } from "react-icons/md";
 import { useTerminalStore } from '@/store/terminalstore';
 import { TimeInput } from "@/components/ui/TimeInput.js";
 import { useRoutes } from "@/v3/hooks/useRoutes.js";
+import { useTerminal } from "@/v3/hooks/useTerminal";
 export const CreateEntry = () => {
   const routeQuery = useRoutes()
-  const {terminal}=useTerminalStore()
+  const terminalQuery=useTerminal()
   const newEntryFormSchema = z.object({
     dateOfIncidence: z.date(),
-    terminalName: z.string().default(terminal as string),
+    terminalName: z.string(),
     airline: z.string().min(1, {
       message: "Select a valid Airline",
     }),
@@ -225,6 +226,80 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 )}
               />
             </div>
+          <div className="flex items-center flex-wrap w-full gap-3 my-2">
+              <FormField
+                name="terminalName"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
+                    <FormLabel>Terminal</FormLabel>
+                    <FormControl>
+                    <Select defaultValue={field.value}  key={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger disabled={terminalQuery.isLoading || terminalQuery.isError} className="w-full h-7  my-1 bg-ncBlue rounded-md dark:bg-ncBlue text-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
+                        <SelectValue
+                          placeholder="Terminal"
+                          className="text-neutral-500"
+                        />
+                      </SelectTrigger>
+                     {
+                      terminalQuery.isSuccess &&  <SelectContent className="w-full bg-ncBlue text-white dark:text-white rounded-md shadow-md  mx-auto text-center outline-none">
+                     {
+                      terminalQuery.data.map((terminal:any)=>
+                        <SelectItem
+                      value={terminal.name}
+                      className=" text-[0.9rem]   w-full p-1 hover:cursor-pointer text-center focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white focus:text-white"
+                    >
+                      {terminal.name}
+                    </SelectItem>
+                      )
+                     }
+                    </SelectContent>
+                     }
+                    </Select>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+                <FormField
+              name="reportType"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
+                  <FormLabel>Report Type:</FormLabel>
+                  <FormControl>
+                    {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
+                    <Select defaultValue={field.value}  key={field.value} onValueChange={(value)=>{
+                      setReportType(value as typeof reportType)
+                      field.onChange(value)
+                    }}>
+                      <SelectTrigger className="w-full h-7  my-1 bg-ncBlue rounded-md dark:bg-ncBlue text-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
+                        <SelectValue
+                          placeholder="Report Type"
+                          className="text-neutral-500"
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="w-full bg-ncBlue text-white dark:text-white rounded-md shadow-md  mx-auto text-center outline-none">
+                        <SelectItem
+                          value="ARRIVAL"
+                          className=" text-[0.9rem]   w-full p-1 hover:cursor-pointer text-center focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white focus:text-white"
+                        >
+                          Arrival
+                        </SelectItem>
+                        <Separator />
+                        <SelectItem
+                          value="DEPARTURE"
+                          className=" text-[0.9rem]   w-full p-1 hover:cursor-pointer text-center focus:bg-slate-200/20 dark:focus:bg-slate-200/20 text-white focus:text-white"
+                        >
+                          Departure
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+              
+            </div>
             <div className="flex items-center flex-wrap w-full gap-3 my-2">
               <FormField
                 name="flightNumber"
@@ -282,7 +357,43 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
               />
             </div>
 
+          
+           
+
             <div className="flex items-center flex-wrap w-full gap-3">
+        
+             <FormField
+                name="inOrOutBoundPassenger"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
+                    <FormLabel>Number Of Passengers</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="acType"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
+                    <FormLabel>Aircraft Type</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+          </div>
+          <div className="flex items-center flex-wrap w-full gap-3">
               <FormField
                 name="stipulatedTimeArrived"
                 control={form.control}
@@ -324,79 +435,6 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 )}
               />
             </div>
-         
-           
-
-            <div className="flex items-center flex-wrap w-full gap-3">
-          <FormField
-              name="reportType"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
-                  <FormLabel>Report Type:</FormLabel>
-                  <FormControl>
-                    {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                    <Select defaultValue={field.value}  key={field.value} onValueChange={(value)=>{
-                      setReportType(value as typeof reportType)
-                      field.onChange(value)
-                    }}>
-                      <SelectTrigger className="w-48 h-7  my-1 bg-white rounded-md dark:bg-white focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none">
-                        <SelectValue
-                          placeholder="Report Type"
-                          className="text-neutral-500"
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="w-full bg-white rounded-md shadow-md  mx-auto text-center outline-none">
-                        <SelectItem
-                          value="ARRIVAL"
-                          className=" text-[0.9rem] text-neutral-400  w-full p-1 hover:cursor-pointer text-center"
-                        >
-                          Arrival
-                        </SelectItem>
-                        <Separator />
-                        <SelectItem
-                          value="DEPARTURE"
-                          className=" text-[0.9rem] text-neutral-400  w-full p-1 hover:cursor-pointer text-center"
-                        >
-                          Departure
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-             <FormField
-                name="inOrOutBoundPassenger"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
-                    <FormLabel>Number Of Passengers</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-          </div>
-          <FormField
-                name="acType"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
-                    <FormLabel>Aircraft Type</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
 
 
             <div className="flex gap-4 items-center my-6">
