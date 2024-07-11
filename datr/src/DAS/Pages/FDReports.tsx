@@ -69,7 +69,7 @@ export const FDReports = () => {
           <Calendar
               initialFocus
               mode="range"
-              defaultMonth={date.from || new Date()}
+              defaultMonth={date?.from || new Date()}
               selected={date}
               onSelect={setDate}
               numberOfMonths={1}
