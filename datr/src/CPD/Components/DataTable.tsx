@@ -7272,6 +7272,92 @@ export const OutboxMessageColumnDef: ColumnDef<sentMessage>[] = [
     },
   },
 ];
+export const OutboxMessageColumnDef: ColumnDef<sentMessage>[] = [
+  {
+    accessorKey: "to",
+    header: ({ column }) => {
+      return (
+        <Button
+          className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent group hover:bg-slate-200 dark:hover:bg-slate-200 mx-auto"
+          onClick={() => {
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}
+        >
+          To{" "}
+          <ArrowUpDown className="w-4 h-4 shrink ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: "complaintType",
+    header: "Complaint Type",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const resolveStatus: (status: string) => string = (status = "") => {
+        const btnStyles: Record<string, string> = {
+          PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
+          UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
+          NEW: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
+          ESCALATED: "bg-[#FF585821] border-2 border-[#FF5858]",
+          OPENED: "bg-[#D016DD21] border-2 border-[#D116DD]",
+          UNASSIGNED: "",
+          RESOLVED: "bg-blue-200 border-2 border-blue-400",
+          CLOSED: "bg-neutral-200 border-2 border-neutral-400",
+        };
+
+        return `${btnStyles[status]} inline h-max p-1`;
+      };
+      return (
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
+              resolveStatus(row.original.status)
+            )}
+          >
+            <p>{row.original.status}</p>
+          </div>
+        </div>
+      );
+    },
+  },
+  { header: "Date", accessorKey: "date" },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      return (
+        <div className="">
+          <Popover>
+            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
+              <BsThreeDots className="w-4 h-4 shrink" />
+            </PopoverTrigger>
+            <PopoverContent
+              className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
+              side="left"
+            >
+              <div
+                className="hover:bg-slate-200/25  text-white text-sm p-1.5"
+                role="button"
+              >
+                <p>View Message</p>
+              </div>
+              <div
+                className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
+                role="button"
+              >
+                <p>Delete Message</p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
+  },
+];
 export const DraftMessagesColumnDefinition: ColumnDef<sentMessage>[] = [
   {
     id: "selection",

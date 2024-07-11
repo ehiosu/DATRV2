@@ -54,11 +54,11 @@ export const CreateEntry = () => {
     flightNumber: z.string().min(1, {
       message: "Enter a valid flight number",
     }),
-    inOrOutBoundPassenger:z.string().min(1,{
-      message:"Enter a valid value"
+    inOrOutBoundPassenger: z.string().min(1, {
+      message: "Enter a valid value",
     }),
-    acType:z.string().min(1,{
-      message:"Enter a valid value"
+    acType: z.string().min(1, {
+      message: "Enter a valid value",
     }),
     route: z.string().min(1, {
       message: "Enter a valid Route",
@@ -66,21 +66,28 @@ export const CreateEntry = () => {
     stipulatedTimeArrived: z.string().min(1, {
       message: "Input a valid Stipulated Time of Arrival.",
     }),
-    actualTimeArrived: z.string().min(1, {
-      message: "Input a valid Actual Time of Arrival.",
-    }).default("").optional(),
+    actualTimeArrived: z
+      .string()
+      .min(1, {
+        message: "Input a valid Actual Time of Arrival.",
+      })
+      .default("")
+      .optional(),
     reportType: z.string().min(1, {
       message: "Select a valid report type",
     }),
-   
+    reasonForDelay: z.string().optional(),
+    reasonForCancellation: z.string().optional(),
   });
   const nav = useNavigate();
   const form = useForm({
     resolver: zodResolver(newEntryFormSchema),
   });
   const { axios } = useAxiosClient();
-  const [reportType,setReportType]=useState<"ARRIVAL"|"DEPARTURE"|"">("ARRIVAL")
-const resetBtn=useRef<HTMLButtonElement|null>(null)
+  const [reportType, setReportType] = useState<"ARRIVAL" | "DEPARTURE" | "">(
+    "ARRIVAL"
+  );
+  const resetBtn = useRef<HTMLButtonElement | null>(null);
   const getAirlinesQuery = useQuery({
     queryKey: ["airlines", "names"],
     queryFn: () =>
@@ -92,39 +99,57 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
   });
   const AddEntryMutation = useMutation({
     mutationKey: ["entry", "new"],
-    mutationFn: (values:any) =>
-      { 
-        console.log(values)
-        return new Promise((resolve, reject) =>
+    mutationFn: (values: any) => {
+      console.log(values);
+      return new Promise((resolve, reject) =>
         axios("data-entries/add", {
           method: "POST",
-          data: {...values,dateOfIncidence:format(new Date(values.dateOfIncidence),'yyyy-MM-dd')},
+          data: {
+            ...values,
+            dateOfIncidence: format(
+              new Date(values.dateOfIncidence),
+              "yyyy-MM-dd"
+            ),
+          },
         })
           .then((resp: any) => resolve(resp.data))
           .catch((err: any) => reject(err))
-      )},
+      );
+    },
   });
 
-
-  const TryAddEntry = (values:any) => {
-   let isSumbitting =false
-    if(!isSumbitting){
+  const TryAddEntry = (values: any) => {
+    let isSumbitting = false;
+    if (!isSumbitting) {
       toast.promise(
-        new Promise((resolve, reject) =>
-         { 
-          isSumbitting=true
-          return AddEntryMutation.mutate({...values,actualTimeArrived:values.actualTimeArrived||null}, {
-            onSuccess: (data, variables, context) => {
-              resolve(data);
-              form.reset({});
-              setReportType("")
-              resetBtn.current?.click()   
+        new Promise((resolve, reject) => {
+          isSumbitting = true;
+          return AddEntryMutation.mutate(
+            {
+              ...values,
+              actualTimeArrived: values.actualTimeArrived || null,
+              reasonForDelay:
+                values.actualTimeArrived > values.stipulatedTimeArrived
+                  ? values.reasonForDelay || null
+                  : null,
+              reasonForCancellation:
+                !values.stipulatedTimeArrived && !values.actualTimeArrived
+                  ? values.reasonForCancellation || null
+                  : null,
             },
-            onError: (error, variables, context) => {
-              reject(error);
-            },
-          })}
-        ),
+            {
+              onSuccess: (data, variables, context) => {
+                resolve(data);
+                form.reset({});
+                setReportType("");
+                resetBtn.current?.click();
+              },
+              onError: (error, variables, context) => {
+                reject(error);
+              },
+            }
+          );
+        }),
         {
           loading: "Trying to add entry...",
           success: "Entry added successfully!",
@@ -134,14 +159,16 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
                   <MdError /> Error
                 </p>
-                <p>{error.response.data.message || error.response.data.detail}</p>
+                <p>
+                  {error.response.data.message || error.response.data.detail}
+                </p>
               </div>
             );
           },
         }
       );
     }
-    isSumbitting=false
+    isSumbitting = false;
   };
   return (
     <main className="w-full h-full">
@@ -435,28 +462,57 @@ const resetBtn=useRef<HTMLButtonElement|null>(null)
                 )}
               />
             </div>
-
-
-            <div className="flex gap-4 items-center my-6">
-              <button
-                className="w-56 h-10 rounded-lg shadow-md bg-darkBlue text-white"
-               type="submit"
-               disabled={AddEntryMutation.isPending}
-              >
-                Submit
-              </button>
-              <button
-                className="w-56 h-10 rounded-lg shadow-md bg-lightPink text-white "
-                onClick={() => {
-                  nav(`/DAS/${Location}/Dashboard`);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </Form>
-     
+            <div className="flex items-center flex-wrap w-full gap-3">
+          <FormField
+            name="reasonForCancellation"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
+                <FormLabel>Reason for Cancellation</FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-full h-8 outline-none border-b-2 dark:bg-white bg-white dark:border-gray-200 border-gray-200"
+                    {...field}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="reasonForDelay"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
+                <FormLabel>Reason for Delay</FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-full h-8 outline-none border-b-2 dark:bg-white bg-white dark:border-gray-200 border-gray-200"
+                    {...field}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          </div>
+          <div className="flex gap-4 items-center my-6">
+            <button
+              className="w-56 h-10 rounded-lg shadow-md bg-darkBlue text-white"
+              type="submit"
+              disabled={AddEntryMutation.isPending}
+            >
+              Submit
+            </button>
+            <button
+              className="w-56 h-10 rounded-lg shadow-md bg-lightPink text-white "
+              onClick={() => {
+                nav(`/DAS/${Location}/Dashboard`);
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Form>
     </main>
   );
 };

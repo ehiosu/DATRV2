@@ -45,6 +45,11 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as sanitizeHtml from "sanitize-html";
 import { toast as sonnerToast } from "sonner";
+import MarkdownIt from "markdown-it";
+import MdEditor from "react-markdown-editor-lite";
+import "react-markdown-editor-lite/lib/index.css";
+
+const mdParser = new MarkdownIt();
 
 export const TicketPage = () => {
   const [messageQueue, setMessageQueue] = useState(() => {
@@ -251,6 +256,34 @@ export const TicketPage = () => {
     sonnerToast.dismiss();
   };
 
+  // Send to airline action
+  const SendToAirlineAction = () => {
+    const { id } = useParams();
+    const { axios } = useAxiosClient(); // Custom hook for axios instance
+    const client = useQueryClient();
+
+    const sendToAirlineMutation = useMutation({
+      mutationKey: ["ticket", `${id}`, "sendToAirline"],
+      mutationFn: () =>
+        axios
+          .put(`tickets/sendToAirline/${id}`) // endpointw
+          .then((resp) => resp.data)
+          .catch((err) => {
+            throw err;
+          }),
+      onSuccess: () => {
+        client.invalidateQueries(["tickets", `${id}`]);
+      },
+      onError: (error) => {
+        console.error("Error sending ticket to airline:", error);
+      },
+    });
+
+    const handleSendToAirline = () => {
+      sendToAirlineMutation.mutate();
+    };
+  };
+
   return (
     <section className="w-full ">
       {ticketQuery.isSuccess && (
@@ -439,6 +472,19 @@ export const TicketPage = () => {
                   ref={textAreaRef}
                   className="flex-1 resize-none text-child bg-transparent dark:bg-transparent ring-transparent dark:ring-transparent outline-none dark:outline-none focus:outline-none dark:focus:outline-none focus-within:outline-none dark:focus-within:outline-none border-transparent dark:border-transparent focus-visible:outline-none dark:focus-visible:outline-none focus-visible:ring-transparent dark:focus-visible:ring-transparent dark:focus-visible:border-transparent focus-visible:border-transparent text-sm"
                 ></Textarea>
+                {/* Markdown editor */}
+                <MdEditor
+                  value={ticketContent}
+                  onChange={({ text }) => setTicketContent(text)}
+                  renderHTML={(text) => mdParser.render(text)}
+                  config={{
+                    view: {
+                      html: true,
+                      menu: true,
+                      md: true,
+                    },
+                  }}
+                />
                 <button
                   disabled={ticketContent.length === 0}
                   onClick={() => {
