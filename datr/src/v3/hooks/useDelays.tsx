@@ -11,7 +11,7 @@ export const useDelays = (terminal: string, date: DateRange, page: number, size:
 
     const queryKey = ['delays', terminal, format(fromDate, 'dd-MM-yyyy'), format(toDate, 'dd-MM-yyyy')];
 
-    const queryFn = () => axios(`data-entries/delays?terminal=${terminal}&airline=Dana-Air&start-date-of-incidence=${format(fromDate, 'dd-MM-yyyy')}&end-date-of-incidence=${format(toDate, 'dd-MM-yyyy')}&page=${page - 1}&size=${size}`)
+    const queryFn = () => axios(`data-entries/delays?terminal=${terminal}&start-date-of-incidence=${format(fromDate, 'dd-MM-yyyy')}&end-date-of-incidence=${format(toDate, 'dd-MM-yyyy')}&page=${page - 1}&size=${size}`)
         .then((resp: any) => resp.data);
 
     const query = useQuery({

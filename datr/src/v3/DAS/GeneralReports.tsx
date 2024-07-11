@@ -117,7 +117,7 @@ const DepartureTable=()=>{
     // }
 
     setReportData(data);
-  }, [query.data]);
+  }, [query]);
   return(
     <section>
       <div  className="w-full max-h-[70vh] overflow-y-auto border-2 bg-white border-t-4 border-t-ncBlue rounded-lg py-1 mt-4 scroll-smooth flex flex-col gap-y-4">
