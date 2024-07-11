@@ -108,6 +108,7 @@ import {
   History,
   Pencil,
   PersonStanding,
+  Send,
   Trash,
   User,
   X,
@@ -3539,6 +3540,10 @@ export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
     },
   },
   {
+    header:"Region",
+    accessorKey:"region"
+  },
+  {
     id: "active",
     header: "State",
     cell: ({ row }) => {
@@ -3636,6 +3641,12 @@ export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
                   </p>
                 </div>
               </ConfirmationDialog>
+              <Dialog>
+                <DialogTrigger className="flex items-center w-full text-[0.8275rem] group-hover:font-semibold text-center space-x-2 p-2 group">
+                  <Pencil className="w-5 h-5 shrink mr-2 opacity-0 group-hover:opacity-100 transtion-opacity duration-300"/> Edit Terminal
+                </DialogTrigger>
+                <EditTerminalDialog name={row.original.name} region={row.original["region"]} id={row.original["id"]}/>
+              </Dialog>
             </PopoverContent>
           </Popover>
         </div>
@@ -3643,6 +3654,134 @@ export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
     },
   },
 ];
+import * as z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+const EditTerminalDialog=({name,region,id}:{name:string,region:string|null,id:string})=>{
+  const { axios } = useAxiosClient();
+      const client = useQueryClient();
+      const editMutation = useMutation({
+        mutationKey: ["terminal", name],
+        mutationFn: (values:z.infer<typeof schema>) =>
+          new Promise((resolve, reject) => {
+            axios(`terminals/${id.toString()}`, {
+              method: "PATCH",
+              data:[
+                {"op":"replace", "path":"/abbreviation", "value":values.name},
+                {"op":"replace", "path":"/name", "value":values.name},
+                {"op":"replace", "path": "/region", "value": values.region}
+            ]
+            })
+              .then((resp: any) => resolve(resp.data))
+              .catch((err: Error) => reject(err));
+          }),
+      });
+      const tryEdit=(values:z.infer<typeof schema>)=>{
+        sonnerToast.promise(
+          new Promise((resolve, reject) => {
+            editMutation.mutate(values, {
+              onSuccess: (data, variables, context) => {
+                resolve(data);
+                client.invalidateQueries({
+                  queryKey: ["terminals", "all"],
+                });
+              },
+              onError: (error, variables, context) => {
+                reject(error);
+              },
+            });
+          }),
+          {
+            loading: "Editing Terminal Data...",
+            success: "Data Updated Successfully!",
+            error: (error) => {
+              return (
+                <div className="text-black flex flex-col">
+                  <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                    <MdError className="w-4 h-4 shrink " /> Error
+                  </p>
+                  <p>
+                    {error.response.data.message ||
+                      error.response.data.detail}
+                  </p>
+                </div>
+              );
+            },
+          }
+        );
+      }
+  const schema=z.object({
+    name:z.string(),
+    region:z.string()
+  })
+  const form = useForm<z.infer<typeof schema>>({
+    defaultValues:{
+      name,
+      region:region as string
+    },
+    resolver:zodResolver(schema)
+  })
+  return(
+   <DialogContent>
+    <Form {...form}>
+    <form onSubmit={form.handleSubmit(tryEdit)}>
+    <FormField
+          name="name"
+          control={form.control}
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  The name of the termianl to be created.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+       <FormField
+          name="region"
+          control={form.control}
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Region</FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  The region the terminal belongs to.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+        <button
+          disabled={Object.keys(form.formState.errors).length > 0}
+          className="w-full h-8 flex flex-row items-center justify-center my-3 bg-neutral-100 hover:bg-ncBlue transition-all duration-300 rounded-lg hover:text-white group disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:text-black"
+        >
+          Submit
+          <Send className="ml-2 w-4 h-4 shrink flex flex-row items-center justify-center mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:duration-700 group-hover:disabled:opacity-0" />
+        </button>
+    </form>
+    </Form>
+
+   </DialogContent>
+  )
+}
 export const airlineColumnDef: ExtendedColumnDef<airlineConfig>[] = [
   {
     accessorKey: "id",
@@ -4172,63 +4311,6 @@ export const cancelledFlightColumnDef: ColumnDef<cancelledFlight>[] = [
   },
 ];
 
-export const cancelledFlightPlaceholderData: cancelledFlight[] = [
-  {
-    id: "Air Peace",
-    cancelledFlights: "12",
-    numberOfFlights: "26",
-  },
-  {
-    id: "Arik Air",
-    numberOfFlights: "26",
-    cancelledFlights: "18",
-  },
-  {
-    id: "Max Air",
-    numberOfFlights: "32",
-    cancelledFlights: "13",
-  },
-  {
-    id: "Aero",
-    numberOfFlights: "28",
-    cancelledFlights: "22",
-  },
-  {
-    id: "Dana Air",
-    numberOfFlights: "20",
-    cancelledFlights: "14",
-  },
-  {
-    id: "Azman Air",
-    numberOfFlights: "0",
-    cancelledFlights: "0",
-  },
-  {
-    id: "Overland",
-    numberOfFlights: "14",
-    cancelledFlights: "5",
-  },
-  {
-    id: "Ibom Air",
-    numberOfFlights: "28",
-    cancelledFlights: "10",
-  },
-  {
-    id: "United Nigeria",
-    numberOfFlights: "14",
-    cancelledFlights: "8",
-  },
-  {
-    id: "Overland",
-    numberOfFlights: "12",
-    cancelledFlights: "4",
-  },
-  {
-    id: "Valeu Jet",
-    numberOfFlights: "6",
-    cancelledFlights: "2",
-  },
-];
 
 const statusFilterFn = (row: Row<Report>, id: string, filterValue: string) => {
   console.log(filterValue, row.original);
@@ -4287,8 +4369,12 @@ export const arrivalReportsColumnDef: ColumnDef<Report>[] = [
     },
   },
   {
+    accessorKey:"inOrOutBoundPassenger",
+    header:"POB"
+  },
+  {
     accessorKey: "delayedDifferenceInHour",
-    header: "Delay",
+    header: "Length of Delay",
     cell: ({ row }) => {
       const hours = Math.floor(
         parseInt(row.original["delayedDifferenceInHour"]!) / 3600
@@ -4301,7 +4387,7 @@ export const arrivalReportsColumnDef: ColumnDef<Report>[] = [
         <div>
           <p className="text-sm">
             {row.original["delayedDifferenceInHour"]
-              ? `${hours} hours , ${minutes} minutes`
+              ? `${Math.abs(hours)} hours , ${Math.abs(minutes)} minutes`
               : "----"}
           </p>
         </div>
@@ -4454,6 +4540,10 @@ export const departureReportsColumnDef: ColumnDef<Report>[] = [
     accessorKey: "route",
     header: "Route",
   },
+{
+  accessorKey:"inOrOutBoundPassenger",
+  header:"POB"
+},
   {
     accessorKey: "sta",
     header: "STD",
@@ -4483,7 +4573,7 @@ export const departureReportsColumnDef: ColumnDef<Report>[] = [
   },
   {
     accessorKey: "delayedDifferenceInHour",
-    header: "Delay",
+    header: "Lenght of Delay",
     cell: ({ row }) => {
       const hours = Math.floor(
         parseInt(row.original["delayedDifferenceInHour"]!) / 3600
@@ -4496,7 +4586,7 @@ export const departureReportsColumnDef: ColumnDef<Report>[] = [
         <div>
           <p className="text-sm">
             {row.original["delayedDifferenceInHour"]
-              ? `${hours} hours , ${minutes} minutes`
+              ? `${Math.abs(hours)} hours , ${Math.abs(minutes)} minutes`
               : "----"}
           </p>
         </div>
@@ -4762,9 +4852,7 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
       const group = new URLSearchParams(useLocation().search).get("group");
       return (
         <div
-          onClick={() => {
-            nav(`/CPD/Configuration/User/${row.original["id"]}?group=${group}`);
-          }}
+          
           role="button"
           className="hover:text-blue-400 transition-all"
         >
@@ -4781,6 +4869,150 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
     accessorKey: "lastName",
     header: "Last Name",
   },
+  {
+    id:"actions",
+    cell:({row})=>{
+      const { axios } = useAxiosClient();
+      const group = new URLSearchParams(useLocation().search).get("group")
+      const client = useQueryClient();
+      const [newRole, setNewRole] = useState("");
+      const [selectedTerminal, setSelectedTerminal] = useState("");
+      const terminalQuery = useQuery({
+        queryKey: ["terminals", "all"],
+        staleTime: Infinity,
+        queryFn: () =>
+          axios("terminals/active", {
+            method: "GET",
+          })
+            .then((resp:AxiosResponse) => resp.data)
+            .catch((err:AxiosError) => {
+              throw err;
+            }),
+      });
+      const changeRoleMutation = useMutation({
+        mutationKey: ["role"],
+        mutationFn: () =>
+          axios("/admin/upgrade", {
+            method: "PUT",
+            data: {
+              ncaaUserEmail: row.original.email,
+              role: newRole,
+              terminalName:
+                newRole === "TERMINAL_SUPERVISOR" || newRole === "SHIFT_SUPERVISOR"
+                  ? selectedTerminal
+                  : "",
+            },
+          })
+            .then((resp:AxiosResponse) => {
+              toast({
+                title: "Success!",
+                description: "User Successfully upgraded!",
+              });
+              client.invalidateQueries({ queryKey: ["groups", group as string] });
+              return resp.data;
+            })
+            .catch((err:AxiosError) => {
+              toast({
+                title: "Error!",
+                description:err.response.data.message || err.response.data.detail,
+                variant: "destructive",
+              });
+            }),
+      });
+      return(
+        
+        <Popover>
+          <PopoverTrigger className="hover:bg-slate-200 rounded p-1.5">
+            <BsThreeDots className="w-5 h-5 shrink"/>
+          </PopoverTrigger>
+          <PopoverContent className="p-1.5 w-max px-3" side="left">
+          <AlertDialog>
+          <AlertDialogTrigger className="text-xs font-semibold hover:text-blue-300 text-neutral-400">
+            Update Role
+          </AlertDialogTrigger>
+          <AlertDialogContent className="text-center">
+            <p className="text-[1.4rem] font-semibold text-neutral-700">
+              Change User Role
+            </p>
+            <p className="my-2 text-[0.77rem] text-neutral-400">
+              Doing this will revoke access to or grant the user access to
+              certain modules and/ or features of the system.
+            </p>
+
+            <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start">
+              Select a new Role
+            </p>
+            <Select
+              onValueChange={(value) => {
+                setNewRole(value);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="New Role..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CPO">Consumer Protection Officer</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="TERMINAL_SUPERVISOR">
+                  Terminal Supervisor
+                </SelectItem>
+                <SelectItem value="SHIFT_SUPERVISOR">
+                  Shift Supervisor
+                </SelectItem>
+                <SelectItem value="DATA_STATISTIC">
+                  Data and Statistics Officer
+                </SelectItem>
+                <SelectItem value="DGO"> Director General</SelectItem>
+                <SelectItem value="CPD_D">CPD Director</SelectItem>
+                <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {(newRole === "TERMINAL_SUPERVISOR" ||
+              newRole === "SHIFT_SUPERVISOR") &&
+              terminalQuery.isSuccess && (
+                <>
+                  <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start mt-4">
+                    Select Terminal
+                  </p>
+                  <Select
+                    onValueChange={(value) => {
+                      setSelectedTerminal(value);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Terminal..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {terminalQuery.data.map((terminal) => (
+                        <SelectItem key={terminal.id} value={terminal.name}>
+                          {terminal.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
+            <AlertDialogFooter>
+              <AlertDialogAction
+                className="flex-grow"
+                onClick={() => {
+                  changeRoleMutation.mutate();
+                }}
+              >
+                Save
+              </AlertDialogAction>
+              <AlertDialogCancel className="flex-grow">
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+          </PopoverContent>
+        </Popover>
+      )
+    }
+  }
 ];
 
 export const AirlineTableColumnDef: ColumnDef<airline>[] = [
