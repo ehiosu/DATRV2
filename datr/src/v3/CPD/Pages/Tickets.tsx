@@ -33,10 +33,11 @@ export const Tickets = () => {
   const query=useTickets(filter,date,currentPage,pageSize,setMaxPages)
   const terminalQuery = useTerminal();
   const nav=useNavigate()
+
   return (
     <section className='w-full px-6 py-2 '>
     <div className="flex items-center w-full justify-between">
-    <p className='text-2xl font-semibold'>Tickets</p>
+    <p className='text-2xl font-semibold'>Complaints</p>
    {user.roles[user.roles.length-1]!== "CPO" && <Select value={filter} onValueChange={(value:string)=>{
       setCurrentPage(1)
       setFilter(value)
@@ -94,7 +95,7 @@ export const Tickets = () => {
                 className="text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white"
                 value="ALL"
               >
-                Terminals
+                All
               </SelectItem>
               {terminalQuery.isLoading ? (
                 <SelectItem disabled value="loading">

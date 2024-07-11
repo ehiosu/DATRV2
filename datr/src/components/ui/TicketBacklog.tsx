@@ -36,7 +36,7 @@ export const TicketBacklog = ({terminals}:{terminals:any[]}) => {
   return (
     <section className="w-full h-full  p-3 overflow-y-auto">
       <div className="flex ">
-        <p className="font-semibold">Complaint Backlog</p>
+        <p className="font-semibold">Complaints Backlog</p>
         {/* <ViewChanger
           className="ml-auto rounded-sm w-7 h-7"
           view="Table"

@@ -182,6 +182,7 @@ useEffect(()=>{
     uploadReportMutation.mutate(data,{
       onSuccess:(data)=>{resolve(data)
         form.reset({})
+        setReportType("Arrival")
 
       },
       onError:(error)=>reject(error)
@@ -348,6 +349,7 @@ useEffect(()=>{
                     <FormLabel>Terminal</FormLabel>
                     <FormControl>
                       <Select
+                      key={field.value}
                         value={field.value}
                         onValueChange={field.onChange}
                       >
@@ -425,7 +427,7 @@ useEffect(()=>{
                     }
                   </FormLabel>
                   <FormControl>
-                  <TimeInput value={field.value}    className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
+                  <TimeInput value={field.value} key={field.value} className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
                   {/* <TimePicker value={field.value} onChange={field.onChange} className={"w-full bg-white  h-8 outline-none  border-b-2 dark:bg-white focus-within:ring-2 focus-within:ring-blue-400 rounded-lg  dark:border-gray-200  border-gray-200"}/> */}
                   </FormControl>
                  </FormItem>
@@ -447,7 +449,7 @@ useEffect(()=>{
                     }
                   </FormLabel>
                   <FormControl>
-                  <TimeInput value={field.value}    className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
+                  <TimeInput value={field.value} key={field.value}    className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
                   </FormControl>
                  </FormItem>
                 )}

@@ -159,7 +159,7 @@ export const NewTicket = () => {
     staleTime: Infinity,
     queryFn: () =>
       isExternal
-        ? axios("http://176.58.117.18:8080/api/terminals/active", {
+        ? atxios("http://176.58.117.18:8080/api/terminals/active", {
             method: "GET",
           })
             .then((resp) => resp.data)
@@ -242,7 +242,7 @@ export const NewTicket = () => {
           <li className="text-blue-400/50">New Ticket</li>
         </ol>
       </div> */}
-      <p className="text-2xl font-semibold text-ncBlue my-2">New Ticket</p>
+      <p className="text-2xl font-semibold text-ncBlue my-2">New Complaint</p>
 
       <Form {...form}>
         <form

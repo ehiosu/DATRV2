@@ -5989,19 +5989,19 @@ export const fdrColumnDef: ColumnDef<fdrEntry>[] = [
   },
   {
     accessorKey: "scheduledTimeArrival",
-    header: "Scheduled Time Of Arrival",
+    header: "Scheduled Time Of Arrival (STA)",
   },
   {
     accessorKey: "scheduledTimeDeparture",
-    header: "Scheduled Time Of Departure",
+    header: "Scheduled Time Of Departure (STD)",
   },
   {
     accessorKey: "expectedTimeArrival",
-    header: "Expected Time Of Arrival",
+    header: "Actual Time Of Arrival (ATA)",
   },
   {
     accessorKey: "expectedTimeDeparture",
-    header: "Expected Time Of Departure",
+    header: "Actual Time Of Departure (ATD)",
   },
   {
     id: "reasonForDelay",
@@ -6160,19 +6160,19 @@ export const fdrAirlineColumnDef: ColumnDef<fdrEntry>[] = [
   },
   {
     accessorKey: "scheduledTimeArrival",
-    header: "Scheduled Time Of Arrival",
+    header: "Scheduled Time Of Arrival (STA)",
   },
   {
     accessorKey: "scheduledTimeDeparture",
-    header: "Scheduled Time Of Departure",
+    header: "Scheduled Time Of Departure (STD)",
   },
   {
     accessorKey: "expectedTimeArrival",
-    header: "Expected Time Of Arrival",
+    header: "Actual Time Of Arrival (ATA)",
   },
   {
     accessorKey: "expectedTimeDeparture",
-    header: "Expected Time Of Departure",
+    header: "Actual Time Of Departure (ATD)",
   },
   {
     id: "reasonForDelay",
@@ -6647,7 +6647,7 @@ export const delayedReportColumnDef: ColumnDef<delayedReportEntry>[] = [
   },
   {
     accessorKey: "delayedDifferenceInHour",
-    header: "Delay Amount",
+    header: "Lenght Of Delay",
     cell: ({ row }) => {
       const hours = Math.floor(
         parseInt(row.original["delayedDifferenceInHour"]!) / 3600
