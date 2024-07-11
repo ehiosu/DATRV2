@@ -80,7 +80,7 @@ export const app = () => {
         <TicketPage/>
        </ProtectedRoute>}/>
      
-       <Route path='/CPD/FDR' element={<ProtectedRoute roles={["ADMIN","AIRLINE",]}>
+       <Route path='/CPD/FDR' element={<ProtectedRoute roles={["ADMIN","AIRLINE","ADMIN","DATA_STATISTICS"]}>
         <FligthDisruption/>
        </ProtectedRoute>}/>
        <Route path='/CPD/FDR/Edit/:id' element={<ProtectedRoute roles={["ADMIN","AIRLINE",]}>
