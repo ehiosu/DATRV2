@@ -13,6 +13,7 @@ type user = {
   lastName:string,
   roles: string[];
   imageUrl:string,
+  terminal:string|null,
   airline?:string | null
 };
 type tokenUpdatePayload = {
@@ -44,6 +45,7 @@ export const useAuthStore = create(persist<state & actions> (
       lastName:"",
       roles: [],
       imageUrl:"",
+      terminal:null,
       airline:null
     },
     verified:false,
@@ -57,7 +59,7 @@ export const useAuthStore = create(persist<state & actions> (
     generalUpdate:(data:generalUpdate)=>{set(()=>({access:data.access_token,refresh:data.refresh_token,user:data.user,verified:data.verified}))},
     updateVerified:(data)=>set(()=>({verified:data})),
     updateImage:(data)=>set((state)=>({user:{...state.user,imageUrl:data}})) ,
-    logout:()=>set((state)=>({user:{email:"",id:"",firstName:"",lastName:"",roles:[],imageUrl:"",airline:null},access:"",refresh:""}))
+    logout:()=>set((state)=>({user:{email:"",id:"",firstName:"",lastName:"",roles:[],imageUrl:"",airline:null,terminal:null},access:"",refresh:""}))
   }),{
 name:"auth-store",
 storage:createJSONStorage(()=>sessionStorage)
