@@ -55,7 +55,7 @@ export function DatePickerWithRange({
   const fromDate = date?.from ? new Date(date.from) : undefined;
   const toDate = date?.to ? new Date(date.to) : undefined;
 
-  const [localDate, localSetDate] = useState<DateRange | undefined>({
+  const [localDate, localSetDate] = useState<DateRange >({
     from: fromDate,
     to: toDate
   });
