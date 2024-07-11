@@ -8,6 +8,7 @@ import { useFlightDisruptions } from '@/v3/hooks/useFlightDisruptions'
 import { Skeleton } from '@/components/ui/skeleton'
 import { GenericDataTable, fdrAirlineColumnDef, fdrColumnDef } from '@/CPD/Components/DataTable'
 import { useAuth } from '@/api/useAuth'
+import { NcPagination } from '@/components/ui/NcPagination'
 
 export const FligthDisruption = () => {
     const {isSuccess,isLoading,data} = useTerminal()
@@ -27,7 +28,7 @@ export const FligthDisruption = () => {
                 <SelectTrigger disabled={!isSuccess} className='dark:bg-ncBlue bg-ncBlue text-white px-2 w-40   h-10 rounded-md ml-auto'>
                     <SelectValue placeholder="Select A terminal" className='text-sm font-normal'/>
                     <SelectContent className='dark:bg-ncBlue bg-ncBlue'>
-                        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='ALL'>All</SelectItem>
+                        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='All'>All</SelectItem>
                         {
                             isSuccess && data.map((terminal:any)=>(
                                 <SelectItem value={terminal.name} className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white'>
@@ -50,6 +51,10 @@ export const FligthDisruption = () => {
             query.isLoading?<Skeleton className='w-full h-[60vh]'/>:query.isSuccess&&   <GenericDataTable tableClassname=''  headerClassname='rounded-lg' columns={isAirline?fdrAirlineColumnDef:fdrColumnDef} data={isAirline?query.data:query.data["flightDisruptionReportResponses"]} filterColumn='airline' filterHeader='Airline' showColumnFilter hasFilter={!isAirline}/>
           }
     </div>
+   <div className="flex items-center justify-center mt-2">
+   <NcPagination className='mx-auto' maxPage={maxPages} currentPage={currentPage} setPage={setCurrentPage}/>
+   </div>
+
     
       
     </section>
