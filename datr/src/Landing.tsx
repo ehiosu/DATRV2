@@ -6,10 +6,13 @@ import minister from "/minister.jpg"
 import dg from "/dg.jpg"
 import welcomeSound from "/Welcome-.mp3"
 import welcome from "/welcome.mp3"
+import { useAuth } from './api/useAuth';
+import { home_pages } from './v3/data';
 export const Landing = () => {
   const {scrollYProgress}=useScroll();
   const [scrollPosition,SetScrollPosition]=useState(0)
-  const [collapsed,setCollapsed]=useState(false)
+  const {access,user} = useAuth()
+  const isLoggedin = access!=="access" && access
   const [soundPlayed, setSoundPlayed] = useState(false);
   const hiddenBtn=useRef<HTMLButtonElement|null>(null)
   useMotionValueEvent(scrollYProgress,"change",(current:number)=>{
@@ -73,12 +76,19 @@ export const Landing = () => {
       <img src="https://res.cloudinary.com/dpxuxtdbh/image/upload/v1715615431/asseco-ncaa/ncaalogo_hklh3e.png" className='h-full aspect-square rounded-full object-contain' alt="" />
       <p className='md:text-2xl text-lg text-white ml-2 tracking-wider font-semibold'>NCAA CPD PORTAL</p>
       <div className='h-full px-4 py-1 flex items-center bg-[rgb(0,6,133)] ml-auto space-x-6 text-sm  md:text-[1rem] text-white rounded-md'>
-       <Link to={"/Auth"} className='hover:border-b-2 hover:border-b-white h-full w-16 text-center flex items-center justify-center'>
-          Sign In       
-       </Link>
-       <Link className='hover:border-b-2 hover:border-b-white h-full w-16 text-center flex items-center justify-center' to={"/Create-Account"}>
-          Register      
-       </Link>
+      {
+        !isLoggedin&&<>  <Link to={"/Auth"} className='hover:border-b-2 hover:border-b-white h-full w-16 text-center flex items-center justify-center'>
+        Sign In       
+     </Link>
+     <Link className='hover:border-b-2 hover:border-b-white h-full w-16 text-center flex items-center justify-center' to={"/Create-Account"}>
+        Register      
+     </Link></>
+      }
+      {
+isLoggedin && <Link to={home_pages[user.roles[user.roles.length - 1] as keyof typeof home_pages]} className='hover:border-b-2 hover:border-b-white h-full w-max px-2 text-center flex items-center justify-center'>
+Go To Dashboard    
+</Link>
+      }
 
       </div>
       </nav>
