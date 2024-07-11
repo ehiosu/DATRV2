@@ -22,9 +22,7 @@ export const TopNav = () => {
                     <SelectValue placeholder="Select A terminal"/>
                 </SelectTrigger>
                 <SelectContent className='dark:bg-ncBlue bg-ncBlue'>
-                      {
-                        location.pathname !== "/DAS/Delays"|| location.pathname !== "/DAS/Cancelled" || location.pathname !== "/DAS/OnTime" &&   <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='All'>All</SelectItem>
-                      }
+                       <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='All'>All</SelectItem>
                         {
                             terminalQuery.isSuccess && terminalQuery.data.map((terminal:any)=>(
                                 <SelectItem value={terminal.name} className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white'>
