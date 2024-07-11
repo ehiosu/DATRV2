@@ -102,6 +102,7 @@ const UserCard = ({ group, user, id }) => {
   const { axios } = useAxiosClient();
   const client = useQueryClient();
   const [newRole, setNewRole] = useState("");
+  const [selectedTerminal, setSelectedTerminal] = useState("");
   const terminalQuery = useQuery({
     queryKey: ["terminals", "all"],
     staleTime: Infinity,
@@ -123,6 +124,10 @@ const UserCard = ({ group, user, id }) => {
         data: {
           ncaaUserEmail: user.email,
           role: newRole,
+          terminalId:
+            newRole === "TERMINAL_SUPERVISOR" || newRole === "SHIFT_SUPERVISOR"
+              ? selectedTerminal
+              : null,
         },
       })
         .then((resp) => {
@@ -212,6 +217,32 @@ const UserCard = ({ group, user, id }) => {
                 <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
               </SelectContent>
             </Select>
+
+            {(newRole === "TERMINAL_SUPERVISOR" ||
+              newRole === "SHIFT_SUPERVISOR") &&
+              terminalQuery.isSuccess && (
+                <>
+                  <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start mt-4">
+                    Select Terminal
+                  </p>
+                  <Select
+                    onValueChange={(value) => {
+                      setSelectedTerminal(value);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Terminal..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {terminalQuery.data.map((terminal) => (
+                        <SelectItem key={terminal.id} value={terminal.id}>
+                          {terminal.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
             <AlertDialogFooter>
               <AlertDialogAction
                 className="flex-grow"
