@@ -95,6 +95,9 @@ const NewTerminalForm = ({ closeDialog }:{closeDialog:()=>void}) => {
     name: z.string().min(1, {
       message: "Enter a valid name!",
     }),
+    region: z.string().min(1, {
+      message: "Enter a valid name!",
+    }),
   });
   const newTerminalForm = useForm({
     mode: "onBlur",
@@ -122,6 +125,27 @@ const NewTerminalForm = ({ closeDialog }:{closeDialog:()=>void}) => {
                 </FormControl>
                 <FormDescription>
                   The name of the termianl to be created.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+         <FormField
+          name="region"
+          control={newTerminalForm.control}
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Region</FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  The region the terminal belongs to.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
