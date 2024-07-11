@@ -69,7 +69,8 @@ export type GeneralTerminal={
   id:string,
   name:string,
   abbreviation?:string,
-  active?:boolean
+  active?:boolean,
+  region:string,
 }
 
 export type DelayedFlight={
