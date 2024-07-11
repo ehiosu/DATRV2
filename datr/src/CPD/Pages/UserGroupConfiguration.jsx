@@ -1,7 +1,5 @@
-import { TabsContent } from "@radix-ui/react-tabs";
 import { motion, AnimatePresence } from "framer-motion";
 import React from "react";
-import { AiOutlineClose, AiOutlinePlus } from "react-icons/ai";
 import {
   GenericDataTable,
   generalGroupColumnDef,
