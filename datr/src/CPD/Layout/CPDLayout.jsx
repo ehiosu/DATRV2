@@ -1,15 +1,19 @@
 import React from "react";
 import { Sidebar } from "../Sidebar/Sidebar";
-import { Outlet, Navigate } from "react-router";
+import { Outlet, Navigate, useLocation } from "react-router";
 import { AxiosClient } from "../../api/useAxiosClient";
 import { useAuth } from "../../api/useAuth";
 import { useVerified } from "../../api/useVerified";
+// import { useLocation } from "react-router-dom";
+
 export const CPDLayout = () => {
   const { access, user } = useAuth();
   const verified = useVerified();
+  // const location = useLocation();
   console.log(access, "access");
 
   if (access.length === 0) return <Navigate to={"/"} />;
+
   if (!verified) return <Navigate to={"/Verify"} />;
   return (
     <main className="flex w-full bg-my-gray max-w-screen-2xl overflow-y-hidden">

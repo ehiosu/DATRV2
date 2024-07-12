@@ -21,7 +21,7 @@ import { useAuth } from "@/api/useAuth";
 import { home_pages } from "../data";
 import { MdError } from "react-icons/md";
 export const Login = () => {
-    const {generalUpdate}=useAuth()
+  const { generalUpdate } = useAuth();
   const loginFormSchema = z.object({
     email: z
       .string()
@@ -43,7 +43,7 @@ export const Login = () => {
   const [visibilityMode, setVisibilityMode] = useState<"password" | "text">(
     "password"
   );
-  const nav=useNavigate()
+  const nav = useNavigate();
   const loginMutation = useMutation({
     mutationKey: ["login"],
     mutationFn: (values: z.infer<typeof loginFormSchema>) =>
@@ -54,15 +54,16 @@ export const Login = () => {
         })
           .then((resp: AxiosResponse) => resolve(resp))
           .catch((err: AxiosError) => {
-            reject(err)
-            throw err})
+            reject(err);
+            throw err;
+          })
       ),
   });
   const tryLogin = (values: z.infer<typeof loginFormSchema>) => {
     toast.promise(
       new Promise((resolve, reject) => {
         loginMutation.mutate(values, {
-          onSuccess: (resolvedData:any, variables, context) => {
+          onSuccess: (resolvedData: any, variables, context) => {
             const { access_token, refresh_token, data } = resolvedData.data;
             resolve(resolvedData);
             generalUpdate({
@@ -72,7 +73,11 @@ export const Login = () => {
               verified: data.verified,
             });
             resolve(resolvedData);
-            console.log(data,resolvedData)
+            console.log(data, resolvedData);
+
+            const referrer = sessionStorage.getItem("referrer");
+            sessionStorage.removeItem("referrer");
+
             if (!data.verified) {
               setTimeout(() => {
                 nav("/Verify");
@@ -80,29 +85,41 @@ export const Login = () => {
               return;
             }
             setTimeout(() => {
-                console.log("navving to home page")
-                const home_page=home_pages[data.roles[data.roles.length - 1] as keyof typeof home_pages]
+              console.log("navving to home page");
+              // const home_page =
+              //   home_pages[
+              //     data.roles[data.roles.length - 1] as keyof typeof home_pages
+              //   ];
+              // nav(home_page as string);
+              if (referrer) {
+                nav(referrer);
+              } else {
+                const home_page =
+                  home_pages[
+                    data.roles[data.roles.length - 1] as keyof typeof home_pages
+                  ];
                 nav(home_page as string);
-              }, 1000);
+              }
+            }, 1000);
           },
-          onError:(error, variables, context)=> {
-            reject(error)
+          onError: (error, variables, context) => {
+            reject(error);
           },
         });
       }),
       {
         loading: "Trying to login...",
-        success:"Logged In Successfully!",
-        error:(error)=>{
-            return (
-                <div className="text-black flex flex-col">
-                  <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
-                    <MdError /> Error
-                  </p>
-                  <p>{error.response.data.message || error.response.data.detail}</p>
-                </div>
-              );
-        }
+        success: "Logged In Successfully!",
+        error: (error) => {
+          return (
+            <div className="text-black flex flex-col">
+              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                <MdError /> Error
+              </p>
+              <p>{error.response.data.message || error.response.data.detail}</p>
+            </div>
+          );
+        },
       }
     );
   };
@@ -123,7 +140,10 @@ export const Login = () => {
           Please enter your email and password to continue
         </p>
         <Form {...form}>
-          <form className="w-[90%] mx-auto text-start space-y-4" onSubmit={form.handleSubmit(tryLogin)}>
+          <form
+            className="w-[90%] mx-auto text-start space-y-4"
+            onSubmit={form.handleSubmit(tryLogin)}
+          >
             <FormField
               control={form.control}
               name="email"
