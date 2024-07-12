@@ -7,7 +7,7 @@ import {
 import { GoReply } from "react-icons/go";
 import { TbArrowForward } from "react-icons/tb";
 import { CiStickyNote } from "react-icons/ci";
-import { FiPrinter } from "react-icons/fi";
+// import { FiPrinter } from "react-icons/fi";
 import { AlertDialog } from "../../components/ui/alert-dialog";
 import {
   Dialog,
@@ -67,33 +67,34 @@ const Actions = ({ children }) => {
 
 const ActionsDropdown = () => {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="md:hidden block w-28  ">
-        <Button
-          variant={"outline"}
-          className="w-full text-[0.8275rem] dark:bg-background dark:hover:bg-neutral-200 dark:hover:text-black h-8"
-        >
-          Actions
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <SingleAction
-          name={"Reply"}
-          className={"w-full pl-2 h-7"}
-          Icon={GoReply}
-        />
-        <SingleAction
-          name={"Forward"}
-          className={"w-full pl-2 h-7"}
-          Icon={TbArrowForward}
-        />
-        <SingleAction
-          name={"Add Note"}
-          className={"w-full pl-2 h-7"}
-          Icon={CiStickyNote}
-        />
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <SingleAction name={"Reply"} className={"w-full pl-2 h-7"} Icon={GoReply} />
+    //   <DropdownMenu>
+    //     <DropdownMenuTrigger className="md:hidden block w-28  ">
+    //       <Button
+    //         variant={"outline"}
+    //         className="w-full text-[0.8275rem] dark:bg-background dark:hover:bg-neutral-200 dark:hover:text-black h-8"
+    //       >
+    //         Actions
+    //       </Button>
+    //     </DropdownMenuTrigger>
+    //     <DropdownMenuContent>
+    //       <SingleAction
+    //         name={"Reply"}
+    //         className={"w-full pl-2 h-7"}
+    //         Icon={GoReply}
+    //       />
+    //       <SingleAction
+    //         name={"Forward"}
+    //         className={"w-full pl-2 h-7"}
+    //         Icon={TbArrowForward}
+    //       />
+    //       <SingleAction
+    //         name={"Add Note"}
+    //         className={"w-full pl-2 h-7"}
+    //         Icon={CiStickyNote}
+    //       />
+    //     </DropdownMenuContent>
+    //   </DropdownMenu>
   );
 };
 
@@ -177,7 +178,7 @@ export const SignleTicketMessage = ({
         </div>
         <div className="flex flex-col items-end gap-2">
           <Actions>
-            <SingleAction name={"Print"} Icon={FiPrinter} />
+            {/* <SingleAction name={"Print"} Icon={FiPrinter} /> */}
             <SingleAction
               name={"Reply"}
               Icon={GoReply}
@@ -185,8 +186,8 @@ export const SignleTicketMessage = ({
                 setReplyingTo(username);
               }}
             />
-            <SingleAction name={"Forward"} Icon={TbArrowForward} />
-            <SingleAction name={"Add Note"} Icon={CiStickyNote} />
+            {/* <SingleAction name={"Forward"} Icon={TbArrowForward} /> */}
+            {/* <SingleAction name={"Add Note"} Icon={CiStickyNote} /> */}
           </Actions>
           <p className="text-[0.725rem] font-semibold text-darkBlue">{date}</p>
         </div>
