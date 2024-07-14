@@ -28,9 +28,9 @@ export const Tickets = () => {
     from:undefined,
     to:undefined
   })
-  const [terminal, setTerminal] = useState("All");
+  const [terminal, setTerminal] = useState("ALL");
   const {user}=useAuth()
-  const query=useTickets(filter,date,currentPage,pageSize,setMaxPages)
+  const query=useTickets(filter,date,currentPage,pageSize,setMaxPages,user.terminal?user.terminal:terminal)
   const terminalQuery = useTerminal();
   const nav=useNavigate()
 
@@ -58,9 +58,11 @@ export const Tickets = () => {
         <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='ESCALATED'>
           Escalated
         </SelectItem>
-        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='NEW'>
+       <AuthorizedComponent roles={["ADMIN","TERMINAL_SUPERVISOR"]}>
+       <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='NEW'>
           New
         </SelectItem>
+       </AuthorizedComponent>
        <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='AWAITING_ESCALATION_APPROVAL'>
           Awaiting Escalation Approval
@@ -83,7 +85,7 @@ export const Tickets = () => {
           <Select
             value={terminal}
             onValueChange={(value: string) => {
-              setCurrentPage(0);
+              setCurrentPage(1);
               setTerminal(value);
             }}
           >
