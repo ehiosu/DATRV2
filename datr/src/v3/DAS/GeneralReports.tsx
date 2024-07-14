@@ -16,7 +16,7 @@ export const GeneralReports = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<10 | 20 | 30 | 40 | 200>(10);
   const [maxPages, setMaxPages] = useState<number>(1);
-  const query = useReports(terminal, setMaxPages, currentPage, pageSize,[`${terminal}`,currentPage.toString(),"ARRIVAL"]);
+  const query = useReports(terminal, setMaxPages, currentPage, pageSize,[`${terminal}`,"reports",currentPage,"ARRIVAL",date]);
   const [reportData, setReportData] = useState<{
     Arrival: any[];
     Departure: any[];
@@ -30,8 +30,8 @@ export const GeneralReports = () => {
       Arrival: [],
       Departure: [],
     };
-    console.log(query.data);
-    if (!query.data) return;
+    if(!query.data) return
+   
     Object.values(query.data["dataEntryResponses"]).map((datum: any) => {
       if (datum["reportType"] == "ARRIVAL") {
         data.Arrival.push(datum);
@@ -323,6 +323,11 @@ const ReportDownloadComponent: React.FC<{ data: any[] }> = ({ data }) => {
                 width: 20,
               },
               {
+                header:"Reason for Disruption",
+                key:"reasonForDelayOrCancellation",
+                width:35
+              },
+              {
                 header: "Report Type",
                 key: "reportType",
                 width: 20,
@@ -336,7 +341,7 @@ const ReportDownloadComponent: React.FC<{ data: any[] }> = ({ data }) => {
 
             sheet.eachColumnKey((column) => {
               column.eachCell((cell, index) => {
-                console.log(cell);
+                
                 cell.font = {
                   size: 13,
                   bold: true,
@@ -369,6 +374,7 @@ const ReportDownloadComponent: React.FC<{ data: any[] }> = ({ data }) => {
                         60
                       } minutes`
                     : "",
+                    reasonForDelayOrCancellation:datum["reasonForDelayOrCancellation"]||"---",
                   reportType: datum["reportType"] || "---",
                   remark: datum["remark"] || "---",
                   stipulatedTimeDeparted:
