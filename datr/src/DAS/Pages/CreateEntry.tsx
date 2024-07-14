@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "react-time-picker/dist/TimePicker.css";
 import "react-clock/dist/Clock.css";
 import { SearchPage } from "../../Reusable/SearchPage";
@@ -42,9 +42,13 @@ import { useTerminalStore } from '@/store/terminalstore';
 import { TimeInput } from "@/components/ui/TimeInput.js";
 import { useRoutes } from "@/v3/hooks/useRoutes.js";
 import { useTerminal } from "@/v3/hooks/useTerminal";
+import { Textarea } from "@/components/ui/textarea";
 export const CreateEntry = () => {
   const routeQuery = useRoutes()
   const terminalQuery=useTerminal()
+  const [sta,setSta]=useState(0)
+  const [ata,setAta]=useState(0)
+  const [disruptionState,setDisruptionState]=useState<"none"|"delayed"|"cancelled">("none")
   const newEntryFormSchema = z.object({
     dateOfIncidence: z.date(),
     terminalName: z.string(),
@@ -76,8 +80,7 @@ export const CreateEntry = () => {
     reportType: z.string().min(1, {
       message: "Select a valid report type",
     }),
-    reasonForDelay: z.string().optional(),
-    reasonForCancellation: z.string().optional(),
+    reasonForDelayOrCancellation: z.string().optional(),
   });
   const nav = useNavigate();
   const form = useForm({
@@ -88,6 +91,19 @@ export const CreateEntry = () => {
     "ARRIVAL"
   );
   const resetBtn = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(()=>{
+      if(ata-sta >0 ){
+        setDisruptionState("delayed")
+        return
+      }
+    
+    else if(!ata){
+      setDisruptionState("cancelled")
+      return
+    }
+    setDisruptionState("none")
+  },[ata,sta])
   const getAirlinesQuery = useQuery({
     queryKey: ["airlines", "names"],
     queryFn: () =>
@@ -128,14 +144,7 @@ export const CreateEntry = () => {
             {
               ...values,
               actualTimeArrived: values.actualTimeArrived || null,
-              reasonForDelay:
-                values.actualTimeArrived > values.stipulatedTimeArrived
-                  ? values.reasonForDelay || null
-                  : null,
-              reasonForCancellation:
-                !values.stipulatedTimeArrived && !values.actualTimeArrived
-                  ? values.reasonForCancellation || null
-                  : null,
+              reasonForDelayOrCancellation:disruptionState==="cancelled"?values.reasonForCancellation:disruptionState==="delayed"?values.reasonForDelay:null
             },
             {
               onSuccess: (data, variables, context) => {
@@ -439,7 +448,13 @@ export const CreateEntry = () => {
                         value={field.value}
                         onChange={field.onChange}
                       /> */}
-                      <TimeInput value={field.value}  className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange}  inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
+                      <TimeInput value={field.value}  className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={(value)=>{
+                        field.onChange(value)
+                        const hour = parseInt(value.split(":")[0])*60
+                        const minute = parseInt(value.split(":")[1])
+                        setSta(hour+minute)
+
+                      }}  inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
                     </FormControl>
                   </FormItem>
                 )}
@@ -456,43 +471,54 @@ export const CreateEntry = () => {
                 </FormLabel>
                     <FormControl>
                       {/* <Input className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200" {...field}/> */}
-                      <TimeInput value={field.value}  className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={field.onChange} inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
+                      <TimeInput value={field.value}  className="w-full bg-white rounded-sm h-8 focus-within:ring-2 focus-within:ring-offset-4 focus-within:ring-blue-400 p-2" onChange={(value)=>{
+                        field.onChange(value)
+                        const firstValue= parseInt(value.split(":")[0])
+                        const hour = firstValue===0?24 *60:firstValue*60
+                        const minute = parseInt(value.split(":")[1])
+                        setAta(hour+minute)
+
+                      }}  inputClassname="dark:bg-transparent bg-transparent border-none w-max h-max p-0 text-center  dark:border-none text-sm px-0 focus:ring-none dark:focus:ring-none"/>
                     </FormControl>
                   </FormItem>
                 )}
               />
             </div>
             <div className="flex items-center flex-wrap w-full gap-3">
-          <FormField
-            name="reasonForCancellation"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
-                <FormLabel>Reason for Cancellation</FormLabel>
-                <FormControl>
-                  <Input
-                    className="w-full h-8 outline-none border-b-2 dark:bg-white bg-white dark:border-gray-200 border-gray-200"
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="reasonForDelay"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="flex md:w-[45%] w-full flex-col my-2 space-y-3">
-                <FormLabel>Reason for Delay</FormLabel>
-                <FormControl>
-                  <Input
-                    className="w-full h-8 outline-none border-b-2 dark:bg-white bg-white dark:border-gray-200 border-gray-200"
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+         {
+          disruptionState==="cancelled" &&  <FormField
+          name="reasonForDelayOrCancellationg"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="flex  w-full flex-col my-2 space-y-3">
+              <FormLabel>Reason for Cancellation</FormLabel>
+              <FormControl>
+                <Textarea
+                  className="md:w-[92%] h-8 outline-none border-b-2 dark:bg-white bg-white dark:border-gray-200 border-gray-200"
+                  {...field}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+         }
+         {
+          disruptionState === "delayed" &&  <FormField
+          name="reasonForDelayOrCancellation"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="flex  w-full flex-col my-2 space-y-3 ">
+              <FormLabel>Reason for Delay</FormLabel>
+              <FormControl>
+                <Textarea
+                  className="md:w-[92%] h-8 outline-none border-b-2 dark:bg-white bg-white dark:border-gray-200 border-gray-200"
+                  {...field}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+         }
           </div>
           <div className="flex gap-4 items-center my-6">
             <button
