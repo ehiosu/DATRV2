@@ -26,7 +26,7 @@ export const Delays = () => {
        </div>
         <div className="w-full h-[60vh] overflow-y-auto border-2 border-neutral-300 rounded-lg py-1 mt-4 scroll-smooth max-w-full overflow-x-auto">
           {
-            query.isLoading?<Skeleton className='w-full h-[60vh]'/>:query.isSuccess&&   <GenericDataTable downloadExcel DownloadComponent={DownloadReportComponent} tableClassname='' headerClassname='rounded-lg' columns={flightsColumnDef as any} data={terminal==="All"?[]:Object.values(query.data)||[]} hasFilter={true} showColumnFilter filterColumn={"airline"}/>
+            query.isLoading?<Skeleton className='w-full h-[60vh]'/>:query.isSuccess&&   <GenericDataTable downloadExcel DownloadComponent={DownloadReportComponent} tableClassname='' headerClassname='rounded-lg' columns={flightsColumnDef as any} data={query.data?Object.values(query.data):[]} hasFilter={true} showColumnFilter filterColumn={"airline"}/>
           }
           {
             query.isError && <GenericDataTable downloadExcel DownloadComponent={DownloadReportComponent} tableClassname='' headerClassname='rounded-lg' columns={flightsColumnDef as any} data={[]} hasFilter={true} showColumnFilter filterColumn={"airline"}/>
