@@ -18,6 +18,8 @@ import {
 import { cn } from "../../lib/utils.ts";
 import sanitizeHtml from "sanitize-html";
 import { useAuth } from "../../api/useAuth.ts";
+import format from "date-fns/format";
+
 export const SignleMessage = ({
   name,
   username,
@@ -119,6 +121,7 @@ export const SignleTicketMessage = ({
   complaintDetails = [],
   isMessage = false,
   setReplyingTo,
+  viewerInfo,
 }) => {
   const { user } = useAuth();
   const cleanHtml = (message) => {
@@ -146,6 +149,35 @@ export const SignleTicketMessage = ({
       },
       allowedIframeHostnames: ["www.youtube.com"],
     });
+  };
+
+  const isSender = user && user.name === username;
+
+  const renderViewerInfo = () => {
+    if (viewerInfo && viewerInfo.length > 0 && !isSender) {
+      return (
+        <div className="mt-2">
+          <Dialog>
+            <DialogTrigger className="text-darkBlue font-bold">
+              {viewerInfo.length > 1
+                ? `${viewerInfo.length} views`
+                : `${viewerInfo.length} view`}
+            </DialogTrigger>
+            <DialogContent>
+              {viewerInfo.map((viewer, index) => (
+                <div key={index}>
+                  <p>Viewed by: {viewer.viewerName}</p>
+                  <p>Email: {viewer.viewerEmail}</p>
+                  <p>
+                    Viewed at: {format(new Date(), "yyyy-MM-dd'T'HH:mm:ss.SSS")}
+                  </p>
+                </div>
+              ))}
+            </DialogContent>
+          </Dialog>
+        </div>
+      );
+    }
   };
   if (user.roles[user.roles.length - 1] === "Airline" && !isMessage)
     return <></>;
@@ -223,6 +255,7 @@ export const SignleTicketMessage = ({
           dangerouslySetInnerHTML={{ __html: cleanHtml(message) }}
         ></div>
       )}
+      {renderViewerInfo()}
     </div>
   );
 };

@@ -70,6 +70,8 @@ export const TicketPage = () => {
   const textAreaRef = useRef(null);
   const { user } = useAuth();
   const role = user.roles[user.roles.length - 1];
+  const [viewerInfo, setViewerInfo] = useState({});
+
   const btnStyles = {
     PENDING: "bg-[#162ADD]/40 border-2 border-[#162ADD]",
     UNRESOLVED: "bg-[#F8C74D29] border-2 border-[#F8C74D]",
@@ -134,12 +136,21 @@ export const TicketPage = () => {
     queryFn: () =>
       axios(`comments/ticket-id?value=${id}`, {
         method: "GET",
-      })
-        .then((resp) => {
-          setMessages(resp.data);
-          return resp.data;
-        })
-        .catch((err) => err),
+      }).then((resp) => resp.data),
+    onSuccess: (data) => {
+      data.forEach((comment) => {
+        if (user && user.name !== comment.authorName) {
+          fetchViewerInfo.mutate(comment.id);
+          markCommentAsRead.mutate(comment.id);
+        }
+      });
+      setMessages(data);
+    },
+    //       .then((resp) => {
+    //         setMessages(resp.data);
+    //         return resp.data;
+    // })
+    //       .catch((err) => err),
   });
 
   const handleMouseMove = (e) => {
@@ -251,33 +262,46 @@ export const TicketPage = () => {
     sonnerToast.dismiss();
   };
 
-  // Send to airline action
-  const SendToAirlineAction = () => {
-    const { id } = useParams();
-    const { axios } = useAxiosClient(); // Custom hook for axios instance
-    const client = useQueryClient();
+  const fetchViewerInfo = useMutation({
+    mutationFn: async (commentId) => {
+      const res = await axios.get(
+        `http://176.58.117.18:8080/api/comments/views/${commentId}`
+      );
+      return res.data;
+    },
+    onSuccess: (data, commentId) => {
+      setViewerInfo((prev) => ({ ...prev, [commentId]: data }));
+    },
+  });
 
-    const sendToAirlineMutation = useMutation({
-      mutationKey: ["ticket", `${id}`, "sendToAirline"],
-      mutationFn: () =>
-        axios
-          .put(`tickets/sendToAirline/${id}`) // endpointw
-          .then((resp) => resp.data)
-          .catch((err) => {
-            throw err;
-          }),
-      onSuccess: () => {
-        client.invalidateQueries(["tickets", `${id}`]);
-      },
-      onError: (error) => {
-        console.error("Error sending ticket to airline:", error);
-      },
-    });
+  const markCommentAsRead = useMutation({
+    mutationFn: async (commentId) => {
+      const response = await axios.put(
+        `http://176.58.117.18:8080/api/comments/views/add/${commentId}`,
+        {
+          viewerName: user.name,
+          viewerEmail: user.email,
+          viewedAt: new Date().toISOString(),
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (data, commentId) => {
+      setViewerInfo((prev) => ({ ...prev, [commentId]: data }));
+    },
+  });
 
-    const handleSendToAirline = () => {
-      sendToAirlineMutation.mutate();
-    };
-  };
+  useEffect(() => {
+    if (commentsQuery.isSuccess) {
+      commentsQuery.data.forEach((comment) => {
+        if (user && user.name !== comment.authorName) {
+          fetchViewerInfo.mutate(comment.id);
+          markCommentAsRead.mutate(comment.id);
+        }
+      });
+      setMessages(commentsQuery.data);
+    }
+  }, [commentsQuery.data, user]);
 
   return (
     <section className="w-full ">
@@ -384,6 +408,7 @@ export const TicketPage = () => {
                           new Date(comment.dateTimeCreated),
                           "dd, MMMM yyyy"
                         )}
+                        viewerInfo={viewerInfo[comment.id]}
                       />
 
                       {messageQueue > 0 &&
