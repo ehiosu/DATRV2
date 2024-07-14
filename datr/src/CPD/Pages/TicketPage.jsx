@@ -40,16 +40,13 @@ import {
   FormMessage,
 } from "../../components/ui/form";
 import useWindowSize from "../Sidebar/Hooks/useWindowSize";
-import { TipTapEditor } from "../Components/TipTapEditor";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as sanitizeHtml from "sanitize-html";
 import { toast as sonnerToast } from "sonner";
-import MarkdownIt from "markdown-it";
-import MdEditor from "react-markdown-editor-lite";
-import "react-markdown-editor-lite/lib/index.css";
-
-const mdParser = new MarkdownIt();
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+const escalated_allowance = ["FOU_HEAD", "FOU_CPO"];
 
 export const TicketPage = () => {
   const [messageQueue, setMessageQueue] = useState(() => {
@@ -67,6 +64,7 @@ export const TicketPage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const [isTextAreaFocused, setIsTextAreaFocused] = useState(false);
+
   const messageEndRef = useRef(null);
   const containerRef = useRef(null);
   const currentMessageCount = useRef(0);
@@ -87,6 +85,7 @@ export const TicketPage = () => {
     AWAITING_APPROVAL: "bg-[#5AD1AD]/40 border-2 border-[#5AD1AD]",
   };
   const [ticketContent, setTicketContent] = useState("");
+
   const ticketQuery = useQuery({
     queryKey: ["tickets", `${id}`],
     queryFn: () =>
@@ -94,6 +93,18 @@ export const TicketPage = () => {
         method: "Get",
       }).then((resp) => resp.data),
   });
+
+  const shouldDisableTextEditor = () => {
+    const isEscalataed =
+      ticketQuery.data["ticketStatus"] === "ESCALATED" ||
+      ticketQuery.data["fouCpoAssigneeName"];
+    console.log(isEscalataed);
+    if (role === "AIRLINE") {
+      return ticketQuery.data["sentToArline"];
+    }
+    if (isEscalataed && !escalated_allowance.includes(role)) return true;
+    return false;
+  };
 
   const sendMessageMutation = useMutation({
     mutationKey: ["comment", "new"],
@@ -332,7 +343,7 @@ export const TicketPage = () => {
             </div>
           </div>
           <div className="flex mt-3 r">
-            <div className="flex-[2.5] border-r-2 border-t-2 p-2 h-[70vh] max-w-full relative ">
+            <div className="flex-[2.5] border-r-2 border-t-2 p-2 min-h-[70vh] px-1.5 max-w-full relative ">
               <div
                 className=" border-neutral-200 flex flex-col px-5 py-2 gap-3  h-[45vh] overflow-y-auto relative "
                 ref={containerRef}
@@ -455,50 +466,38 @@ export const TicketPage = () => {
                   </div>
                 </div>
               )}
-              <div
-                className={cn(
-                  "flex flex-col mt-3  bg-white text-parent shadow-sm rounded-md p-1.5",
-                  isTextAreaFocused && "focused"
-                )}
-              >
-                <Textarea
-                  value={ticketContent}
-                  onChange={(e) => {
-                    setTicketContent(e.target.value);
-                  }}
-                  onFocus={(e) => {
-                    setIsTextAreaFocused(true);
-                  }}
-                  ref={textAreaRef}
-                  className="flex-1 resize-none text-child bg-transparent dark:bg-transparent ring-transparent dark:ring-transparent outline-none dark:outline-none focus:outline-none dark:focus:outline-none focus-within:outline-none dark:focus-within:outline-none border-transparent dark:border-transparent focus-visible:outline-none dark:focus-visible:outline-none focus-visible:ring-transparent dark:focus-visible:ring-transparent dark:focus-visible:border-transparent focus-visible:border-transparent text-sm"
-                ></Textarea>
-                {/* Markdown editor */}
-                <MdEditor
-                  value={ticketContent}
-                  onChange={({ text }) => setTicketContent(text)}
-                  renderHTML={(text) => mdParser.render(text)}
-                  config={{
-                    view: {
-                      html: true,
-                      menu: true,
-                      md: true,
-                    },
-                  }}
-                />
-                <button
-                  disabled={ticketContent.length === 0}
-                  onClick={() => {
-                    trySendMessage();
-                  }}
-                  className="ml-auto w-max h-max py-1.5 px-5 bg-ncBlue text-white rounded-md"
+              {!shouldDisableTextEditor() && (
+                <div
+                  className={cn(
+                    "flex flex-col mt-6  bg-white text-parent shadow-sm rounded-md p-4 mb-10 ",
+                    isTextAreaFocused && "focused"
+                  )}
                 >
-                  Send
-                </button>
-              </div>
-              {/* <TipTapEditor
-                disabled={!commentsQuery.isSuccess}
-                addMessage={addMessage}
-              /> */}
+                  <ReactQuill
+                    onFocus={() => {
+                      setIsTextAreaFocused(true);
+                    }}
+                    onBlur={() => {
+                      setIsTextAreaFocused(false);
+                    }}
+                    className="border-none dark:border-none bg-transparent mb-12 h-[20vh]"
+                    theme="snow"
+                    value={ticketContent}
+                    onChange={setTicketContent}
+                  />
+                  {/* Markdown editor */}
+
+                  <button
+                    disabled={ticketContent.length === 0}
+                    onClick={() => {
+                      trySendMessage();
+                    }}
+                    className="ml-auto w-max h-max py-1.5 px-5 bg-ncBlue text-white rounded-md"
+                  >
+                    Send
+                  </button>
+                </div>
+              )}
             </div>
             <LeftPanel />
           </div>
@@ -757,16 +756,16 @@ const EscalatePopover = () => {
     </Popover>
   );
 };
-import logo from "/NCAALogo.png";
+
 const SeekApprovalPopover = ({}) => {
   const { screenSize } = useWindowSize();
   const { id } = useParams();
   const client = useQueryClient();
   const ticketData = client.getQueryData(["tickets", `${id}`]);
   const { axios } = useAxiosClient();
-  console.log(ticketData);
-  // const { axios } = useAxiosClient();
-  // const client = useQueryClient();
+  const isAwaitingApproval =
+    ticketData["ticketStatus"] === "AWAITING_ESCALATION_APPROVAL" ||
+    ticketData["ticketStatus"] === "AWAITING_APPROVAL";
   const [approvalRemark, SetApprovalRemark] = useState("");
   const [HasFocused, SetHasFocused] = useState(false);
   const submitApprovalMutation = useMutation({
@@ -802,6 +801,9 @@ const SeekApprovalPopover = ({}) => {
     submitApprovalMutation.mutate();
   };
 
+  if (isAwaitingApproval) {
+    return <></>;
+  }
   return (
     <AlertDialog>
       <AlertDialogTrigger
@@ -949,9 +951,26 @@ const ActionsComponent = () => {
           </button>
         )}
 
-        <SeekApprovalPopover />
-        <ApproveEscalationAction />
-        <DeleteAction />
+        <AuthorizedComponent
+          roles={["CPO", "SHIFT_SUPERVISOR", "TERMINAL_SUPERVISOR", "ADMIN"]}
+        >
+          <SeekApprovalPopover />
+        </AuthorizedComponent>
+        <AuthorizedComponent
+          roles={["SHIFT_SUPERVISOR", "TERMINAL_SUPERVISOR", "ADMIN"]}
+        >
+          <ApproveEscalationAction />
+        </AuthorizedComponent>
+        <AuthorizedComponent
+          roles={[
+            "ADMIN",
+            "SHIFT_SUPERVISOR",
+            "TERMINAL_SUPERVISOR",
+            "FOU_HEAD",
+          ]}
+        >
+          <DeleteAction />
+        </AuthorizedComponent>
       </PopoverContent>
     </Popover>
   );
@@ -965,11 +984,68 @@ const ApproveEscalationAction = () => {
   const isAwaitingApproval =
     ticketData["ticketStatus"] === "AWAITING_ESCALATION_APPROVAL";
   if (!isAwaitingApproval) return <></>;
+
+  const approvalMutation = useMutation({
+    mutationKey: [id, "escalation-approval"],
+    mutationFn: (isApproving) =>
+      new Promise((resolve, reject) =>
+        axios(`tickets/review/escalation/${id}?is-approved=${isApproving}`, {
+          method: "PUT",
+        })
+          .then((resp) => resolve(resp.data))
+          .catch((err) => reject(err))
+      ),
+  });
+  const tryApprove = (isApproving) => {
+    sonnerToast.promise(
+      new Promise((resolve, reject) =>
+        approvalMutation.mutate(isApproving, {
+          onSuccess: (data) => {
+            client.invalidateQueries({
+              queryKey: ["ticket", id],
+            });
+            resolve(data);
+          },
+          onError: (error) => reject(error),
+        })
+      ),
+      {
+        loading: isApproving ? "Approving Request..." : "Rejecting Request...",
+        success: isApproving
+          ? "Request Approved Successfully!"
+          : "Request Rejected Successfully!",
+        error: (error) => {
+          return (
+            <div className="text-black flex flex-col">
+              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                <MdError className="w-4 h-4 shrink " /> Error
+              </p>
+              <p>
+                {error.response.data
+                  ? error.response.data.message
+                  : error.response.data.detail}
+              </p>
+            </div>
+          );
+        },
+      }
+    );
+  };
   return (
     <AuthorizedComponent
       roles={["SHIFT_SUPERVISOR", "TERMINAL_SUPERVISOR", "ADMIN"]}
     >
-      <ConfirmationDialog message="This Will permanently alter the status of the ticket.">
+      <ConfirmationDialog
+        onClick={() => {
+          tryApprove(true);
+        }}
+        continueText="Approve"
+        cancelText="Reject"
+        onCancel={() => {
+          tryApprove(false);
+        }}
+        message="This Will permanently alter the status of the ticket."
+      >
         <button className="text-xs text-center hover:text-blue-400 w-full">
           Approve Escalation
         </button>
@@ -1010,7 +1086,6 @@ const EscalateAction = () => {
           loading: "Trying to escalate ticket...",
           success: "Ticket Escalated Successfully!",
           error: (error) => {
-            console.log(error);
             return (
               <div className="text-black flex flex-col">
                 <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
@@ -1074,11 +1149,21 @@ const EscalateAction = () => {
 import { FiMessageCircle } from "react-icons/fi";
 const ExtraActions = () => {
   return (
-    <div className="w-full flex flex-col mt-2 px-2 gap-2">
-      <DetailsSubAction />
-      <HistorySubAction />
-      <ApprovalSubAction />
-    </div>
+    <AuthorizedComponent
+      roles={[
+        "SHIFT_SUPERVISOR",
+        "TERMINAL_SUPERVISOR",
+        "REGIONAL_HEAD",
+        "FOU_HEAD",
+        "ADMIN",
+      ]}
+    >
+      <div className="w-full flex flex-col mt-2 px-2 gap-2">
+        <DetailsSubAction />
+        <HistorySubAction />
+        <ApprovalSubAction />
+      </div>
+    </AuthorizedComponent>
   );
 };
 
@@ -1262,7 +1347,13 @@ const ApprovalSubAction = () => {
   const ticketData = client.getQueryData(["tickets", `${id}`]);
   const isEscalataed = ticketData["ticketStatus"] === "ESCALATED";
   const isApproved = ticketData.approved;
-  if (isApproved) {
+  const isAwaitingEscalationApproval =
+    ticketData["ticketStatus"] === "AWAITING_ESCALATION_APPROVAL";
+
+  if (isApproved || isAwaitingEscalationApproval) {
+    return <></>;
+  }
+  if (isEscalataed && !escalated_allowance.includes(role)) {
     return <></>;
   }
   const approvalMutation = useMutation({
