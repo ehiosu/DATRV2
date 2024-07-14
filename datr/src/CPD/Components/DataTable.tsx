@@ -150,7 +150,9 @@ export const recentTicketcolumnDefinition: ColumnDef<recieptData>[] = [
     id: "actions",
     cell: ({ row }) => {
       return (
-        <AuthorizedComponent roles={["ADMIN", "SHIFT_HEAD", "TERMINAL_HEAD","FOU_HEAD"]}>
+        <AuthorizedComponent
+          roles={["ADMIN", "SHIFT_HEAD", "TERMINAL_HEAD", "FOU_HEAD"]}
+        >
           <Popover>
             <PopoverTrigger>
               <BsThreeDots className="w-5 h-5 shrink" />
@@ -160,12 +162,12 @@ export const recentTicketcolumnDefinition: ColumnDef<recieptData>[] = [
               className="px-2 py-2 bg-ncBlue dark:bg-ncBlue rounded-lg w-max space-y-1"
             >
               <AssignTicketDialog id={row.original["id"]}>
-              <button className="w-max text-white flex items-center text-sm">
-              <User className="w-4 h-4 shrink mr-2" />
-              Assign ticket
-              </button>
+                <button className="w-max text-white flex items-center text-sm">
+                  <User className="w-4 h-4 shrink mr-2" />
+                  Assign ticket
+                </button>
               </AssignTicketDialog>
-              
+
               <AlertDialog>
                 <AlertDialogTrigger className="dark:hover:bg-slate-100/20 flex items-center hover:bg-slate-100/20 text-sm text-start w-full h-8 text-white rounded-b-lg p-1">
                   <Trash className="w-4 h-4 mr-2 shrink" />
@@ -387,7 +389,16 @@ export const generalTicketColumnDefiniton: ColumnDef<GeneralTicket>[] = [
 
       return (
         <AuthorizedComponent
-          roles={["CPO","FOU_CPO","ADMIN","TERMINAL_SUPERVISOR","SHIFT_SUPERVISOR","DGO","FOU_HEAD","AIRLINE"]}
+          roles={[
+            "CPO",
+            "FOU_CPO",
+            "ADMIN",
+            "TERMINAL_SUPERVISOR",
+            "SHIFT_SUPERVISOR",
+            "DGO",
+            "FOU_HEAD",
+            "AIRLINE",
+          ]}
         >
           <Popover>
             <PopoverTrigger>
@@ -413,7 +424,12 @@ export const generalTicketColumnDefiniton: ColumnDef<GeneralTicket>[] = [
               </AuthorizedComponent>
               {row.original.ticketStatus === "NEW" && (
                 <AuthorizedComponent
-                  roles={["ADMIN", "TERMINAL_SUPERVISOR", "FOU_HEAD","SHIFT_SUPERVISOR"]}
+                  roles={[
+                    "ADMIN",
+                    "TERMINAL_SUPERVISOR",
+                    "FOU_HEAD",
+                    "SHIFT_SUPERVISOR",
+                  ]}
                 >
                   <AssignTicketDialog id={row.original.id}>
                     <div
@@ -442,7 +458,7 @@ const AssignTicketDialog = ({
   children: React.ReactElement;
 }) => {
   const { axios } = useAxiosClient();
-  const user_mail=useAuth().user.email
+  const user_mail = useAuth().user.email;
   const cpoQuery = useQuery({
     queryKey: ["cpo", "all"],
     queryFn: () =>
@@ -453,55 +469,58 @@ const AssignTicketDialog = ({
         }),
   });
   const dialogRef = useRef<HTMLButtonElement | null>(null);
-  const client =useQueryClient()
+  const client = useQueryClient();
   const assignTicketMutation = useMutation({
     mutationKey: ["ticket", id, "assign"],
     mutationFn: () => {
       return new Promise((resolve, reject) =>
         axios("tickets/assign", {
           method: "PUT",
-          data:{
-            "supervisorEmail": user_mail,
-  "cpoEmail": selectedCpo,
-  "ticketId": id
-          }
+          data: {
+            supervisorEmail: user_mail,
+            cpoEmail: selectedCpo,
+            ticketId: id,
+          },
         })
           .then((resp: AxiosResponse) => resolve(resp))
           .catch((err: AxiosError) => reject(err))
       );
     },
   });
-  const TryAssignTicket=()=>{
-    sonnerToast.promise(new Promise((resolve,reject)=>{
-      assignTicketMutation.mutate(undefined,{
-        onSuccess:(data, variables, context)=> {
-          resolve(data)
-          dialogRef.current?.click()
-          client.invalidateQueries({
-            queryKey:["tickets"],
-            exact:false
-          })
+  const TryAssignTicket = () => {
+    sonnerToast.promise(
+      new Promise((resolve, reject) => {
+        assignTicketMutation.mutate(undefined, {
+          onSuccess: (data, variables, context) => {
+            resolve(data);
+            dialogRef.current?.click();
+            client.invalidateQueries({
+              queryKey: ["tickets"],
+              exact: false,
+            });
+          },
+          onError: (error, variables, context) => {
+            reject(error);
+          },
+        });
+      }),
+      {
+        loading: "Trying to assign ticket...",
+        success: "Ticket Assigned Successfully!",
+        error: (error: any) => {
+          console.log(error);
+          return (
+            <div className="text-black flex flex-col">
+              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                <MdError /> Error
+              </p>
+              <p>{error.response.data.message || error.response.data.detail}</p>
+            </div>
+          );
         },
-        onError:(error, variables, context)=> {
-          reject(error)
-        },
-      })
-    }),{
-      loading:"Trying to assign ticket...",
-      success:"Ticket Assigned Successfully!",
-      error: (error: any) => {
-        console.log(error)
-        return (
-          <div className="text-black flex flex-col">
-            <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
-              <MdError /> Error
-            </p>
-            <p>{error.response.data.message || error.response.data.detail}</p>
-          </div>
-        );
       }
-    })
-  }
+    );
+  };
   const [selectedCpo, setSelectedCpo] = useState<string>("");
   return (
     <AlertDialog>
@@ -522,7 +541,11 @@ const AssignTicketDialog = ({
           defaultValue={selectedCpo}
         >
           <SelectTrigger
-            disabled={cpoQuery.isError || cpoQuery.isLoading || assignTicketMutation.isPending}
+            disabled={
+              cpoQuery.isError ||
+              cpoQuery.isLoading ||
+              assignTicketMutation.isPending
+            }
             className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue"
           >
             <SelectValue
@@ -550,7 +573,9 @@ const AssignTicketDialog = ({
         <button
           className="w-full text-sm text-white bg-ncBlue disabled:bg-slate-200 disabled:text-black h-8 rounded"
           disabled={selectedCpo.length === 0 || assignTicketMutation.isPending}
-          onClick={()=>{TryAssignTicket()}}
+          onClick={() => {
+            TryAssignTicket();
+          }}
         >
           {selectedCpo.length !== 0
             ? `Assign Ticket to ${selectedCpo}`
@@ -3496,8 +3521,8 @@ export const generalGroupColumnDef: ExtendedColumnDef<GeneralGroup>[] = [
         CPD_GM: "CPD General Manager",
         AIRLINE: "Airline",
         FOU: "Flight Operation Unit",
-        FOU_HEAD:"Flight Operation Unit Head",
-        FOU_CPO:"Flight Operation Unit CPO"
+        FOU_HEAD: "Flight Operation Unit Head",
+        FOU_CPO: "Flight Operation Unit CPO",
       };
       const nav = useNavigate();
       return (
@@ -3584,8 +3609,8 @@ export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
     },
   },
   {
-    header:"Region",
-    accessorKey:"region"
+    header: "Region",
+    accessorKey: "region",
   },
   {
     id: "active",
@@ -3687,9 +3712,14 @@ export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
               </ConfirmationDialog>
               <Dialog>
                 <DialogTrigger className="flex items-center w-full text-[0.8275rem] group-hover:font-semibold text-center space-x-2 p-2 group">
-                  <Pencil className="w-5 h-5 shrink mr-2 opacity-0 group-hover:opacity-100 transtion-opacity duration-300"/> Edit Terminal
+                  <Pencil className="w-5 h-5 shrink mr-2 opacity-0 group-hover:opacity-100 transtion-opacity duration-300" />{" "}
+                  Edit Terminal
                 </DialogTrigger>
-                <EditTerminalDialog name={row.original.name} region={row.original["region"]} id={row.original["id"]}/>
+                <EditTerminalDialog
+                  name={row.original.name}
+                  region={row.original["region"]}
+                  id={row.original["id"]}
+                />
               </Dialog>
             </PopoverContent>
           </Popover>
@@ -3698,134 +3728,146 @@ export const generalTerminalColumnDef: ExtendedColumnDef<GeneralTerminal>[] = [
     },
   },
 ];
-import * as z from "zod"
+import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-const EditTerminalDialog=({name,region,id}:{name:string,region:string|null,id:string})=>{
+const EditTerminalDialog = ({
+  name,
+  region,
+  id,
+}: {
+  name: string;
+  region: string | null;
+  id: string;
+}) => {
   const { axios } = useAxiosClient();
-      const client = useQueryClient();
-      const editMutation = useMutation({
-        mutationKey: ["terminal", name],
-        mutationFn: (values:z.infer<typeof schema>) =>
-          new Promise((resolve, reject) => {
-            axios(`terminals/${id.toString()}`, {
-              method: "PATCH",
-              data:[
-                {"op":"replace", "path":"/abbreviation", "value":values.name},
-                {"op":"replace", "path":"/name", "value":values.name},
-                {"op":"replace", "path": "/region", "value": values.region}
-            ]
-            })
-              .then((resp: any) => resolve(resp.data))
-              .catch((err: Error) => reject(err));
-          }),
-      });
-      const tryEdit=(values:z.infer<typeof schema>)=>{
-        sonnerToast.promise(
-          new Promise((resolve, reject) => {
-            editMutation.mutate(values, {
-              onSuccess: (data, variables, context) => {
-                resolve(data);
-                client.invalidateQueries({
-                  queryKey: ["terminals", "all"],
-                });
-              },
-              onError: (error, variables, context) => {
-                reject(error);
-              },
+  const client = useQueryClient();
+  const editMutation = useMutation({
+    mutationKey: ["terminal", name],
+    mutationFn: (values: z.infer<typeof schema>) =>
+      new Promise((resolve, reject) => {
+        axios(`terminals/${id.toString()}`, {
+          method: "PATCH",
+          data: [
+            { op: "replace", path: "/abbreviation", value: values.name },
+            { op: "replace", path: "/name", value: values.name },
+            { op: "replace", path: "/region", value: values.region },
+          ],
+        })
+          .then((resp: any) => resolve(resp.data))
+          .catch((err: Error) => reject(err));
+      }),
+  });
+  const tryEdit = (values: z.infer<typeof schema>) => {
+    sonnerToast.promise(
+      new Promise((resolve, reject) => {
+        editMutation.mutate(values, {
+          onSuccess: (data, variables, context) => {
+            resolve(data);
+            client.invalidateQueries({
+              queryKey: ["terminals", "all"],
             });
-          }),
-          {
-            loading: "Editing Terminal Data...",
-            success: "Data Updated Successfully!",
-            error: (error) => {
-              return (
-                <div className="text-black flex flex-col">
-                  <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
-                    <MdError className="w-4 h-4 shrink " /> Error
-                  </p>
-                  <p>
-                    {error.response.data.message ||
-                      error.response.data.detail}
-                  </p>
-                </div>
-              );
-            },
-          }
-        );
+          },
+          onError: (error, variables, context) => {
+            reject(error);
+          },
+        });
+      }),
+      {
+        loading: "Editing Terminal Data...",
+        success: "Data Updated Successfully!",
+        error: (error) => {
+          return (
+            <div className="text-black flex flex-col">
+              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                <MdError className="w-4 h-4 shrink " /> Error
+              </p>
+              <p>{error.response.data.message || error.response.data.detail}</p>
+            </div>
+          );
+        },
       }
-  const schema=z.object({
-    name:z.string(),
-    region:z.string()
-  })
+    );
+  };
+  const schema = z.object({
+    name: z.string(),
+    region: z.string(),
+  });
   const form = useForm<z.infer<typeof schema>>({
-    defaultValues:{
+    defaultValues: {
       name,
-      region:region as string
+      region: region as string,
     },
-    resolver:zodResolver(schema)
-  })
-  return(
-   <DialogContent>
-    <Form {...form}>
-    <form onSubmit={form.handleSubmit(tryEdit)}>
-    <FormField
-          name="name"
-          control={form.control}
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input
-                    className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  The name of the termianl to be created.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-       <FormField
-          name="region"
-          control={form.control}
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Region</FormLabel>
-                <FormControl>
-                  <Input
-                    className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  The region the terminal belongs to.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-        <button
-          disabled={Object.keys(form.formState.errors).length > 0}
-          className="w-full h-8 flex flex-row items-center justify-center my-3 bg-neutral-100 hover:bg-ncBlue transition-all duration-300 rounded-lg hover:text-white group disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:text-black"
-        >
-          Submit
-          <Send className="ml-2 w-4 h-4 shrink flex flex-row items-center justify-center mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:duration-700 group-hover:disabled:opacity-0" />
-        </button>
-    </form>
-    </Form>
-
-   </DialogContent>
-  )
-}
+    resolver: zodResolver(schema),
+  });
+  return (
+    <DialogContent>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(tryEdit)}>
+          <FormField
+            name="name"
+            control={form.control}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The name of the termianl to be created.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          <FormField
+            name="region"
+            control={form.control}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Region</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The region the terminal belongs to.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          <button
+            disabled={Object.keys(form.formState.errors).length > 0}
+            className="w-full h-8 flex flex-row items-center justify-center my-3 bg-neutral-100 hover:bg-ncBlue transition-all duration-300 rounded-lg hover:text-white group disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:text-black"
+          >
+            Submit
+            <Send className="ml-2 w-4 h-4 shrink flex flex-row items-center justify-center mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:duration-700 group-hover:disabled:opacity-0" />
+          </button>
+        </form>
+      </Form>
+    </DialogContent>
+  );
+};
 export const airlineColumnDef: ExtendedColumnDef<airlineConfig>[] = [
   {
     accessorKey: "id",
@@ -4355,7 +4397,6 @@ export const cancelledFlightColumnDef: ColumnDef<cancelledFlight>[] = [
   },
 ];
 
-
 const statusFilterFn = (row: Row<Report>, id: string, filterValue: string) => {
   console.log(filterValue, row.original);
   if (filterValue === ("" as any)) return true;
@@ -4413,8 +4454,8 @@ export const arrivalReportsColumnDef: ColumnDef<Report>[] = [
     },
   },
   {
-    accessorKey:"inOrOutBoundPassenger",
-    header:"POB"
+    accessorKey: "inOrOutBoundPassenger",
+    header: "POB",
   },
   {
     accessorKey: "delayedDifferenceInHour",
@@ -4584,10 +4625,10 @@ export const departureReportsColumnDef: ColumnDef<Report>[] = [
     accessorKey: "route",
     header: "Route",
   },
-{
-  accessorKey:"inOrOutBoundPassenger",
-  header:"POB"
-},
+  {
+    accessorKey: "inOrOutBoundPassenger",
+    header: "POB",
+  },
   {
     accessorKey: "sta",
     header: "STD",
@@ -4895,11 +4936,7 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
       const nav = useNavigate();
       const group = new URLSearchParams(useLocation().search).get("group");
       return (
-        <div
-          
-          role="button"
-          className="hover:text-blue-400 transition-all"
-        >
+        <div role="button" className="hover:text-blue-400 transition-all">
           <p>{row.original.email}</p>
         </div>
       );
@@ -4914,10 +4951,10 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
     header: "Last Name",
   },
   {
-    id:"actions",
-    cell:({row})=>{
+    id: "actions",
+    cell: ({ row }) => {
       const { axios } = useAxiosClient();
-      const group = new URLSearchParams(useLocation().search).get("group")
+      const group = new URLSearchParams(useLocation().search).get("group");
       const client = useQueryClient();
       const [newRole, setNewRole] = useState("");
       const [selectedTerminal, setSelectedTerminal] = useState("");
@@ -4928,8 +4965,8 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
           axios("terminals/active", {
             method: "GET",
           })
-            .then((resp:AxiosResponse) => resp.data)
-            .catch((err:AxiosError) => {
+            .then((resp: AxiosResponse) => resp.data)
+            .catch((err: AxiosError) => {
               throw err;
             }),
       });
@@ -4942,121 +4979,126 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
               ncaaUserEmail: row.original.email,
               role: newRole,
               terminalName:
-                newRole === "TERMINAL_SUPERVISOR" || newRole === "SHIFT_SUPERVISOR"
+                newRole === "TERMINAL_SUPERVISOR" ||
+                newRole === "SHIFT_SUPERVISOR"
                   ? selectedTerminal
                   : "",
             },
           })
-            .then((resp:AxiosResponse) => {
+            .then((resp: AxiosResponse) => {
               toast({
                 title: "Success!",
                 description: "User Successfully upgraded!",
               });
-              client.invalidateQueries({ queryKey: ["groups", group as string] });
+              client.invalidateQueries({
+                queryKey: ["groups", group as string],
+              });
               return resp.data;
             })
-            .catch((err:AxiosError) => {
+            .catch((err: AxiosError) => {
               toast({
                 title: "Error!",
-                description:err.response.data.message || err.response.data.detail,
+                description:
+                  err.response.data.message || err.response.data.detail,
                 variant: "destructive",
               });
             }),
       });
-      return(
-        
+      return (
         <Popover>
           <PopoverTrigger className="hover:bg-slate-200 rounded p-1.5">
-            <BsThreeDots className="w-5 h-5 shrink"/>
+            <BsThreeDots className="w-5 h-5 shrink" />
           </PopoverTrigger>
           <PopoverContent className="p-1.5 w-max px-3" side="left">
-          <AlertDialog>
-          <AlertDialogTrigger className="text-xs font-semibold hover:text-blue-300 text-neutral-400">
-            Update Role
-          </AlertDialogTrigger>
-          <AlertDialogContent className="text-center">
-            <p className="text-[1.4rem] font-semibold text-neutral-700">
-              Change User Role
-            </p>
-            <p className="my-2 text-[0.77rem] text-neutral-400">
-              Doing this will revoke access to or grant the user access to
-              certain modules and/ or features of the system.
-            </p>
+            <AlertDialog>
+              <AlertDialogTrigger className="text-xs font-semibold hover:text-blue-300 text-neutral-400">
+                Update Role
+              </AlertDialogTrigger>
+              <AlertDialogContent className="text-center">
+                <p className="text-[1.4rem] font-semibold text-neutral-700">
+                  Change User Role
+                </p>
+                <p className="my-2 text-[0.77rem] text-neutral-400">
+                  Doing this will revoke access to or grant the user access to
+                  certain modules and/ or features of the system.
+                </p>
 
-            <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start">
-              Select a new Role
-            </p>
-            <Select
-              onValueChange={(value) => {
-                setNewRole(value);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="New Role..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="CPO">Consumer Protection Officer</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="TERMINAL_SUPERVISOR">
-                  Terminal Supervisor
-                </SelectItem>
-                <SelectItem value="SHIFT_SUPERVISOR">
-                  Shift Supervisor
-                </SelectItem>
-                <SelectItem value="DATA_STATISTIC">
-                  Data and Statistics Officer
-                </SelectItem>
-                <SelectItem value="DGO"> Director General</SelectItem>
-                <SelectItem value="CPD_D">CPD Director</SelectItem>
-                <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
-              </SelectContent>
-            </Select>
+                <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start">
+                  Select a new Role
+                </p>
+                <Select
+                  onValueChange={(value) => {
+                    setNewRole(value);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="New Role..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CPO">
+                      Consumer Protection Officer
+                    </SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="TERMINAL_SUPERVISOR">
+                      Terminal Supervisor
+                    </SelectItem>
+                    <SelectItem value="SHIFT_SUPERVISOR">
+                      Shift Supervisor
+                    </SelectItem>
+                    <SelectItem value="DATA_STATISTIC">
+                      Data and Statistics Officer
+                    </SelectItem>
+                    <SelectItem value="DGO"> Director General</SelectItem>
+                    <SelectItem value="CPD_D">CPD Director</SelectItem>
+                    <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
+                  </SelectContent>
+                </Select>
 
-            {(newRole === "TERMINAL_SUPERVISOR" ||
-              newRole === "SHIFT_SUPERVISOR") &&
-              terminalQuery.isSuccess && (
-                <>
-                  <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start mt-4">
-                    Select Terminal
-                  </p>
-                  <Select
-                    onValueChange={(value) => {
-                      setSelectedTerminal(value);
+                {(newRole === "TERMINAL_SUPERVISOR" ||
+                  newRole === "SHIFT_SUPERVISOR") &&
+                  terminalQuery.isSuccess && (
+                    <>
+                      <p className="block font-semibold text-[0.9275rem] text-neutral-600 text-start mt-4">
+                        Select Terminal
+                      </p>
+                      <Select
+                        onValueChange={(value) => {
+                          setSelectedTerminal(value);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Terminal..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {terminalQuery.data.map((terminal) => (
+                            <SelectItem key={terminal.id} value={terminal.name}>
+                              {terminal.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </>
+                  )}
+                <AlertDialogFooter>
+                  <AlertDialogAction
+                    className="flex-grow"
+                    onClick={() => {
+                      changeRoleMutation.mutate();
                     }}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Terminal..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {terminalQuery.data.map((terminal) => (
-                        <SelectItem key={terminal.id} value={terminal.name}>
-                          {terminal.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </>
-              )}
-            <AlertDialogFooter>
-              <AlertDialogAction
-                className="flex-grow"
-                onClick={() => {
-                  changeRoleMutation.mutate();
-                }}
-              >
-                Save
-              </AlertDialogAction>
-              <AlertDialogCancel className="flex-grow">
-                Cancel
-              </AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                    Save
+                  </AlertDialogAction>
+                  <AlertDialogCancel className="flex-grow">
+                    Cancel
+                  </AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </PopoverContent>
         </Popover>
-      )
-    }
-  }
+      );
+    },
+  },
 ];
 
 export const AirlineTableColumnDef: ColumnDef<airline>[] = [
@@ -5845,36 +5887,41 @@ export const ticketBacklogColumnDef: ColumnDef<backlogTicket>[] = [
   },
   {
     id: "total",
-    header:"Total Tickets" ,
+    header: "Total Tickets",
     sortingFn: (rowA, rowB, columnId) => {
-      const totalA=parseInt(rowA.original.unresolvedTickets)+ parseInt(rowA.original.activeTickets)
-      const totalB=parseInt(rowB.original.unresolvedTickets)+ parseInt(rowB.original.activeTickets)
-      return (
-        totalA-totalB
-      );
+      const totalA =
+        parseInt(rowA.original.unresolvedTickets) +
+        parseInt(rowA.original.activeTickets);
+      const totalB =
+        parseInt(rowB.original.unresolvedTickets) +
+        parseInt(rowB.original.activeTickets);
+      return totalA - totalB;
     },
     cell: ({ row }) => {
-      const total = parseInt(row.original.activeTickets) + parseInt(row.original.unresolvedTickets)
-    return(
-      <div>
-      <p>{total||0}</p>
-    </div>
-    )
+      const total =
+        parseInt(row.original.activeTickets) +
+        parseInt(row.original.unresolvedTickets);
+      return (
+        <div>
+          <p>{total || 0}</p>
+        </div>
+      );
     },
   },
   {
     id: "unassigned",
     header: "% Unassigned",
     cell: ({ row }) => {
-      const total = parseInt(row.original.activeTickets) + parseInt(row.original.unresolvedTickets)
-    return(
-      <div>
-      <p>{`${((
-        (parseFloat(row.original.unresolvedTickets) / total) ||0
-      )*
-      100).toPrecision(3)}%`}</p>
-    </div>
-    )
+      const total =
+        parseInt(row.original.activeTickets) +
+        parseInt(row.original.unresolvedTickets);
+      return (
+        <div>
+          <p>{`${(
+            (parseFloat(row.original.unresolvedTickets) / total || 0) * 100
+          ).toPrecision(3)}%`}</p>
+        </div>
+      );
     },
   },
 ];
@@ -5985,13 +6032,15 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
   },
   {
     id: "disruptedFlights",
-    cell:({row})=>{
-      const disruptedFlights= parseInt(row.original.cancelledFlightCount) + parseInt(row.original.delayedFlightCount)
-      return(
+    cell: ({ row }) => {
+      const disruptedFlights =
+        parseInt(row.original.cancelledFlightCount) +
+        parseInt(row.original.delayedFlightCount);
+      return (
         <div>
           <p>{disruptedFlights}</p>
         </div>
-      )
+      );
     },
     header: ({ header, column }) => {
       return (
@@ -6007,12 +6056,15 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     sortingFn: (rowA, rowB, column) => {
-      const disruptedFlightsA= parseInt(rowA.original.cancelledFlightCount) + parseInt(rowA.original.delayedFlightCount)
-      const disruptedFlightsB= parseInt(rowB.original.cancelledFlightCount) + parseInt(rowB.original.delayedFlightCount)
-      return (column.getIsSorted() === "asc"?
-        disruptedFlightsA -
-        disruptedFlightsB: disruptedFlightsB-disruptedFlightsA
-      );
+      const disruptedFlightsA =
+        parseInt(rowA.original.cancelledFlightCount) +
+        parseInt(rowA.original.delayedFlightCount);
+      const disruptedFlightsB =
+        parseInt(rowB.original.cancelledFlightCount) +
+        parseInt(rowB.original.delayedFlightCount);
+      return column.getIsSorted() === "asc"
+        ? disruptedFlightsA - disruptedFlightsB
+        : disruptedFlightsB - disruptedFlightsA;
     },
   },
   {
@@ -6036,13 +6088,16 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
           parseFloat(row.original.totalFlightCount)) *
         100
       ).toPrecision(2);
-      if(parseInt(row.original.onTimeFlightCount)==0 || parseInt(row.original.totalFlightCount)==0){
-        onTimePercentage=0
+      if (
+        parseInt(row.original.onTimeFlightCount) == 0 ||
+        parseInt(row.original.totalFlightCount) == 0
+      ) {
+        onTimePercentage = 0;
       }
-     
+
       return (
         <div>
-          <p>{`${onTimePercentage?onTimePercentage:"0"}%`}</p>
+          <p>{`${onTimePercentage ? onTimePercentage : "0"}%`}</p>
         </div>
       );
     },
@@ -6061,7 +6116,7 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
           100
         ).toPrecision(2)
       );
-      
+
       return onTimePercentageA - onTimePercentageB;
     },
   },
@@ -6081,17 +6136,22 @@ export const OnTimeTableColumnDef: ColumnDef<flightPerformanceColumnEntry>[] = [
       );
     },
     cell: ({ row }) => {
-      const disruptedFlight = parseFloat(row.original.cancelledFlightCount) + parseInt(row.original.delayedFlightCount)
-      let disruptionPercentage = (
-        disruptedFlight /
-          parseFloat(row.original.totalFlightCount)) *
-        100 ;
-      if(parseFloat(row.original.cancelledFlightCount)==0 || parseInt(row.original.delayedFlightCoun)==0){
-        disruptionPercentage=0
+      const disruptedFlight =
+        parseFloat(row.original.cancelledFlightCount) +
+        parseInt(row.original.delayedFlightCount);
+      let disruptionPercentage =
+        (disruptedFlight / parseFloat(row.original.totalFlightCount)) * 100;
+      if (
+        parseFloat(row.original.cancelledFlightCount) == 0 ||
+        parseInt(row.original.delayedFlightCoun) == 0
+      ) {
+        disruptionPercentage = 0;
       }
       return (
         <div>
-          <p>{`${!disruptionPercentage?0 :disruptionPercentage.toPrecision(3)  }%`}</p>
+          <p>{`${
+            !disruptionPercentage ? 0 : disruptionPercentage.toPrecision(3)
+          }%`}</p>
         </div>
       );
     },
@@ -6183,7 +6243,7 @@ export const disruptionLeaderColumnDef: ColumnDef<disruptionLeaderEntry>[] = [
         ).toPrecision(3)
       );
 
-      return (disruptionPercentageA - disruptionPercentageB);
+      return disruptionPercentageA - disruptionPercentageB;
     },
   },
 ];
@@ -6199,7 +6259,7 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
         <Button
           className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
           onClick={() => {
-            console.log("click",column)
+            console.log("click", column);
             column.toggleSorting(column.getIsSorted() === "asc");
           }}
         >
@@ -6208,7 +6268,7 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
         </Button>
       );
     },
-    enableSorting:true,
+    enableSorting: true,
   },
   {
     accessorKey: "resolvedTickets",
@@ -6221,7 +6281,7 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
         <Button
           className="flex items-center justify-center space-x-2 dark:bg-transparent bg-transparent hover:bg-slate-200 dark:hover:bg-slate-200 group"
           onClick={() => {
-            console.log("click",column)
+            console.log("click", column);
             column.toggleSorting(column.getIsSorted() === "asc");
           }}
         >
@@ -6230,8 +6290,8 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
         </Button>
       );
     },
-    enableSorting:true,
-    sortingFn:(rowA,rowB, columnId)=>{
+    enableSorting: true,
+    sortingFn: (rowA, rowB, columnId) => {
       const unresolvedTicketsA = parseFloat(rowA.original.resolvedTickets);
       const activeTicketsA = parseFloat(rowA.original.activeTickets);
       const valueA = (unresolvedTicketsA / activeTicketsA).toPrecision(2) * 100;
@@ -6239,7 +6299,7 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
       const activeTicketsB = parseFloat(rowB.original.activeTickets);
       const valueB = (unresolvedTicketsB / activeTicketsB).toPrecision(2) * 100;
 
-      return (valueA - valueB)
+      return valueA - valueB;
     },
     cell: ({ row }) => {
       const unresolvedTickets = parseFloat(row.original.resolvedTickets);
@@ -6247,7 +6307,7 @@ export const bestPerformingColumnDef: ColumnDef<bestPerformingEntry>[] = [
       const value = (unresolvedTickets / activeTickets).toPrecision(2) * 100;
       return (
         <div>
-          <p>{`${value||0}%`}</p>
+          <p>{`${value || 0}%`}</p>
         </div>
       );
     },
@@ -7285,55 +7345,55 @@ export const OutboxMessageColumnDef: ColumnDef<sentMessage>[] = [
           CLOSED: "bg-neutral-200 border-2 border-neutral-400",
         };
 
-        return `${btnStyles[status]} inline h-max p-1`;
-      };
-      return (
-        <div className="flex items-center justify-center">
-          <div
-            className={cn(
-              "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
-              resolveStatus(row.original.status)
-            )}
-          >
-            <p>{row.original.status}</p>
-          </div>
-        </div>
-      );
-    },
-  },
-  { header: "Date", accessorKey: "date" },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      return (
-        <div className="">
-          <Popover>
-            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
-              <BsThreeDots className="w-4 h-4 shrink" />
-            </PopoverTrigger>
-            <PopoverContent
-              className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
-              side="left"
-            >
-              <div
-                className="hover:bg-slate-200/25  text-white text-sm p-1.5"
-                role="button"
-              >
-                <p>View Message</p>
-              </div>
-              <div
-                className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
-                role="button"
-              >
-                <p>Delete Message</p>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      );
-    },
-  },
-];
+//         return `${btnStyles[status]} inline h-max p-1`;
+//       };
+//       return (
+//         <div className="flex items-center justify-center">
+//           <div
+//             className={cn(
+//               "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
+//               resolveStatus(row.original.status)
+//             )}
+//           >
+//             <p>{row.original.status}</p>
+//           </div>
+//         </div>
+//       );
+//     },
+//   },
+//   { header: "Date", accessorKey: "date" },
+//   {
+//     id: "actions",
+//     cell: ({ row }) => {
+//       return (
+//         <div className="">
+//           <Popover>
+//             <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
+//               <BsThreeDots className="w-4 h-4 shrink" />
+//             </PopoverTrigger>
+//             <PopoverContent
+//               className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
+//               side="left"
+//             >
+//               <div
+//                 className="hover:bg-slate-200/25  text-white text-sm p-1.5"
+//                 role="button"
+//               >
+//                 <p>View Message</p>
+//               </div>
+//               <div
+//                 className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
+//                 role="button"
+//               >
+//                 <p>Delete Message</p>
+//               </div>
+//             </PopoverContent>
+//           </Popover>
+//         </div>
+//       );
+//     },
+//   },
+// ];
 export const DraftMessagesColumnDefinition: ColumnDef<sentMessage>[] = [
   {
     id: "selection",

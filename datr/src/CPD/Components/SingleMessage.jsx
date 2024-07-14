@@ -7,7 +7,7 @@ import {
 import { GoReply } from "react-icons/go";
 import { TbArrowForward } from "react-icons/tb";
 import { CiStickyNote } from "react-icons/ci";
-import { FiPrinter } from "react-icons/fi";
+// import { FiPrinter } from "react-icons/fi";
 import { AlertDialog } from "../../components/ui/alert-dialog";
 import {
   Dialog,
@@ -18,6 +18,8 @@ import {
 import { cn } from "../../lib/utils.ts";
 import sanitizeHtml from "sanitize-html";
 import { useAuth } from "../../api/useAuth.ts";
+import format from "date-fns/format";
+
 export const SignleMessage = ({
   name,
   username,
@@ -67,33 +69,34 @@ const Actions = ({ children }) => {
 
 const ActionsDropdown = () => {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="md:hidden block w-28  ">
-        <Button
-          variant={"outline"}
-          className="w-full text-[0.8275rem] dark:bg-background dark:hover:bg-neutral-200 dark:hover:text-black h-8"
-        >
-          Actions
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <SingleAction
-          name={"Reply"}
-          className={"w-full pl-2 h-7"}
-          Icon={GoReply}
-        />
-        <SingleAction
-          name={"Forward"}
-          className={"w-full pl-2 h-7"}
-          Icon={TbArrowForward}
-        />
-        <SingleAction
-          name={"Add Note"}
-          className={"w-full pl-2 h-7"}
-          Icon={CiStickyNote}
-        />
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <SingleAction name={"Reply"} className={"w-full pl-2 h-7"} Icon={GoReply} />
+    //   <DropdownMenu>
+    //     <DropdownMenuTrigger className="md:hidden block w-28  ">
+    //       <Button
+    //         variant={"outline"}
+    //         className="w-full text-[0.8275rem] dark:bg-background dark:hover:bg-neutral-200 dark:hover:text-black h-8"
+    //       >
+    //         Actions
+    //       </Button>
+    //     </DropdownMenuTrigger>
+    //     <DropdownMenuContent>
+    //       <SingleAction
+    //         name={"Reply"}
+    //         className={"w-full pl-2 h-7"}
+    //         Icon={GoReply}
+    //       />
+    //       <SingleAction
+    //         name={"Forward"}
+    //         className={"w-full pl-2 h-7"}
+    //         Icon={TbArrowForward}
+    //       />
+    //       <SingleAction
+    //         name={"Add Note"}
+    //         className={"w-full pl-2 h-7"}
+    //         Icon={CiStickyNote}
+    //       />
+    //     </DropdownMenuContent>
+    //   </DropdownMenu>
   );
 };
 
@@ -118,6 +121,7 @@ export const SignleTicketMessage = ({
   complaintDetails = [],
   isMessage = false,
   setReplyingTo,
+  viewerInfo,
 }) => {
   const { user } = useAuth();
   const cleanHtml = (message) => {
@@ -145,6 +149,35 @@ export const SignleTicketMessage = ({
       },
       allowedIframeHostnames: ["www.youtube.com"],
     });
+  };
+
+  const isSender = user && user.name === username;
+
+  const renderViewerInfo = () => {
+    if (viewerInfo && viewerInfo.length > 0 && !isSender) {
+      return (
+        <div className="mt-2">
+          <Dialog>
+            <DialogTrigger className="text-darkBlue font-bold">
+              {viewerInfo.length > 1
+                ? `${viewerInfo.length} views`
+                : `${viewerInfo.length} view`}
+            </DialogTrigger>
+            <DialogContent>
+              {viewerInfo.map((viewer, index) => (
+                <div key={index}>
+                  <p>Viewed by: {viewer.viewerName}</p>
+                  <p>Email: {viewer.viewerEmail}</p>
+                  <p>
+                    Viewed at: {format(new Date(), "yyyy-MM-dd'T'HH:mm:ss.SSS")}
+                  </p>
+                </div>
+              ))}
+            </DialogContent>
+          </Dialog>
+        </div>
+      );
+    }
   };
   if (user.roles[user.roles.length - 1] === "Airline" && !isMessage)
     return <></>;
@@ -177,7 +210,7 @@ export const SignleTicketMessage = ({
         </div>
         <div className="flex flex-col items-end gap-2">
           <Actions>
-            <SingleAction name={"Print"} Icon={FiPrinter} />
+            {/* <SingleAction name={"Print"} Icon={FiPrinter} /> */}
             <SingleAction
               name={"Reply"}
               Icon={GoReply}
@@ -185,8 +218,8 @@ export const SignleTicketMessage = ({
                 setReplyingTo(username);
               }}
             />
-            <SingleAction name={"Forward"} Icon={TbArrowForward} />
-            <SingleAction name={"Add Note"} Icon={CiStickyNote} />
+            {/* <SingleAction name={"Forward"} Icon={TbArrowForward} /> */}
+            {/* <SingleAction name={"Add Note"} Icon={CiStickyNote} /> */}
           </Actions>
           <p className="text-[0.725rem] font-semibold text-darkBlue">{date}</p>
         </div>
@@ -222,6 +255,7 @@ export const SignleTicketMessage = ({
           dangerouslySetInnerHTML={{ __html: cleanHtml(message) }}
         ></div>
       )}
+      {renderViewerInfo()}
     </div>
   );
 };
