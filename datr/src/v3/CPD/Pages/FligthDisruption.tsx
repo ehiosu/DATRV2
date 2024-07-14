@@ -9,22 +9,29 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { GenericDataTable, fdrAirlineColumnDef, fdrColumnDef } from '@/CPD/Components/DataTable'
 import { useAuth } from '@/api/useAuth'
 import { NcPagination } from '@/components/ui/NcPagination'
+import { DateRange } from 'react-day-picker'
+import { DatePickerWithRange } from '@/v3/DAS/Delays'
 
 export const FligthDisruption = () => {
     const {isSuccess,isLoading,data} = useTerminal()
-    const [terminal,setTerminal]=useState("ALL")
+    const [terminal,setTerminal]=useState("All")
     const {user}=useAuth()
     const isAirline=user.roles[user.roles.length-1]==="AIRLINE"
-    const [currentPage,setCurrentPage]=useState(1)
-    const [maxPages,setMaxPages]=useState(1)
-    const [pageSize,setPageSize]=useState(4)
-    const query=useFlightDisruptions(terminal,currentPage,setMaxPages,pageSize)
+    const [currentPage,setCurrentPage]=useState(0)
+    const [maxPages,setMaxPages]=useState(0)
+    const [pageSize,setPageSize]=useState(12)
+    const [date,setDate]=useState<DateRange>({
+        from:new Date(),
+        to:new Date()
+    })
+    const query=useFlightDisruptions(terminal,currentPage,setMaxPages,pageSize,date)
     const nav= useNavigate()
   return (
     <section className='w-full px-6 py-2 '>
     <div className="flex items-center w-full justify-between">
     <p className='text-xl font-semibold'>Flight Disruptions</p>
-    <Select value={terminal} onValueChange={setTerminal}>
+ <div className="flex flex-col gap-y-3">
+ <Select value={terminal} onValueChange={setTerminal}>
                 <SelectTrigger disabled={!isSuccess} className='dark:bg-ncBlue bg-ncBlue text-white px-2 w-40   h-10 rounded-md ml-auto'>
                     <SelectValue placeholder="Select A terminal" className='text-sm font-normal'/>
                     <SelectContent className='dark:bg-ncBlue bg-ncBlue'>
@@ -39,6 +46,8 @@ export const FligthDisruption = () => {
                     </SelectContent>
                 </SelectTrigger>
             </Select>
+            <DatePickerWithRange date={date} setDate={setDate}/>
+ </div>
     </div>
     <AuthorizedComponent roles={["AIRLINE","ADMIN"]}>
                 <button onClick={()=>{nav("/CPD/FDR/New")}} className='w-40 h-10 rounded-lg bg-ncBlue text-white flex items-center justify-center space-x-3'>
@@ -52,7 +61,7 @@ export const FligthDisruption = () => {
           }
     </div>
    <div className="flex items-center justify-center mt-2">
-   <NcPagination className='mx-auto' maxPage={maxPages} currentPage={currentPage} setPage={setCurrentPage}/>
+   <NcPagination className='mx-auto' maxPage={maxPages} currentPage={currentPage+1} setPage={setCurrentPage}/>
    </div>
 
     
