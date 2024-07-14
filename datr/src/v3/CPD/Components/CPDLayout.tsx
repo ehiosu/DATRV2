@@ -15,7 +15,7 @@ export const CPDLayout = () => {
     if (!isAccessValid && location.pathname !== "/CPD/New-Ticket") {
       sessionStorage.setItem("referrer", location.pathname);
       console.log(`${location.pathname} and ${location.search}`);
-      nav("/");
+      nav("/Auth");
     } else if (!verified && location.pathname !== "/CPD/New-Ticket") {
       console.log("not verified");
       nav("/Verify");
