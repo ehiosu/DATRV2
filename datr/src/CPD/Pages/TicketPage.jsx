@@ -405,7 +405,7 @@ export const TicketPage = () => {
                     { title: "Rating", data: "3" },
                     {
                       title: "Attachments",
-                      data: ticketQuery.data.attachment.attachmentUrl,
+                      data: ticketQuery.data.attachmentIds,
                     },
                   ]}
                 />
@@ -478,14 +478,14 @@ export const TicketPage = () => {
                 </div>
               </div>
               {replyingTo && (
-                <div className="text-[0.8275rem] w-max px-1.5 rounded-md  bg-ncBlue text-white py-1  shadow-sm flex items-center justify-between group/reply">
+                <div className="text-[0.8275rem] w-max px-4 rounded-md  bg-ncBlue text-white py-1 gap-x-4  shadow-sm flex items-center justify-between group/reply">
                   <p>{replyingTo}</p>
-                  <div className="h-full aspect-square group/reply-btn  group-hover/reply:opacity-100 transition duration-300 group-hover/reply:bg-neutral-300  p-1 rounded-md opacity-0">
+                  <div className="h-full aspect-square group/reply-btn  group-hover/reply:opacity-100 transition duration-300 group-hover/reply:bg-slate-200/20 p-1 rounded-md opacity-0">
                     <CgClose
                       onClick={() => {
                         setReplyingTo("");
                       }}
-                      className="group-hover/reply-btn:font-bold group-hover/reply-btn:text-red-600 group-hover/reply-btn:scale-110 transition"
+                      className="group-hover/reply-btn:font-bold group-hover/reply-btn:text-white group-hover/reply-btn:scale-110 transition"
                       role="button"
                     />
                   </div>
@@ -1236,7 +1236,7 @@ import { CgClose, CgDetailsMore } from "react-icons/cg";
 import { MdError, MdHistory } from "react-icons/md";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAxiosClient } from "../../api/useAxiosClient";
-import { differenceInHours, differenceInMinutes, format } from "date-fns";
+import { format } from "date-fns";
 import { toast } from "../../components/ui/use-toast";
 
 import { SignleTicketMessage } from "../Components/SingleMessage";
@@ -1251,15 +1251,13 @@ const DetailsSubAction = () => {
     ticketId: ticketData.id,
     status: ticketData.ticketStatus,
     life_cycle: "24 Hours",
-    consumer_protection_officer: ticketData.creatorName,
-    tasks: "0",
-    reminders: "0",
-    Approval_Status: "Not Approved",
-    Attachments: ticketData.attachment.attachmentUrl.length,
+    consumer_protection_officer: ticketData.creatorName || "None",
+    Approval_Status: ticketData.approved ? "Approved" : "Not Approved",
+    Attachments: ticketData.attachmentIds.length,
     Responded_Date: format(new Date(ticketData.dateTimeModified), "dd/MM/yyyy"),
     Due_By: format(new Date(ticketData.dateTimeTicketExpired), "dd/MM/yyyy"),
     Airline: ticketData.airline,
-    Assigner: ticketData.assigneeName,
+    Assigner: ticketData.assignerEmail,
   };
 
   return (
@@ -1325,14 +1323,18 @@ const DetailCellManager = ({ cellKey, value }) => {
   if (cellKey === "ticketID")
     return (
       <div className="col-span-1  flex flex-col  items-center   justify-center">
-        <p className="text-[0.75rem] text-neutral-700 font-semibold">{id}</p>
+        <p className="text-[0.75rem] text-neutral-700 font-semibold w-full">
+          {id}
+        </p>
         <p className="text-[0.6275rem] text-neutral-500 ">{cellKey}</p>
       </div>
     );
   if (cellKey !== "status")
     return (
-      <div className="col-span-1  flex flex-col  items-center  justify-center">
-        <p className="text-[0.75rem] text-neutral-700 font-semibold">{value}</p>
+      <div className="col-span-1  flex flex-col  items-center  justify-center truncate ">
+        <p className="text-[0.75rem] text-neutral-700 font-semibold    flex items-center justify-center  h-auto">
+          {value}
+        </p>
         <p className="text-[0.6275rem] text-neutral-500 ">
           {cellKey.replaceAll("_", " ")}
         </p>
@@ -1373,9 +1375,9 @@ const ApprovalSubAction = () => {
   const isEscalataed = ticketData["ticketStatus"] === "ESCALATED";
   const isApproved = ticketData.approved;
   const isAwaitingEscalationApproval =
-    ticketData["ticketStatus"] === "AWAITING_ESCALATION_APPROVAL";
+    ticketData["ticketStatus"] === "AWAITING_APPROVAL";
 
-  if (isApproved || isAwaitingEscalationApproval) {
+  if (!isAwaitingEscalationApproval) {
     return <></>;
   }
   if (isEscalataed && !escalated_allowance.includes(role)) {
