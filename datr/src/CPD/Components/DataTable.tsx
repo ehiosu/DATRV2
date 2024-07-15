@@ -295,50 +295,73 @@ export const generalTicketColumnDefiniton: ColumnDef<GeneralTicket>[] = [
 
   {
     accessorKey: "ticketStatus",
-    header:({column})=>{
-      const {user} = useAuth()
-      const role = user.roles[user.roles.length-1]
-      if(role!=="CPO" && role !=="FOU_CPO" && role !=="ADMIN"){ return (
-        <div>
-          <p>Status</p>
-        </div>
-      )}
-      return(
-        <Select onValueChange={(value)=>{
-          if(value==="ALL"){
-            column.setFilterValue("")
-            return
-          }
-          column.setFilterValue(value)
-        }}>
+    header: ({ column }) => {
+      const { user } = useAuth();
+      const role = user.roles[user.roles.length - 1];
+      if (role !== "CPO" && role !== "FOU_CPO" && role !== "ADMIN") {
+        return (
+          <div>
+            <p>Status</p>
+          </div>
+        );
+      }
+      return (
+        <Select
+          onValueChange={(value) => {
+            if (value === "ALL") {
+              column.setFilterValue("");
+              return;
+            }
+            column.setFilterValue(value);
+          }}
+        >
           <SelectTrigger className="bg-transparent focus:font-semibold hover:bg-slate-200  dark:bg-transparent outline-none dark:border-transparent border-transparent focus:border-transparent dark:focus:border-transparent focus:shadow-none dark:focus:shadow-none ring-transparent focus:ring-transparent focus:bg-slate-200 dark:focus:ring-transparent focus:ring-offset-transparent dark:focus:ring-offset-transparent">
-            <SelectValue placeholder="Status..."/>
+            <SelectValue placeholder="Status..." />
           </SelectTrigger>
           <SelectContent className="bg-ncBlue">
-          <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='ALL'>
-          All
-        </SelectItem>
-        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='OPENED'>
-          Open
-        </SelectItem>
-        <AuthorizedComponent roles={["CPO","ADMIN"]}>
-       <>
-       <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='RESOLVED'>
-          Resolved
-        </SelectItem>
-        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='ESCALATED'>
-          Escalated
-        </SelectItem>
-        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='NEW'>
-          New
-        </SelectItem></>
-        </AuthorizedComponent>
-        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='AWAITING_APPROVAL'>
-          Awaiting  Approval
-        </SelectItem>
+            <SelectItem
+              className="text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white"
+              value="ALL"
+            >
+              All
+            </SelectItem>
+            <SelectItem
+              className="text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white"
+              value="OPENED"
+            >
+              Open
+            </SelectItem>
+            <AuthorizedComponent roles={["CPO", "ADMIN"]}>
+              <>
+                <SelectItem
+                  className="text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white"
+                  value="RESOLVED"
+                >
+                  Resolved
+                </SelectItem>
+                <SelectItem
+                  className="text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white"
+                  value="ESCALATED"
+                >
+                  Escalated
+                </SelectItem>
+                <SelectItem
+                  className="text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white"
+                  value="NEW"
+                >
+                  New
+                </SelectItem>
+              </>
+            </AuthorizedComponent>
+            <SelectItem
+              className="text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white"
+              value="AWAITING_APPROVAL"
+            >
+              Awaiting Approval
+            </SelectItem>
           </SelectContent>
         </Select>
-      )
+      );
     },
     cell: ({ row }) => {
       const btnStyles: Record<string, string> = {
@@ -385,6 +408,8 @@ export const generalTicketColumnDefiniton: ColumnDef<GeneralTicket>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
+      const { requestWordDocument, requestPdfDocument, isDownloading } =
+        useDocumentDownload();
       const nav = useNavigate();
 
       return (
@@ -405,6 +430,35 @@ export const generalTicketColumnDefiniton: ColumnDef<GeneralTicket>[] = [
               <BsThreeDots />
             </PopoverTrigger>
             <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+              <Popover>
+                <PopoverTrigger className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2 w-full">
+                  Download
+                </PopoverTrigger>
+                <PopoverContent>
+                  <div
+                    aria-disabled={isDownloading.pdf}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestPdfDocument(row.original["id"]);
+                    }}
+                    role="button"
+                    className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                  >
+                    <p>Download as PDF</p>
+                  </div>
+                  <div
+                    aria-disabled={isDownloading.doc}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestWordDocument(row.original["id"]);
+                    }}
+                    role="button"
+                    className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                  >
+                    <p>Download as Word</p>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <div
                 onClick={() => {
                   nav(`/CPD/Ticket/${row.original.id}`);
@@ -1539,6 +1593,8 @@ export const openTicketColumnDefinition: ExtendedColumnDef<openTicket>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
+      const { requestWordDocument, requestPdfDocument, isDownloading } =
+        useDocumentDownload();
       const nav = useNavigate();
       return (
         <AuthorizedComponent
@@ -1549,6 +1605,35 @@ export const openTicketColumnDefinition: ExtendedColumnDef<openTicket>[] = [
               <BsThreeDots />
             </PopoverTrigger>
             <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+              <Popover>
+                <PopoverTrigger className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2 w-full">
+                  Download
+                </PopoverTrigger>
+                <PopoverContent>
+                  <div
+                    aria-disabled={isDownloading.pdf}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestPdfDocument(row.original["id"]);
+                    }}
+                    role="button"
+                    className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                  >
+                    <p>Download as PDF</p>
+                  </div>
+                  <div
+                    aria-disabled={isDownloading.doc}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestWordDocument(row.original["id"]);
+                    }}
+                    role="button"
+                    className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                  >
+                    <p>Download as Word</p>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <div
                 onClick={() => {
                   nav(`/CPD/Ticket/${row.original.id}`);
@@ -1953,6 +2038,8 @@ export const ResolvedTicketColumnDefinition: ExtendedColumnDef<ResolvedTicket>[]
     {
       id: "actions",
       cell: ({ row }) => {
+        const { requestWordDocument, requestPdfDocument, isDownloading } =
+          useDocumentDownload();
         const nav = useNavigate();
         return (
           <AuthorizedComponent
@@ -1963,6 +2050,35 @@ export const ResolvedTicketColumnDefinition: ExtendedColumnDef<ResolvedTicket>[]
                 <BsThreeDots />
               </PopoverTrigger>
               <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+                <Popover>
+                  <PopoverTrigger className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2 w-full">
+                    Download
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <div
+                      aria-disabled={isDownloading.pdf}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestPdfDocument(row.original["id"]);
+                      }}
+                      role="button"
+                      className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                    >
+                      <p>Download as PDF</p>
+                    </div>
+                    <div
+                      aria-disabled={isDownloading.doc}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestWordDocument(row.original["id"]);
+                      }}
+                      role="button"
+                      className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                    >
+                      <p>Download as Word</p>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <div
                   onClick={() => {
                     nav(`/CPD/Ticket/${row.original.id}`);
@@ -2208,6 +2324,8 @@ export const UnresolvedTicketsColumnDefinition: ExtendedColumnDef<ResolvedTicket
     {
       id: "actions",
       cell: ({ row }) => {
+        const { requestWordDocument, requestPdfDocument, isDownloading } =
+          useDocumentDownload();
         const nav = useNavigate();
         return (
           <AuthorizedComponent
@@ -2218,6 +2336,35 @@ export const UnresolvedTicketsColumnDefinition: ExtendedColumnDef<ResolvedTicket
                 <BsThreeDots />
               </PopoverTrigger>
               <PopoverContent className="bg-ncBlue dark:bg-ncBlue rounded-lg  px-1.5 py-1 w-48">
+                <Popover>
+                  <PopoverTrigger className="text-white hover:bg-slate-100/10 text-sm h-8 flex items-center pl-2 w-full">
+                    Download
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <div
+                      aria-disabled={isDownloading.pdf}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestPdfDocument(row.original["id"]);
+                      }}
+                      role="button"
+                      className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                    >
+                      <p>Download as PDF</p>
+                    </div>
+                    <div
+                      aria-disabled={isDownloading.doc}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestWordDocument(row.original["id"]);
+                      }}
+                      role="button"
+                      className="hover:bg-neutral-50 transition rounded-lg py-2 px-3 flex items-center  space-x-2 text-sm mt-1 w-full"
+                    >
+                      <p>Download as Word</p>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <div
                   onClick={() => {
                     nav(`/CPD/Ticket/${row.original.id}`);
@@ -3741,6 +3888,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useDocumentDownload } from "@/v3/hooks/useDocumentDownload";
 const EditTerminalDialog = ({
   name,
   region,
@@ -5493,11 +5641,11 @@ export const ConfirmationDialog = ({
 }: {
   children: React.ReactElement;
   onClick: () => void;
-  onCancel?:()=>void;
+  onCancel?: () => void;
   title?: string;
   message?: string;
-  continueText?:string,
-  cancelText?:string
+  continueText?: string;
+  cancelText?: string;
 }) => {
   return (
     <AlertDialog>
@@ -5505,10 +5653,9 @@ export const ConfirmationDialog = ({
       <AlertDialogContent>
         <div className="flex items-center justify-end">
           <AlertDialogCancel className="w-8 m-0 h-8 flex items-center justify-center aspect-square p-0">
-            <MdClose className="w-4 h-4 shrink"/>
+            <MdClose className="w-4 h-4 shrink" />
           </AlertDialogCancel>
         </div>
-
 
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -5520,13 +5667,17 @@ export const ConfirmationDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={()=>{
-            if(typeof onCancel !== "undefined"){
-              onCancel()
-            }
-          }}>{cancelText||"Cancel"}</AlertDialogCancel>
+          <AlertDialogCancel
+            onClick={() => {
+              if (typeof onCancel !== "undefined") {
+                onCancel();
+              }
+            }}
+          >
+            {cancelText || "Cancel"}
+          </AlertDialogCancel>
           <AlertDialogAction onClick={() => onClick()}>
-            {continueText||"Continue"}
+            {continueText || "Continue"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -7344,56 +7495,10 @@ export const OutboxMessageColumnDef: ColumnDef<sentMessage>[] = [
           RESOLVED: "bg-blue-200 border-2 border-blue-400",
           CLOSED: "bg-neutral-200 border-2 border-neutral-400",
         };
-
-//         return `${btnStyles[status]} inline h-max p-1`;
-//       };
-//       return (
-//         <div className="flex items-center justify-center">
-//           <div
-//             className={cn(
-//               "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
-//               resolveStatus(row.original.status)
-//             )}
-//           >
-//             <p>{row.original.status}</p>
-//           </div>
-//         </div>
-//       );
-//     },
-//   },
-//   { header: "Date", accessorKey: "date" },
-//   {
-//     id: "actions",
-//     cell: ({ row }) => {
-//       return (
-//         <div className="">
-//           <Popover>
-//             <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
-//               <BsThreeDots className="w-4 h-4 shrink" />
-//             </PopoverTrigger>
-//             <PopoverContent
-//               className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
-//               side="left"
-//             >
-//               <div
-//                 className="hover:bg-slate-200/25  text-white text-sm p-1.5"
-//                 role="button"
-//               >
-//                 <p>View Message</p>
-//               </div>
-//               <div
-//                 className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
-//                 role="button"
-//               >
-//                 <p>Delete Message</p>
-//               </div>
-//             </PopoverContent>
-//           </Popover>
-//         </div>
-//       );
-//     },
-//   },
-// ];
+      };
+    },
+  },
+];
 export const DraftMessagesColumnDefinition: ColumnDef<sentMessage>[] = [
   {
     id: "selection",
