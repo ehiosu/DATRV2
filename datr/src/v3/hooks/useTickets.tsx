@@ -107,12 +107,15 @@ const GetRequestUrl = (requestargs: requestParams) => {
             page - 1
           }&size=${size}`;
 
-    axios("tickets/airline/action", {
+    const base = axios("tickets/airline/action", {
       method: "GET",
     })
       .then((resp: string) => console.log("The response:", resp))
       .catch((err: string) => console.log("Error occurred:", err));
-    return url;
+    return {
+      url,
+      base,
+    };
   }
   return "";
 };
