@@ -45,8 +45,8 @@ export const SignleMessage = ({
         <div className="flex flex-col items-end gap-2">
           <Actions>
             <SingleAction name={"Reply"} Icon={GoReply} />
-            <SingleAction name={"Forward"} Icon={TbArrowForward} />
-            <SingleAction name={"Add Note"} Icon={CiStickyNote} />
+            {/* <SingleAction name={"Forward"} Icon={TbArrowForward} />
+            <SingleAction name={"Add Note"} Icon={CiStickyNote} /> */}
           </Actions>
           <p className="text-[0.725rem] font-semibold text-darkBlue">{date}</p>
         </div>
@@ -156,7 +156,7 @@ export const SignleTicketMessage = ({
   const renderViewerInfo = () => {
     if (viewerInfo && viewerInfo.length > 0 && !isSender) {
       return (
-        <div className="mt-2">
+        <div className="">
           <Dialog>
             <DialogTrigger className="text-darkBlue font-bold">
               {viewerInfo.length > 1
