@@ -11,6 +11,7 @@ import {
   SelectGroup,
   SelectLabel,
 } from "@/components/ui/select";
+import { FileUploadComponent } from "@/components/ui/FileUploadComponent.tsx";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { useAuth } from "../../api/useAuth";
 import { AxiosClient, useAxiosClient } from "../../api/useAxiosClient";
@@ -20,7 +21,6 @@ import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -29,15 +29,11 @@ import {
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Input } from "../../components/ui/input";
-import { FormDatePicker } from "../../components/Datepicker";
 import { toast } from "../../components/ui/use-toast";
 import { format } from "date-fns";
-import DateTimePicker from "react-datetime-picker";
-import "react-datetime-picker/dist/DateTimePicker.css";
-import "react-calendar/dist/Calendar.css";
-import "react-clock/dist/Clock.css";
+import DateTimePicker from "../../components/ui/Datepicker2";
 import { Calendar } from "lucide-react";
-import { UploadButton, UploadDropzone } from "@bytescale/upload-widget-react";
+
 import axios from "axios";
 const complaintSources = [
   {
@@ -159,7 +155,7 @@ export const NewTicket = () => {
     staleTime: Infinity,
     queryFn: () =>
       isExternal
-        ? atxios("http://176.58.117.18:8080/api/terminals/active", {
+        ? axios("http://176.58.117.18:8080/api/terminals/active", {
             method: "GET",
           })
             .then((resp) => resp.data)
@@ -175,25 +171,88 @@ export const NewTicket = () => {
             }),
   });
   const form = useForm({
+    defaultValues: {
+      terminalName: "",
+      cpoCreatorEmail: "",
+      complainantName: "",
+      complainantEmail: "",
+      complainantPhoneNo: "",
+      complainantType: "",
+      dateOfIncident: "",
+      timeOfIncident: "",
+      route: "",
+      sourceOfComplaint: "",
+      complaintDetail: "",
+      redressSought: "",
+      airline: "",
+      location: "",
+      priority: "",
+    },
     resolver: zodResolver(formSchema),
     mode: "onChange",
   });
   const formSubmitMutation = useMutation({
     mutationFn: (values) => {
-      console.log(values);
-      const axiosInstance = user ? axiosClient : axios; // this would use 'axiosClient' if user is logged in, otherwise it would use regular axios
+      const isExternalUser = user.email ? false : true;
+      console.log(isExternalUser);
+      const axiosInstance = isExternalUser ? axios : axiosClient; // this would use 'axiosClient' if user is logged in, otherwise it would use regular axios
+      const data = new FormData();
+      const timeOfIncident = format(values.dateOfIncident, "xxxxx bbb");
+      values.timeOfIncident = timeOfIncident;
+      const createTicketDto = {
+        terminalName: values.terminalName,
+        cpoCreatorEmail: user?.email || null,
+        complainantName: values.complainantName,
+        complainantEmail: values.complainantName,
+        complainantPhoneNo: values.complainantPhoneNo,
+        complainantType: values.complainantType,
+        dateOfIncident: values.dateOfIncident, // Ensure the date format is correct
+        timeOfIncident: timeOfIncident,
+        route: values.route,
+        sourceOfComplaint: values.sourceOfComplaint,
+        complaintDetail: values.complaintDetail,
+        redressSought: values.redressSought,
+        airline: values.airline,
+        location: values.location,
+        priority: values.priority,
+      };
+      const createTicketDtoString = JSON.stringify(createTicketDto);
+      console.log("createTicketDtoString:", createTicketDtoString);
+      // Append the JSON string as a Blob
+      data.append(
+        "create-ticket-dto",
+        new Blob([createTicketDtoString], { type: "application/json" })
+      );
 
-      return axiosInstance("http://176.58.117.18:8080/api/tickets/create", {
-        method: "POST",
-        data: {
-          ...values,
-          cpoCreatorEmail: user?.email || null, // if user is logged in would set the user email to cpoCreatorEmail or otherwise it would be null
-        },
-      }).then((resp) => resp.data);
+      // data.append("create-ticket-dto", JSON.stringify(createTicketDto));
+      // data.append("files", uploadedFiles);
+      // let res = [];
+      if (uploadedFiles && uploadedFiles.length > 0) {
+        uploadedFiles.forEach((file) => {
+          data.append("files", file);
+        });
+      } else {
+        // Append an empty Blob if no files are uploaded
+        data.append("files", new Blob());
+      }
+
+      // data.append("files", []);
+
+      return isExternal
+        ? axios.post("http://176.58.117.18:8080/api/tickets/create", data, {})
+        : axiosClient
+            .post("tickets/create", data, {
+              headers: {
+                Accept: "application/json", // Ensure the server understands the response type expected
+                "Content-Type": "multipart/form-data",
+              },
+            })
+            .then((resp) => resp.data);
     },
     onSuccess: () => {
       setTimeout(() => {
-        nav(-1);
+        form.reset({});
+        setUploadedFiles([]);
       }, 1500);
       return toast({
         title: "Success!",
@@ -315,6 +374,7 @@ export const NewTicket = () => {
                       field.onChange(value);
                     }}
                     defaultValue={field.value}
+                    key={field.value}
                   >
                     <SelectTrigger
                       disabled={getRequestTypesQuery.isLoading}
@@ -380,6 +440,7 @@ export const NewTicket = () => {
                       }
                     }}
                     type="text"
+                    {...field}
                     name=""
                     id=""
                     className="w-full h-8 outline-none  border-b-2 dark:bg-white bg-white dark:border-gray-200  border-gray-200"
@@ -405,23 +466,13 @@ export const NewTicket = () => {
 
                 <FormControl>
                   {/* <FormDatePicker field={field} /> */}
-                  <DateTimePicker
-                    maxDate={new Date()}
-                    className={
-                      "border-2 group border-neutral-200   rounded-lg transition w-full   bg-white  focus-within:ring-2 focus-within:ring-slate-300 focus-within:ring-offset-2   "
-                    }
-                    clearIcon={
-                      <AiOutlineClose
-                        className="hover:font-semibold group-hover:opacity-100 opacity-0 transition hover:bg-slate-200 h-full aspect-square w-5 p-1 rounded-md shrink"
-                        size={14}
-                      />
-                    }
-                    calendarIcon={
-                      <Calendar className="hover:font-semibold group-hover:opacity-100 opacity-0 transition hover:bg-slate-200 h-full aspect-square w-6 p-1 rounded-md shrink" />
-                    }
-                    value={field.value || null}
-                    onChange={(value) => field.onChange(value)}
-                  />
+                  <div className="bg-white rounded-lg w-full ring-2 ring-neutral-200 h-8 flex items-center">
+                    <DateTimePicker
+                      maxDate={new Date()}
+                      value={field.value}
+                      onFieldChange={field.onChange}
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage className="text-start text-xs" />
               </FormItem>
@@ -480,7 +531,11 @@ export const NewTicket = () => {
                 </FormLabel>
 
                 <FormControl>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.value}
+                    key={field.value}
+                    onValueChange={field.onChange}
+                  >
                     <SelectTrigger className="w-full h-9  my-1 text-white dark:text-white rounded-md  focus:outline-none dark:focus:outline-none dark:outline-none outline-none dark:focus-within:outline-none focus-within:outline-none bg-ncBlue dark:bg-ncBlue">
                       <SelectValue placeholder="Select Complaint Source..." />
                     </SelectTrigger>
@@ -604,6 +659,7 @@ export const NewTicket = () => {
                 </FormLabel>
                 <FormControl>
                   <Select
+                    key={field.value}
                     className="outline-none"
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -705,6 +761,7 @@ export const NewTicket = () => {
                 </FormLabel>
                 <FormControl>
                   <Select
+                    key={field.value}
                     className="outline-none"
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -753,6 +810,7 @@ export const NewTicket = () => {
                 </FormLabel>
                 <FormControl>
                   <Select
+                    key={field.value}
                     className="outline-none"
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -791,8 +849,16 @@ export const NewTicket = () => {
               </FormItem>
             )}
           />
+          <div className="flex flex-col gap-y-2  w-[97%] mx-auto">
+            <p className="  text-[#172B4D]">Attachments</p>
+            <FileUploadComponent
+              key={uploadedFiles}
+              onSubmit={setUploadedFiles}
+              allowedTypes={["application/pdf", "application/msword"]}
+            />
+          </div>
 
-          <div className="flex  my-4 ml-6 p-1 md:space-x-6  space-x-2 md:col-span-2  mx-auto w-full md:justify-center ">
+          <div className="flex  my-4 ml-6 p-1 md:space-x-6  space-x-2 md:col-span-2  mx-auto md:w-full md:justify-center  w-[90%]">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -815,54 +881,54 @@ export const NewTicket = () => {
   );
 };
 
-const FileUploadComponent = ({
-  onChange,
-  setCanSubmit,
-  currentfiles,
-  setUploadedFiles,
-}) => {
-  const options = {
-    apiKey: "public_FW25c3KEBus52eeNnRvxetrJqURB", // This is your API key.
-    maxFileCount: 3,
-  };
+// const FileUploadComponent = ({
+//   onChange,
+//   setCanSubmit,
+//   currentfiles,
+//   setUploadedFiles,
+// }) => {
+//   const options = {
+//     apiKey: "public_FW25c3KEBus52eeNnRvxetrJqURB", // This is your API key.
+//     maxFileCount: 3,
+//   };
 
-  return (
-    <UploadButton
-      options={options}
-      onComplete={(files) => {
-        console.log(files);
-        let res = [];
-        let uploaded = [];
-        files.map((file) => {
-          res.push(file.fileUrl);
-          uploaded.push({
-            fileName: file.originalFile.originalFileName,
-            url: file.fileUrl,
-          });
-        });
-        if (currentfiles) {
-          onChange([...currentfiles, ...res]);
-        } else {
-          onChange(res);
-        }
-        setUploadedFiles((state) => [...state, ...uploaded]);
-        setCanSubmit(false);
-      }}
-    >
-      {({ onClick }) => (
-        <button
-          className="w-40  rounded-xl bg-neutral-200 hover:bg-darkBlue hover:text-white font-semibold transition-all duration-500 p-2"
-          onClick={(e) => {
-            onClick(e);
-            setCanSubmit(true);
-          }}
-        >
-          Upload a file...
-        </button>
-      )}
-    </UploadButton>
-  );
-};
+//   return (
+//     <UploadButton
+//       options={options}
+//       onComplete={(files) => {
+//         console.log(files);
+//         let res = [];
+//         let uploaded = [];
+//         files.map((file) => {
+//           res.push(file.fileUrl);
+//           uploaded.push({
+//             fileName: file.originalFile.originalFileName,
+//             url: file.fileUrl,
+//           });
+//         });
+//         if (currentfiles) {
+//           onChange([...currentfiles, ...res]);
+//         } else {
+//           onChange(res);
+//         }
+//         setUploadedFiles((state) => [...state, ...uploaded]);
+//         setCanSubmit(false);
+//       }}
+//     >
+//       {({ onClick }) => (
+//         <button
+//           className="w-40  rounded-xl bg-neutral-200 hover:bg-darkBlue hover:text-white font-semibold transition-all duration-500 p-2"
+//           onClick={(e) => {
+//             onClick(e);
+//             setCanSubmit(true);
+//           }}
+//         >
+//           Upload a file...
+//         </button>
+//       )}
+//     </UploadButton>
+//   );
+// };
 
 {
   /* <button onClick={setCanSubmit(false)}>Upload a file...</button>; */
