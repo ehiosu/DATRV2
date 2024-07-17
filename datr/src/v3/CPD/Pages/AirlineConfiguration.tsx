@@ -34,7 +34,7 @@ export const AirlineConfiguration = () => {
       <Dialog>
         <DialogTrigger ref={dialogRef} asChild>
           <button className="mt-2 w-max text-sm bg-ncBlue px-3 py-1.5 text-white rounded-lg">
-            Add Airlines
+            Add Airline
           </button>
         </DialogTrigger>
         <DialogContent>

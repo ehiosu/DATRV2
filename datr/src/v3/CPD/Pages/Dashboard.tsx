@@ -26,7 +26,7 @@ export const Dashboard = () => {
           </div>
           <AuthorizedComponent roles={["ADMIN","TERMINAL_SUPERVISOR","SHIFT_SUPERVISOR","FOU_HEAD","FOU_CPO"]}>
             <button onClick={()=>{nav('/CPD/New-Ticket')}} className='w-max px-3 py-1.5 whitespace-nowrap h-9 hover:bg-slate-400 transition-all rounded-md bg-ncBlue text-white flex items-center space-x-2 justify-center ml-auto '>
-              New Ticket <Plus className='w-4 h-4 ml-2 shrink'/>
+              New Complaint <Plus className='w-4 h-4 ml-2 shrink'/>
             </button>
           </AuthorizedComponent>
         </div>
@@ -212,7 +212,7 @@ const DashboardReports=()=>{
     const terminals=useTerminal()
     const {user}=useAuth()
     const [terminal,setTerminal]=useState("ALL")
-    const query=useTickets(user.roles[user.roles.length-1]==="FOU_HEAD"?"ESCALATED":"NEW",{from:undefined,to:undefined},1,20,()=>{})
+    const query=useTickets(user.roles[user.roles.length-1]==="FOU_HEAD"?"ESCALATED":"NEW",{from:undefined,to:undefined},1,20,()=>{},user.terminal||"All")
     let data = {
         labels:["Air Peace","Max Air","Dana Air","Arik Air","Aero Contractors"],
         datasets: [{

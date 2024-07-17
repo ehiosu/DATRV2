@@ -15,7 +15,7 @@ export const TopNav = () => {
         console.log(location.pathname)
     },[location])
   return (
-    <div className='bg-white h-16 p-2 w-full flex items-center justify-end divide-x-2 divide-neutral-200 space-x-4'>
+    <div className='bg-white h-16 p-2 w-full flex items-center justify-end divide-x-2 divide-neutral-200 space-x-4 sticky top-0'>
         {
             location.pathname.toLowerCase().includes("das") && location.pathname!=="DAS/Dashboard"&& !location.pathname.includes("CPD")&&  <Select value={terminal} onValueChange={setTerminal}>
                 <SelectTrigger className='w-40 ml-auto dark:bg-ncBlue bg-ncBlue text-white' disabled={!terminalQuery.isSuccess}>
