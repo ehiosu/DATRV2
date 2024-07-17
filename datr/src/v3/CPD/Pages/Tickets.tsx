@@ -24,7 +24,7 @@ import { useAuth } from "@/api/useAuth";
 import { useTerminal } from "@/v3/hooks/useTerminal";
 const statusColumnMap = {
   OPENED: openTicketColumnDefinition,
-  ALL: generalTicketColumnDefiniton,
+  All: generalTicketColumnDefiniton,
   RESOLVED: ResolvedTicketColumnDefinition,
   ESCALATED: UnresolvedTicketsColumnDefinition,
   NEW: generalTicketColumnDefiniton,
@@ -32,7 +32,7 @@ const statusColumnMap = {
   AWAITING_APPROVAL: generalTicketColumnDefiniton,
 };
 export const Tickets = () => {
-  const [filter,setFilter]=useState("ALL")
+  const [filter,setFilter]=useState("All")
   const [currentPage,setCurrentPage]=useState(1)
   const [maxPages,setMaxPages]=useState(1)
   const [pageSize,setPageSize]=useState(10)
@@ -50,43 +50,7 @@ export const Tickets = () => {
     <section className='w-full px-6 py-2 '>
     <div className="flex items-center w-full justify-between">
     <p className='text-2xl font-semibold'>Complaints</p>
-   {user.roles[user.roles.length-1]!== "CPO" && <Select value={filter} onValueChange={(value:string)=>{
-      setCurrentPage(1)
-      setFilter(value)
-    }}>
-      <SelectTrigger className='w-32 h-10 bg-ncBlue dark:bg-ncBlue text-white dark:text-white hover:bg-slate-500 focus:outline-none outline-none dark:focus:outline-none ring-0 focus:ring-0 dark:focus:ring-0 dark:hover:bg-slate-500 transition'>
-        <SelectValue placeholder="Filter By Status"/>
-      </SelectTrigger>
-      <SelectContent className='bg-ncBlue dark:bg-ncBlue text-white'>
-      <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='ALL'>
-          All
-        </SelectItem>
-        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='OPENED'>
-          Open
-        </SelectItem>
-        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='RESOLVED'>
-          Resolved
-        </SelectItem>
-        <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='ESCALATED'>
-          Escalated
-        </SelectItem>
-       <AuthorizedComponent roles={["ADMIN","TERMINAL_SUPERVISOR"]}>
-       <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='NEW'>
-          New
-        </SelectItem>
-       </AuthorizedComponent>
-       <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
-       <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='AWAITING_ESCALATION_APPROVAL'>
-          Awaiting Escalation Approval
-        </SelectItem>
-       </AuthorizedComponent>
-       <AuthorizedComponent roles={["SHIFT_SUPERVISOR","TERMINAL_SUPERVISOR","ADMIN"]}>
-       <SelectItem className='text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white' value='AWAITING_APPROVAL'>
-          Awaiting  Approval
-        </SelectItem>
-       </AuthorizedComponent>
-      </SelectContent>
-    </Select>}
+  
     </div>
     <AuthorizedComponent roles={["ADMIN","TERMINAL_HEAD","SHIFT_HEAD","CPO"]}>
     <div className="flex flex-col items-end justify-end mt-2">
@@ -98,7 +62,7 @@ export const Tickets = () => {
             value={filter}
             onValueChange={(value: string) => {
               setCurrentPage(1);
-              setTerminal(value);
+              setFilter(value);
             }}
           >
             <SelectTrigger className="w-32 h-10 bg-ncBlue dark:bg-ncBlue text-white dark:text-white hover:bg-slate-500 focus:outline-none outline-none dark:focus:outline-none ring-0 focus:ring-0 dark:focus:ring-0 dark:hover:bg-slate-500 transition">
@@ -107,7 +71,7 @@ export const Tickets = () => {
             <SelectContent className="bg-ncBlue dark:bg-ncBlue text-white">
               <SelectItem
                 className="text-white hover:bg-slate-100/10 dark:hover:bg-slate-100/10 focus:bg-slate-100/10 dark:focus:bg-slate-100/10 dark:focus:text-white focus:text-white"
-                value="ALL"
+                value="All"
               >
                 All
               </SelectItem>
@@ -157,8 +121,10 @@ export const Tickets = () => {
               </AuthorizedComponent>
             </SelectContent>
           </Select>
-        )}
+         
+        </AuthorizedComponent>
       </div>
+      </AuthorizedComponent>
       <AuthorizedComponent
         roles={["ADMIN", "TERMINAL_HEAD", "SHIFT_HEAD", "CPO"]}
       >
@@ -167,7 +133,7 @@ export const Tickets = () => {
             <Select
               value={terminal}
               onValueChange={(value: string) => {
-                setCurrentPage(0);
+                setCurrentPage(1);
                 setTerminal(value);
               }}
             >
@@ -245,3 +211,4 @@ export const Tickets = () => {
     </section>
   );
 };
+
