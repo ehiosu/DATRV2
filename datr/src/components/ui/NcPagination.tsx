@@ -21,7 +21,7 @@ export const NcPagination: React.FC<paginationProps> = ({
   return (
     <div className={cn("flex items-center flex-wrap", className)}>
       <button
-        disabled={currentPage === 1}
+        disabled={currentPage <=1}
         onClick={() => setPage((state) => Math.max(state - 1, 1))}
         className="w-8 h-8 rounded bg-ncBlue text-white flex items-center justify-center mr-2 disabled:bg-slate-300 disabled:text-black"
       >
@@ -56,7 +56,7 @@ export const NcPagination: React.FC<paginationProps> = ({
           value={targetPage || ""}
           className="w-8 h-8 border-[1px] ml-2 mr-1 dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue px-1"
           max={maxPage}
-          placeholder="1"
+          placeholder={maxPage}
           onChange={(e) => {
             const value = parseInt(e.target.value, 10);
             if (!e.target.value) {
@@ -83,6 +83,7 @@ export const NcPagination: React.FC<paginationProps> = ({
       </div>
 
       <button
+      disabled={currentPage >= maxPage}
         onClick={() => setPage((state) => Math.min(state + 1, maxPage))}
         className="w-8 h-8 rounded bg-ncBlue text-white flex items-center justify-center ml-2 disabled:bg-slate-300 disabled:text-black md:mt-0 mt-2"
       >
