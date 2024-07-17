@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import { home_pages } from "../data";
 import { MdError } from "react-icons/md";
 export const Login = () => {
   const { generalUpdate } = useAuth();
+  // const referrer = new URLSearchParams(useLocation().search).get("referrer")
   const loginFormSchema = z.object({
     email: z
       .string()
