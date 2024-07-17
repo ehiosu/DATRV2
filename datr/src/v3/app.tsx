@@ -54,6 +54,7 @@ import { RouteConfiguration } from "./CPD/Pages/RouteConfiguration.tsx";
 import { Login } from "./Auth/Login.tsx";
 import { AirlineConfiguration } from "./CPD/Pages/AirlineConfiguration.tsx";
 import { FdrEdit } from "./CPD/Pages/FdrEdit.tsx";
+import { AccessNotGranted } from "./Pages/AccessNotGranted.tsx";
 const queryClient = new QueryClient();
 export const app = () => {
   return (
@@ -61,7 +62,7 @@ export const app = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<AccessNotGranted />} />
           <Route path="/Rating" element={<Rating />} />
           <Route path="/Create-Account" element={<CreateBaseAccount />} />
           <Route path="/Auth" element={<Login />} />
