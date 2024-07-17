@@ -1257,7 +1257,7 @@ const DetailsSubAction = () => {
     Responded_Date: format(new Date(ticketData.dateTimeModified), "dd/MM/yyyy"),
     Due_By: format(new Date(ticketData.dateTimeTicketExpired), "dd/MM/yyyy"),
     Airline: ticketData.airline,
-    Assigner: ticketData.assignerEmail,
+    Assigner: ticketData.assignerEmail || "None",
   };
 
   return (
