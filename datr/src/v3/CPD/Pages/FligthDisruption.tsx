@@ -61,7 +61,7 @@ export const FligthDisruption = () => {
           }
     </div>
    <div className="flex items-center justify-center mt-2">
-   <NcPagination className='mx-auto' maxPage={maxPages} currentPage={currentPage+1} setPage={setCurrentPage}/>
+   <NcPagination className='mx-auto' maxPage={maxPages} currentPage={currentPage} setPage={setCurrentPage}/>
    </div>
 
     
