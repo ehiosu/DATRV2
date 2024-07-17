@@ -5050,7 +5050,8 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
                     </SelectItem>
                     <SelectItem value="DGO"> Director General</SelectItem>
                     <SelectItem value="CPD_D">CPD Director</SelectItem>
-                    <SelectItem value="CPD_GM">CPD General Manager</SelectItem>
+                    <SelectItem value="FOU_HEAD">FOU Head</SelectItem>
+                    <SelectItem value="FOU_CPO">FOU CPO</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -5070,7 +5071,7 @@ export const cpoTableColumnDef: ExtendedColumnDef<cpo>[] = [
                           <SelectValue placeholder="Select Terminal..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {terminalQuery.data.map((terminal) => (
+                          {terminalQuery.data.map((terminal:{name:string,id:string}) => (
                             <SelectItem key={terminal.id} value={terminal.name}>
                               {terminal.name}
                             </SelectItem>
@@ -7345,55 +7346,55 @@ export const OutboxMessageColumnDef: ColumnDef<sentMessage>[] = [
           CLOSED: "bg-neutral-200 border-2 border-neutral-400",
         };
 
-//         return `${btnStyles[status]} inline h-max p-1`;
-//       };
-//       return (
-//         <div className="flex items-center justify-center">
-//           <div
-//             className={cn(
-//               "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
-//               resolveStatus(row.original.status)
-//             )}
-//           >
-//             <p>{row.original.status}</p>
-//           </div>
-//         </div>
-//       );
-//     },
-//   },
-//   { header: "Date", accessorKey: "date" },
-//   {
-//     id: "actions",
-//     cell: ({ row }) => {
-//       return (
-//         <div className="">
-//           <Popover>
-//             <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
-//               <BsThreeDots className="w-4 h-4 shrink" />
-//             </PopoverTrigger>
-//             <PopoverContent
-//               className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
-//               side="left"
-//             >
-//               <div
-//                 className="hover:bg-slate-200/25  text-white text-sm p-1.5"
-//                 role="button"
-//               >
-//                 <p>View Message</p>
-//               </div>
-//               <div
-//                 className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
-//                 role="button"
-//               >
-//                 <p>Delete Message</p>
-//               </div>
-//             </PopoverContent>
-//           </Popover>
-//         </div>
-//       );
-//     },
-//   },
-// ];
+        return `${btnStyles[status]} inline h-max p-1`;
+      };
+      return (
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "w-max px-4  h-8 flex items-center justify-center text-xs text-center rounded-full ",
+              resolveStatus(row.original.status)
+            )}
+          >
+            <p>{row.original.status}</p>
+          </div>
+        </div>
+      );
+    },
+  },
+  { header: "Date", accessorKey: "date" },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      return (
+        <div className="">
+          <Popover>
+            <PopoverTrigger className="h-6 w-6 p-0 hover:bg-slate-300 rounded-md flex items-center justify-center transition-all">
+              <BsThreeDots className="w-4 h-4 shrink" />
+            </PopoverTrigger>
+            <PopoverContent
+              className="bg-ncBlue dark:bg-ncBlue text-white p-0 w-36  rounded-md overflow-hidden gap-y-2"
+              side="left"
+            >
+              <div
+                className="hover:bg-slate-200/25  text-white text-sm p-1.5"
+                role="button"
+              >
+                <p>View Message</p>
+              </div>
+              <div
+                className="hover:bg-red-500 hover:text-white transition-all text-red-400 text-sm p-1.5"
+                role="button"
+              >
+                <p>Delete Message</p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
+  },
+];
 export const DraftMessagesColumnDefinition: ColumnDef<sentMessage>[] = [
   {
     id: "selection",
