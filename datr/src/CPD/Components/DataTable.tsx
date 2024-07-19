@@ -49,6 +49,7 @@ import {
   DelayedFlight,
   GeneralGroup,
   GeneralTerminal,
+  GeneralRegion,
   GeneralTicket,
   Message,
   Report,
@@ -4004,6 +4005,283 @@ const EditTerminalDialog = ({
               );
             }}
           />
+          <button
+            disabled={Object.keys(form.formState.errors).length > 0}
+            className="w-full h-8 flex flex-row items-center justify-center my-3 bg-neutral-100 hover:bg-ncBlue transition-all duration-300 rounded-lg hover:text-white group disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:text-black"
+          >
+            Submit
+            <Send className="ml-2 w-4 h-4 shrink flex flex-row items-center justify-center mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:duration-700 group-hover:disabled:opacity-0" />
+          </button>
+        </form>
+      </Form>
+    </DialogContent>
+  );
+};
+
+export const generalRegionColumnDef: ExtendedColumnDef<GeneralRegion>[] = [
+  {
+    accessorKey: "id",
+    header: "ID",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p>{row.original["id"]}</p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "regionName",
+    header: "Region Name",
+    cell: ({ row }) => {
+      const nav = useNavigate();
+      return (
+        <div
+          onClick={() => {
+            if (row.original.abbreviation) {
+              nav(`/DAS/${row.original.regionName}/Dashboard`);
+            }
+          }}
+          role="button"
+          className="hover:text-blue-300"
+        >
+          <p>{row.original.regionName}</p>
+        </div>
+      );
+    },
+  },
+  {
+    id: "active",
+    header: "State",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <p>{row.original["active"] ? "Active" : "Inactive"}</p>
+        </div>
+      );
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const { axios } = useAxiosClient();
+      const client = useQueryClient();
+      const toggleActivenessMutation = useMutation({
+        mutationKey: ["regions", row.original["id"], "activeness"],
+        mutationFn: () =>
+          new Promise((resolve, reject) => {
+            axios(`regions/toggle/${row.original["id"]}`, {
+              method: "PUT",
+            })
+              .then((resp: any) => resolve(resp.data))
+              .catch((err: Error) => reject(err));
+          }),
+      });
+      return (
+        <div className="flex items-center justify-end">
+          <Popover>
+            <PopoverTrigger>
+              <BsThreeDots />
+            </PopoverTrigger>
+            <PopoverContent side="left" className="p-1">
+              <ConfirmationDialog onClick={() => {}}>
+                <div
+                  role="button"
+                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                >
+                  <Trash className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <p className="text-[0.8275rem] group-hover:font-semibold">
+                    Delete Region
+                  </p>
+                </div>
+              </ConfirmationDialog>
+              <ConfirmationDialog
+                message="This action will permanently change the state of this region."
+                onClick={() => {
+                  sonnerToast.promise(
+                    new Promise((resolve, reject) => {
+                      toggleActivenessMutation.mutate(undefined, {
+                        onSuccess: (data, variables, context) => {
+                          resolve(data);
+                          client.invalidateQueries({
+                            queryKey: ["regions", "all"],
+                          });
+                        },
+                        onError: (error, variables, context) => {
+                          reject(error);
+                        },
+                      });
+                    }),
+                    {
+                      loading: "Changing Region State...",
+                      success: "State Updated Successfully!",
+                      error: (error) => {
+                        return (
+                          <div className="text-black flex flex-col">
+                            <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                              <MdError className="w-4 h-4 shrink " /> Error
+                            </p>
+                            <p>
+                              {error.response.data.message ||
+                                error.response.data.detail}
+                            </p>
+                          </div>
+                        );
+                      },
+                    }
+                  );
+                }}
+              >
+                <div
+                  role="button"
+                  className="flex items-center space-x-2 hover:bg-neutral-100 group p-2"
+                >
+                  {row.original["active"] ? (
+                    <Ban className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  ) : (
+                    <Check className="w-5 h-5 shrink opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  )}
+                  <p className="text-[0.8275rem] group-hover:font-semibold">
+                    {row.original["active"]
+                      ? "Deactivate Region"
+                      : "Activate Region"}
+                  </p>
+                </div>
+              </ConfirmationDialog>
+              <Dialog>
+                <DialogTrigger className="flex items-center w-full text-[0.8275rem] group-hover:font-semibold text-center space-x-2 p-2 group">
+                  <Pencil className="w-5 h-5 shrink mr-2 opacity-0 group-hover:opacity-100 transtion-opacity duration-300" />{" "}
+                  Edit Region
+                </DialogTrigger>
+                <EditRegionDialog
+                  regionName={row.original.regionName}
+                  id={row.original["id"]}
+                />
+              </Dialog>
+            </PopoverContent>
+          </Popover>
+        </div>
+      );
+    },
+  },
+];
+
+const EditRegionDialog = ({
+  regionName,
+  id,
+  closeDialog,
+}: {
+  regionName: string;
+  id: string;
+  closeDialog: () => void;
+}) => {
+  const { axios } = useAxiosClient();
+  const client = useQueryClient();
+  const editMutation = useMutation({
+    mutationKey: ["region", name],
+    mutationFn: (values: z.infer<typeof schema>) =>
+      new Promise((resolve, reject) => {
+        axios(`regions/${id.toString()}`, {
+          method: "PATCH",
+          data: [
+            {
+              op: "replace",
+              path: "/regionName",
+              value: values.regionName,
+            },
+          ],
+        })
+          .then((resp: any) => resolve(resp.data))
+          .catch((err: Error) => reject(err));
+      }),
+  });
+  const tryEdit = (values: z.infer<typeof schema>) => {
+    sonnerToast.promise(
+      new Promise((resolve, reject) => {
+        editMutation.mutate(values, {
+          onSuccess: (data, variables, context) => {
+            resolve(data);
+            client.invalidateQueries({
+              queryKey: ["regions", "all"],
+            });
+            closeDialog();
+          },
+          onError: (error, variables, context) => {
+            reject(error);
+          },
+        });
+      }),
+      {
+        loading: "Editing Region Data...",
+        success: "Data Updated Successfully!",
+        error: (error) => {
+          return (
+            <div className="text-black flex flex-col">
+              <p className="flex flex-row items-center font-semibold text-[0.9275rem] gap-2">
+                <MdError className="w-4 h-4 shrink " /> Error
+              </p>
+              <p>{error.response.data.message || error.response.data.detail}</p>
+            </div>
+          );
+        },
+      }
+    );
+  };
+  const schema = z.object({
+    regionName: z.string(),
+  });
+  const form = useForm<z.infer<typeof schema>>({
+    defaultValues: {
+      regionName,
+    },
+    resolver: zodResolver(schema),
+  });
+  return (
+    <DialogContent>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(tryEdit)}>
+          <FormField
+            name="regionName"
+            control={form.control}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Region Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The name of the region to be created.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+          {/* <FormField
+            name="region"
+            control={form.control}
+            render={({ field }) => {
+              return (
+                <FormItem>
+                  <FormLabel>Region</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-full h-8 p-2 rounded-lg border-[1px] dark:bg-white dark:border-neutral-400 border-neutral-400 transition-all focus:border-darkBlue text-[0.77rem]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The region the terminal belongs to.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          /> */}
           <button
             disabled={Object.keys(form.formState.errors).length > 0}
             className="w-full h-8 flex flex-row items-center justify-center my-3 bg-neutral-100 hover:bg-ncBlue transition-all duration-300 rounded-lg hover:text-white group disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:text-black"
